@@ -1,0 +1,4696 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LearnHouse",
+    "description": "LearnHouse is an open-source platform tailored for learning experiences.",
+    "version": "1.4.5"
+  },
+  "paths": {
+    "/api/v1/admin/{org_slug}/auth/token": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Issue a user token",
+        "description": "Issue a JWT access token on behalf of a user. The user must belong to the organization matching the org_slug. Requires `users.action_update` permission. Privileged targets (org Admin/Maintainer, platform backoffice staff member) are refused.",
+        "operationId": "api_admin_issue_token_api_v1_admin__org_slug__auth_token_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token minted on behalf of the target user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "API token lacks permission, target is privileged, user not in org, or org_slug mismatch"
+          },
+          "404": {
+            "description": "User or organization not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/auth/embed-session": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Mint an embed session",
+        "description": "Mint a short-lived session for a learner, for the LearnHouse embed components (@learnhouse/react, @learnhouse/vue) to act as that learner in a browser. The session lasts 15 minutes by default (1 hour at most) and has no refresh token: mint a new one when it expires. It only works inside this organization, only on the routes the embed components use, and never on account settings. Requires `users.action_update` permission. Privileged targets (org Admin/Maintainer, platform backoffice staff member) and accounts that belong to other organizations are refused.",
+        "operationId": "api_admin_issue_embed_session_api_v1_admin__org_slug__auth_embed_session_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmbedSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Embed session minted for the learner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbedSessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "API token lacks permission, target is privileged or shared, user not in org, or org_slug mismatch"
+          },
+          "404": {
+            "description": "User or organization not found"
+          },
+          "422": {
+            "description": "ttl_seconds out of range"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/courses/{course_uuid}/access/{user_id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Check user course access",
+        "description": "Check if a user can access a specific course. Returns enrollment status and whether the course is public. Requires `courses.action_read` permission.",
+        "operationId": "api_admin_check_course_access_api_v1_admin__org_slug__courses__course_uuid__access__user_id__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Access check result: whether the user can view the course.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseAccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/enrollments/bulk/unenroll": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Bulk unenroll users from a course",
+        "description": "Mirror of bulk enroll. Users not currently enrolled are reported in `not_enrolled`. Requires `courses.action_update` permission.",
+        "operationId": "api_admin_bulk_unenroll_api_v1_admin__org_slug__enrollments_bulk_unenroll_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkUnenrollRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Per-user unenroll summary: unenrolled, not_enrolled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkUnenrollResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/enrollments/{user_id}/{course_uuid}": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Enroll user in course",
+        "description": "Enroll a user in a course on their behalf. Creates the learning trail and trail run. The user must belong to the organization. Requires `courses.action_update` permission.",
+        "operationId": "api_admin_enroll_user_api_v1_admin__org_slug__enrollments__user_id___course_uuid__post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User enrolled; returns the user's updated trail with all runs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User is already enrolled"
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User or course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Unenroll user from course",
+        "description": "Unenroll a user from a course. Removes the enrollment and all associated progress (trail steps). Requires `courses.action_update` permission.",
+        "operationId": "api_admin_unenroll_user_api_v1_admin__org_slug__enrollments__user_id___course_uuid__delete",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User unenrolled; trail steps for this course are deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnenrollResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Enrollment not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/enrollments/{user_id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get user enrollments",
+        "description": "Get all course enrollments for a user in the organization, including trail runs and steps. Requires `courses.action_read` permission.",
+        "operationId": "api_admin_get_user_enrollments_api_v1_admin__org_slug__enrollments__user_id__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The user's trail with every course enrollment and step.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailRead"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User not found or not a member of this organization"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/progress/{user_id}/{course_uuid}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get user progress in course",
+        "description": "Get a user's progress in a specific course including completion percentage and list of completed activity IDs. Requires `courses.action_read` permission.",
+        "operationId": "api_admin_get_user_progress_api_v1_admin__org_slug__progress__user_id___course_uuid__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Progress summary (completion percentage + completed activity ids).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/progress/{user_id}/activities/{activity_uuid}/complete": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Mark activity as completed",
+        "description": "Mark an activity as completed on behalf of a user. Automatically creates enrollment if needed. If this completes the entire course, a certificate is awarded (if configured). Requires `courses.action_update` permission.",
+        "operationId": "api_admin_complete_activity_api_v1_admin__org_slug__progress__user_id__activities__activity_uuid__complete_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "activity_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Activity Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activity marked complete; includes whether this completed the course.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityCompletionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Activity not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Undo activity completion",
+        "description": "Remove a user's activity completion. Does not revoke certificates. Requires `courses.action_update` permission.",
+        "operationId": "api_admin_uncomplete_activity_api_v1_admin__org_slug__progress__user_id__activities__activity_uuid__complete_delete",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "activity_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Activity Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activity completion removed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityUncompletionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Activity not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/progress/{user_id}/{course_uuid}/complete": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Mark entire course as completed",
+        "description": "Mark all activities in a course as completed for a user. Skips activities that are already completed. Awards a certificate if configured. Requires `courses.action_update` permission.",
+        "operationId": "api_admin_complete_course_api_v1_admin__org_slug__progress__user_id___course_uuid__complete_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All activities marked complete; indicates whether a certificate was awarded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseCompletionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/progress/{user_id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get all user progress",
+        "description": "Get a progress summary across all courses a user is enrolled in. Returns completion percentage and status for each enrollment. Requires `courses.action_read` permission.",
+        "operationId": "api_admin_get_all_user_progress_api_v1_admin__org_slug__progress__user_id__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One row per course enrollment with completion percentage and status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressSummaryItem"
+                  },
+                  "title": "Response Api Admin Get All User Progress Api V1 Admin  Org Slug  Progress  User Id  Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User not found or not a member of this organization"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/trails/{user_id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get user trail with full progress breakdown",
+        "description": "Return the user's trail in the organization with a full chapter-by-chapter and activity-by-activity progress breakdown for every course they are enrolled in. Each activity carries its completion state, teacher verification flag, grade, and completion timestamp. Requires `courses.action_read` permission.",
+        "operationId": "api_admin_get_user_trail_detail_api_v1_admin__org_slug__trails__user_id__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full trail breakdown grouped by course → chapter → activity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTrailDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "API token lacks access to this organization"
+          },
+          "404": {
+            "description": "User not found or not a member of this organization"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/trails/{user_id}/courses/{course_uuid}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get user trail breakdown for a single course",
+        "description": "Return the user's full chapter-by-chapter and activity-by-activity progress breakdown for a single course. Surfaces progress even when the user has no explicit enrollment row (status will be null in that case). Requires `courses.action_read` permission.",
+        "operationId": "api_admin_get_user_course_trail_detail_api_v1_admin__org_slug__trails__user_id__courses__course_uuid__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full breakdown for the requested course only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTrailDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "API token lacks access to this organization"
+          },
+          "404": {
+            "description": "Course or user not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/certifications/{user_id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get user certificates",
+        "description": "Get all certificates awarded to a user in the organization. Includes certification details and course information. Requires `certifications.action_read` permission.",
+        "operationId": "api_admin_get_user_certificates_api_v1_admin__org_slug__certifications__user_id__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All certificates awarded to the user in this org.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CertificateItem"
+                  },
+                  "title": "Response Api Admin Get User Certificates Api V1 Admin  Org Slug  Certifications  User Id  Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User not found or not a member of this organization"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/users": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Provision a user",
+        "description": "Create a user and attach them to the organization in one call. Designed for SSO/JIT provisioning: the user's email is auto-verified and the normal email-verification flow is skipped. If a user with the given email already exists in another organization, they are attached to this org (idempotent); the password/username/name fields in the request are ignored in that case. Requires `users.action_create` permission.",
+        "operationId": "api_admin_provision_user_api_v1_admin__org_slug__users_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User created or attached to the org. Returns the user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email already in this org, duplicate username, weak password, or invalid role_id"
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Member limit reached, feature disabled, role belongs to another org, role is elevated (Admin/Maintainer), or token creator lacks privilege"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many provisioning requests for this token"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/users/{user_id}": {
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Remove a user from the organization",
+        "description": "Remove a user's organization membership. The user account itself is preserved (it may belong to other orgs). Blocks removing the last admin. Requires `users.action_delete` permission.",
+        "operationId": "api_admin_remove_user_api_v1_admin__org_slug__users__user_id__delete",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Membership removed. The user account is preserved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User is the last admin"
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User not in org"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Update a user's profile",
+        "description": "Update profile fields of an org member. Supports partial updates: only fields present in the request body are changed. Duplicate email/username is rejected. Requires `users.action_update` permission.",
+        "operationId": "api_admin_update_user_profile_api_v1_admin__org_slug__users__user_id__patch",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgMemberUserRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Duplicate email or username"
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User not in org"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/users/by-email/{email}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Look up a user by email",
+        "description": "Find a user by email within the organization. Returns 404 if the user does not exist or is not a member of this org. Requires `users.action_read` permission.",
+        "operationId": "api_admin_get_user_by_email_api_v1_admin__org_slug__users_by_email__email__get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "URL-encoded email address",
+              "title": "Email"
+            },
+            "description": "URL-encoded email address"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The user matching the given email within this org.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgMemberUserRead"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User not found in this organization"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/auth/magic-link": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Issue a magic sign-in link",
+        "description": "Generate a short-lived URL that, when opened in a browser, will log the target user in and optionally redirect them to a specific path. Token lifetime is clamped to 60–900 seconds.\n\nThe URL is on the organization's own site (its verified custom domain, else its LearnHouse subdomain). Each link signs in once: any later use is refused. A user with two-factor authentication enabled is still asked for their code.\n\nThe target must be an ordinary member. Consuming the link mints a full session, so the same rule as `/users/{user_id}/token` applies: an API token cannot sign in as an organization Admin or Maintainer, or as a platform backoffice staff member. Requires `users.action_update` permission.",
+        "operationId": "api_admin_issue_magic_link_api_v1_admin__org_slug__auth_magic_link_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MagicLinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Magic sign-in URL and underlying JWT. Token lifetime is already clamped.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagicLinkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "redirect_to is not a same-origin path, or host is not a verified custom domain of the organization"
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "User not in this org, or the target is an Admin, Maintainer or backoffice; distinguish by the detail message before treating it as a membership problem"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/auth/magic-consume": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Open a magic sign-in link issued by an older version (browser-facing)",
+        "description": "Public endpoint (no API token required). Links are now issued straight to the org's sign-in page (`/auth/magic`), which redeems them. This endpoint keeps links in the older API form working: it forwards the browser to that page on the org's own domain without spending the link.",
+        "operationId": "api_admin_magic_consume_api_v1_admin__org_slug__auth_magic_consume_get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Magic-link JWT",
+              "title": "Token"
+            },
+            "description": "Magic-link JWT"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "302": {
+            "description": "Forward to the org's sign-in page, which redeems the link"
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/enrollments/bulk": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Bulk enroll users in a course",
+        "description": "Enroll a batch of users into a single course. Users who are already enrolled are reported in `already_enrolled`. Users who are not members of the org are reported in `skipped`. Requires `courses.action_update` permission.",
+        "operationId": "api_admin_bulk_enroll_api_v1_admin__org_slug__enrollments_bulk_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkEnrollRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Per-user enrollment summary: enrolled, already_enrolled, skipped.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkEnrollResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/courses/{course_uuid}/enrollments": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List users enrolled in a course",
+        "description": "Reverse lookup: get all users currently enrolled in a course, with pagination. Returns enrollment status and enrolled_at per user. Requires `courses.action_read` permission.",
+        "operationId": "api_admin_list_course_enrollments_api_v1_admin__org_slug__courses__course_uuid__enrollments_get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One row per enrolled user in this course, with status and enrolled_at.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourseEnrollmentItem"
+                  },
+                  "title": "Response Api Admin List Course Enrollments Api V1 Admin  Org Slug  Courses  Course Uuid  Enrollments Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/progress/{user_id}/{course_uuid}/reset": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Reset a user's progress in a course",
+        "description": "Delete all of a user's trail steps for a course, keeping the enrollment intact. The user can retake the course from scratch. Requires `courses.action_update` permission.",
+        "operationId": "api_admin_reset_user_progress_api_v1_admin__org_slug__progress__user_id___course_uuid__reset_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the number of trail steps deleted for this user/course.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetProgressResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User or course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/certifications/{user_id}/{course_uuid}/award": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Manually award a certificate",
+        "description": "Award a certificate to a user bypassing the normal completion gate. Useful for migrations and manual overrides. The course must have a certification configured. Requires `certifications.action_create` permission.",
+        "operationId": "api_admin_award_certificate_api_v1_admin__org_slug__certifications__user_id___course_uuid__award_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certificate awarded; returns the new user_certification_uuid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AwardCertificateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User already has a certificate for this course"
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Course or certification not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/certifications/{user_id}/{user_certification_uuid}": {
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Revoke a user's certificate",
+        "description": "Delete a certificate row. Does not affect course enrollment or progress. Requires `certifications.action_delete` permission.",
+        "operationId": "api_admin_revoke_certificate_api_v1_admin__org_slug__certifications__user_id___user_certification_uuid__delete",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "user_certification_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Certification Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certificate revoked. The cert row is hard-deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeCertificateResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Certificate not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/usergroups/{usergroup_uuid}/members/{user_id}": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Add a user to a user group",
+        "description": "Add a user to a cohort/group. Both must belong to the token's org. Requires `usergroups.action_update` permission.",
+        "operationId": "api_admin_add_usergroup_member_api_v1_admin__org_slug__usergroups__usergroup_uuid__members__user_id__post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "usergroup_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Usergroup Uuid"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User added to the cohort.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGroupMemberResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User is already in this group"
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User or group not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Remove a user from a user group",
+        "description": "Remove a user's direct membership of a cohort/group. The user account itself is preserved. Idempotent: `status` is `removed`, `kept` (the group's rules or a sub-group still include them) or `absent` (they were not a member). Requires `usergroups.action_update` permission.",
+        "operationId": "api_admin_remove_usergroup_member_api_v1_admin__org_slug__usergroups__usergroup_uuid__members__user_id__delete",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "usergroup_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Usergroup Uuid"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removal applied (see `status`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGroupMemberResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User or group not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/users/{user_id}/role": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Change a user's org role",
+        "description": "Change the user's role within the organization. Blocks demoting the last admin. The target role must belong to this org or be a global role. Requires `users.action_update` and `roles.action_update` permissions.",
+        "operationId": "api_admin_change_user_role_api_v1_admin__org_slug__users__user_id__role_patch",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeRoleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User role updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeRoleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Cannot demote the last admin"
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Role does not belong to this organization"
+          },
+          "404": {
+            "description": "User or role not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/usergroups": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Create a user group",
+        "description": "Create a cohort/user group owned by the organization. Requires `usergroups.action_create` permission.",
+        "operationId": "api_admin_create_usergroup_api_v1_admin__org_slug__usergroups_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserGroupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The newly created cohort.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGroupResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/usergroups/{usergroup_uuid}": {
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Delete a user group",
+        "description": "Delete a user group and all its memberships and course links. The underlying users and courses are untouched. Requires `usergroups.action_delete` permission.",
+        "operationId": "api_admin_delete_usergroup_api_v1_admin__org_slug__usergroups__usergroup_uuid__delete",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "usergroup_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Usergroup Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cohort and all its memberships/course links deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteUserGroupResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "UserGroup not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/usergroups/{usergroup_uuid}/members": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List members of a user group",
+        "description": "Reverse lookup: list users belonging to a cohort, with pagination. Requires `usergroups.action_read` permission.",
+        "operationId": "api_admin_list_usergroup_members_api_v1_admin__org_slug__usergroups__usergroup_uuid__members_get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "usergroup_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Usergroup Uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Members of the cohort, paginated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserGroupMemberListItem"
+                  },
+                  "title": "Response Api Admin List Usergroup Members Api V1 Admin  Org Slug  Usergroups  Usergroup Uuid  Members Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "UserGroup not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/users/{user_id}/groups": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List user groups a user belongs to",
+        "description": "Reverse lookup: which cohorts is this user a member of? Requires `usergroups.action_read` permission.",
+        "operationId": "api_admin_get_user_groups_api_v1_admin__org_slug__users__user_id__groups_get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cohorts the user belongs to within this org.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserUserGroupItem"
+                  },
+                  "title": "Response Api Admin Get User Groups Api V1 Admin  Org Slug  Users  User Id  Groups Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User not in org"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/usergroups/{usergroup_uuid}/courses/{course_uuid}": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Grant a cohort access to a course",
+        "description": "Link a course to a user group; all members of the group gain the access rights configured for that group. Requires `usergroups.action_update` permission.",
+        "operationId": "api_admin_add_course_to_usergroup_api_v1_admin__org_slug__usergroups__usergroup_uuid__courses__course_uuid__post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "usergroup_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Usergroup Uuid"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course linked to the cohort.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGroupCourseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Course already linked to this group"
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Group or course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Revoke a cohort's access to a course",
+        "description": "Unlink a course from a user group. Members of the cohort lose access unless granted through another path. Requires `usergroups.action_update` permission.",
+        "operationId": "api_admin_remove_course_from_usergroup_api_v1_admin__org_slug__usergroups__usergroup_uuid__courses__course_uuid__delete",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "usergroup_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Usergroup Uuid"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course unlinked from the cohort.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGroupCourseResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Group or link not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/users/{user_id}/export": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Full GDPR data export for a user",
+        "description": "Return a JSON bundle containing the user's profile, org memberships, trails, runs, steps, certificates, and cohort memberships. Intended for GDPR Article 15 (Right of Access) compliance. All sub-collections are scoped to the caller's org. Requires `users.action_read` permission.",
+        "operationId": "api_admin_export_user_data_api_v1_admin__org_slug__users__user_id__export_get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundle of all user data scoped to this org.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDataExportResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User not in org"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/users/{user_id}/anonymize": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "GDPR right-to-be-forgotten",
+        "description": "Scrub a user's PII (email, name, avatar, bio, details, profile, password). Delete API tokens the user created. Keeps trails and certificates so course analytics remain accurate. Invalidates session cache. Requires `users.action_delete` permission.",
+        "operationId": "api_admin_anonymize_user_api_v1_admin__org_slug__users__user_id__anonymize_post",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User PII scrubbed; reports how many API tokens were revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnonymizeUserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "User not in org"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{org_slug}/courses/{course_uuid}/analytics": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Aggregate stats for a course",
+        "description": "Returns enrollment/completion counts, average completion percentage across all enrollees, and total certificates awarded. Requires `courses.action_read` permission.",
+        "operationId": "api_admin_get_course_analytics_api_v1_admin__org_slug__courses__course_uuid__analytics_get",
+        "parameters": [
+          {
+            "name": "org_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Slug"
+            }
+          },
+          {
+            "name": "course_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregate course stats: enrollment, completion, certificates, etc.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseAnalyticsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credentials, or an invalid, expired or revoked API token"
+          },
+          "403": {
+            "description": "Not an API token (user sessions are refused), the token's org does not match org_slug, the org's plan lacks the Admin API, or the token lacks the right this endpoint needs"
+          },
+          "404": {
+            "description": "Course not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActivityCompletionResponse": {
+        "properties": {
+          "activity_uuid": {
+            "type": "string",
+            "title": "Activity Uuid"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed"
+          },
+          "is_new_completion": {
+            "type": "boolean",
+            "title": "Is New Completion",
+            "description": "True if this was a new completion (not already completed)"
+          },
+          "course_completed": {
+            "type": "boolean",
+            "title": "Course Completed",
+            "description": "True if this completion finished the entire course"
+          }
+        },
+        "type": "object",
+        "required": [
+          "activity_uuid",
+          "user_id",
+          "completed",
+          "is_new_completion",
+          "course_completed"
+        ],
+        "title": "ActivityCompletionResponse",
+        "description": "Result of marking an activity as completed."
+      },
+      "ActivityUncompletionResponse": {
+        "properties": {
+          "activity_uuid": {
+            "type": "string",
+            "title": "Activity Uuid"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "activity_uuid",
+          "user_id"
+        ],
+        "title": "ActivityUncompletionResponse",
+        "description": "Result of removing an activity completion."
+      },
+      "AnonymizeUserResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "anonymized_email": {
+            "type": "string",
+            "title": "Anonymized Email"
+          },
+          "api_tokens_revoked": {
+            "type": "integer",
+            "title": "Api Tokens Revoked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "user_id",
+          "anonymized_email",
+          "api_tokens_revoked"
+        ],
+        "title": "AnonymizeUserResponse"
+      },
+      "AwardCertificateResponse": {
+        "properties": {
+          "user_certification_uuid": {
+            "type": "string",
+            "title": "User Certification Uuid"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_certification_uuid",
+          "user_id",
+          "course_uuid"
+        ],
+        "title": "AwardCertificateResponse"
+      },
+      "BulkEnrollRequest": {
+        "properties": {
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "user_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "User Ids",
+            "description": "List of user ids to enroll (max 500)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid",
+          "user_ids"
+        ],
+        "title": "BulkEnrollRequest",
+        "description": "Request body for bulk enrolling users into a course."
+      },
+      "BulkEnrollResponse": {
+        "properties": {
+          "enrolled": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Enrolled",
+            "description": "User ids that were newly enrolled"
+          },
+          "already_enrolled": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Already Enrolled",
+            "description": "User ids that already had an enrollment"
+          },
+          "skipped": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Skipped",
+            "description": "User ids that were not members of the org"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enrolled",
+          "already_enrolled",
+          "skipped"
+        ],
+        "title": "BulkEnrollResponse"
+      },
+      "BulkUnenrollRequest": {
+        "properties": {
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "user_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "User Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid",
+          "user_ids"
+        ],
+        "title": "BulkUnenrollRequest"
+      },
+      "BulkUnenrollResponse": {
+        "properties": {
+          "unenrolled": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Unenrolled"
+          },
+          "not_enrolled": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Not Enrolled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unenrolled",
+          "not_enrolled"
+        ],
+        "title": "BulkUnenrollResponse"
+      },
+      "CertificateCourseInfo": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "thumbnail_image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Image"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid",
+          "name"
+        ],
+        "title": "CertificateCourseInfo"
+      },
+      "CertificateItem": {
+        "properties": {
+          "certificate_user": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Certificate User"
+          },
+          "certification": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Certification"
+          },
+          "course": {
+            "$ref": "#/components/schemas/CertificateCourseInfo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "certificate_user",
+          "certification",
+          "course"
+        ],
+        "title": "CertificateItem",
+        "description": "A user's certificate with certification and course info."
+      },
+      "ChangeRoleRequest": {
+        "properties": {
+          "role_id": {
+            "type": "integer",
+            "title": "Role Id",
+            "description": "Target role id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role_id"
+        ],
+        "title": "ChangeRoleRequest"
+      },
+      "ChangeRoleResponse": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "role_id": {
+            "type": "integer",
+            "title": "Role Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "role_id"
+        ],
+        "title": "ChangeRoleResponse"
+      },
+      "CourseAccessResponse": {
+        "properties": {
+          "has_access": {
+            "type": "boolean",
+            "title": "Has Access",
+            "description": "True if the user can access the course (public or enrolled)"
+          },
+          "is_enrolled": {
+            "type": "boolean",
+            "title": "Is Enrolled",
+            "description": "True if the user is enrolled in the course"
+          },
+          "is_public": {
+            "type": "boolean",
+            "title": "Is Public",
+            "description": "True if the course is public"
+          },
+          "is_published": {
+            "type": "boolean",
+            "title": "Is Published",
+            "description": "True if the course is published"
+          }
+        },
+        "type": "object",
+        "required": [
+          "has_access",
+          "is_enrolled",
+          "is_public",
+          "is_published"
+        ],
+        "title": "CourseAccessResponse",
+        "description": "Whether a user can access a course."
+      },
+      "CourseAnalyticsResponse": {
+        "properties": {
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "enrollment_count": {
+            "type": "integer",
+            "title": "Enrollment Count"
+          },
+          "completed_count": {
+            "type": "integer",
+            "title": "Completed Count"
+          },
+          "in_progress_count": {
+            "type": "integer",
+            "title": "In Progress Count"
+          },
+          "total_activities": {
+            "type": "integer",
+            "title": "Total Activities"
+          },
+          "average_completion_percentage": {
+            "type": "number",
+            "title": "Average Completion Percentage"
+          },
+          "certificate_count": {
+            "type": "integer",
+            "title": "Certificate Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid",
+          "enrollment_count",
+          "completed_count",
+          "in_progress_count",
+          "total_activities",
+          "average_completion_percentage",
+          "certificate_count"
+        ],
+        "title": "CourseAnalyticsResponse"
+      },
+      "CourseCompletionResponse": {
+        "properties": {
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "completed_count": {
+            "type": "integer",
+            "title": "Completed Count",
+            "description": "Number of newly completed activities"
+          },
+          "already_completed_count": {
+            "type": "integer",
+            "title": "Already Completed Count",
+            "description": "Number of activities that were already completed"
+          },
+          "total_activities": {
+            "type": "integer",
+            "title": "Total Activities"
+          },
+          "course_completed": {
+            "type": "boolean",
+            "title": "Course Completed"
+          },
+          "certificate_awarded": {
+            "type": "boolean",
+            "title": "Certificate Awarded",
+            "description": "True if a certificate was awarded as a result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid",
+          "user_id",
+          "completed_count",
+          "already_completed_count",
+          "total_activities",
+          "course_completed",
+          "certificate_awarded"
+        ],
+        "title": "CourseCompletionResponse",
+        "description": "Result of marking an entire course as completed."
+      },
+      "CourseEnrollmentItem": {
+        "properties": {
+          "user": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "User"
+          },
+          "enrolled_at": {
+            "type": "string",
+            "title": "Enrolled At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "enrolled_at",
+          "status"
+        ],
+        "title": "CourseEnrollmentItem",
+        "description": "A single row in a course enrollment listing."
+      },
+      "CreateUserGroupRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CreateUserGroupRequest"
+      },
+      "DeleteUserGroupResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "usergroup_uuid": {
+            "type": "string",
+            "title": "Usergroup Uuid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "usergroup_uuid"
+        ],
+        "title": "DeleteUserGroupResponse"
+      },
+      "EmbedSessionRequest": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id",
+            "description": "ID of the learner the session is for"
+          },
+          "ttl_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ttl Seconds",
+            "description": "Lifetime in seconds, 60 to 3600. Defaults to 900 (15 minutes)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "title": "EmbedSessionRequest",
+        "description": "Request body for minting an embed session."
+      },
+      "EmbedSessionResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "Embed session token. Hand it to the browser; never the API token."
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "description": "Token type (always 'bearer')",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Seconds until the session expires"
+          },
+          "expires_at": {
+            "type": "integer",
+            "title": "Expires At",
+            "description": "Unix time (seconds) the session expires at"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id",
+            "description": "ID of the learner"
+          },
+          "user_uuid": {
+            "type": "string",
+            "title": "User Uuid",
+            "description": "UUID of the learner"
+          },
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id",
+            "description": "ID of the organization the session is held to"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in",
+          "expires_at",
+          "user_id",
+          "user_uuid",
+          "org_id"
+        ],
+        "title": "EmbedSessionResponse",
+        "description": "A short-lived learner session for the embed components."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IssueTokenRequest": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id",
+            "description": "ID of the user to issue a token for"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "title": "IssueTokenRequest",
+        "description": "Request body for issuing a user token."
+      },
+      "MagicLinkRequest": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "redirect_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redirect To",
+            "description": "Same-origin path to open once the user is signed in"
+          },
+          "ttl_seconds": {
+            "type": "integer",
+            "maximum": 900,
+            "minimum": 60,
+            "title": "Ttl Seconds",
+            "description": "Token lifetime in seconds (60–900)",
+            "default": 300
+          },
+          "host": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 253
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Host",
+            "description": "One of the organization's verified custom domains to build the link on, e.g. a domain served through a CDN. The link goes to that host as given, so only name a domain the organization still controls. Defaults to the organization's own site."
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "title": "MagicLinkRequest",
+        "description": "Request body for issuing a magic sign-in link."
+      },
+      "MagicLinkResponse": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "Clickable URL to deliver to the user"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "Raw JWT, for integrations that build their own URL: `https://{org site}/auth/magic?token={token}`"
+          },
+          "expires_at": {
+            "type": "string",
+            "title": "Expires At",
+            "description": "ISO8601 timestamp when the token expires"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "token",
+          "expires_at"
+        ],
+        "title": "MagicLinkResponse"
+      },
+      "OrgMemberUserRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_uuid": {
+            "type": "string",
+            "title": "User Uuid"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "first_name": {
+            "type": "string",
+            "title": "First Name"
+          },
+          "last_name": {
+            "type": "string",
+            "title": "Last Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "email_verified": {
+            "type": "boolean",
+            "title": "Email Verified",
+            "default": false
+          },
+          "avatar_image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Image",
+            "default": ""
+          },
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio",
+            "default": ""
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile"
+          },
+          "extra_metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra Metadata"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "signup_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signup Method"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_uuid",
+          "username",
+          "first_name",
+          "last_name",
+          "email"
+        ],
+        "title": "OrgMemberUserRead",
+        "description": "A member as seen by an org admin (members list, admin-token user reads).\n\nSECURITY: ``User`` is a global account shared across every org it joins.\n``extra_metadata`` collects signup-field answers from *all* of those orgs,\nand ``is_backoffice_staff`` is platform-level. An org admin must see neither, so\nthis view drops ``is_backoffice_staff`` and the caller filters ``extra_metadata``\ndown to the keys of the viewing org's own declared signup fields (see\n``for_org``). ``signup_method``/``last_login_at`` stay: the members table\nrenders them."
+      },
+      "ProgressResponse": {
+        "properties": {
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "total_activities": {
+            "type": "integer",
+            "title": "Total Activities",
+            "description": "Total number of activities in the course"
+          },
+          "completed_activities": {
+            "type": "integer",
+            "title": "Completed Activities",
+            "description": "Number of activities the user has completed"
+          },
+          "completion_percentage": {
+            "type": "number",
+            "title": "Completion Percentage",
+            "description": "Completion percentage (0-100)"
+          },
+          "completed_activity_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Completed Activity Ids",
+            "description": "IDs of completed activities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid",
+          "user_id",
+          "total_activities",
+          "completed_activities",
+          "completion_percentage",
+          "completed_activity_ids"
+        ],
+        "title": "ProgressResponse",
+        "description": "User's progress in a specific course."
+      },
+      "ProgressSummaryItem": {
+        "properties": {
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "course_name": {
+            "type": "string",
+            "title": "Course Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Enrollment status (STATUS_IN_PROGRESS, STATUS_COMPLETED, etc.)"
+          },
+          "total_activities": {
+            "type": "integer",
+            "title": "Total Activities"
+          },
+          "completed_activities": {
+            "type": "integer",
+            "title": "Completed Activities"
+          },
+          "completion_percentage": {
+            "type": "number",
+            "title": "Completion Percentage"
+          },
+          "enrolled_at": {
+            "type": "string",
+            "title": "Enrolled At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid",
+          "course_name",
+          "status",
+          "total_activities",
+          "completed_activities",
+          "completion_percentage",
+          "enrolled_at"
+        ],
+        "title": "ProgressSummaryItem",
+        "description": "Progress summary for a single course enrollment."
+      },
+      "ProvisionUserRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "format": "email",
+            "title": "Email"
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Username"
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 150,
+            "title": "First Name",
+            "default": ""
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 150,
+            "title": "Last Name",
+            "default": ""
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password",
+            "description": "Optional; if omitted, treated as SSO user with empty password"
+          },
+          "role_id": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Role Id",
+            "description": "Role id for the org membership (default 4 = student)",
+            "default": 4
+          },
+          "extra_metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra Metadata",
+            "description": "Optional arbitrary JSON metadata attached to the user for headless integrations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "username"
+        ],
+        "title": "ProvisionUserRequest",
+        "description": "Request body for provisioning a new user."
+      },
+      "RemoveUserResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "RemoveUserResponse"
+      },
+      "ResetProgressResponse": {
+        "properties": {
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "steps_deleted": {
+            "type": "integer",
+            "title": "Steps Deleted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid",
+          "user_id",
+          "steps_deleted"
+        ],
+        "title": "ResetProgressResponse"
+      },
+      "RevokeCertificateResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "user_certification_uuid": {
+            "type": "string",
+            "title": "User Certification Uuid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "user_certification_uuid"
+        ],
+        "title": "RevokeCertificateResponse"
+      },
+      "StatusEnum": {
+        "type": "string",
+        "enum": [
+          "STATUS_IN_PROGRESS",
+          "STATUS_COMPLETED",
+          "STATUS_PAUSED",
+          "STATUS_CANCELLED"
+        ],
+        "title": "StatusEnum"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "JWT access token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "description": "Token type (always 'bearer')",
+            "default": "bearer"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id",
+            "description": "ID of the user the token was issued for"
+          },
+          "user_uuid": {
+            "type": "string",
+            "title": "User Uuid",
+            "description": "UUID of the user"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "user_id",
+          "user_uuid"
+        ],
+        "title": "TokenResponse",
+        "description": "JWT token issued on behalf of a user."
+      },
+      "TrailActivityProgress": {
+        "properties": {
+          "activity_uuid": {
+            "type": "string",
+            "title": "Activity Uuid"
+          },
+          "activity_id": {
+            "type": "integer",
+            "title": "Activity Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "activity_type": {
+            "type": "string",
+            "title": "Activity Type"
+          },
+          "activity_sub_type": {
+            "type": "string",
+            "title": "Activity Sub Type"
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order",
+            "description": "Order of this activity within its chapter"
+          },
+          "published": {
+            "type": "boolean",
+            "title": "Published"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed"
+          },
+          "teacher_verified": {
+            "type": "boolean",
+            "title": "Teacher Verified",
+            "description": "Whether a teacher has verified the completion (assignments)",
+            "default": false
+          },
+          "grade": {
+            "type": "string",
+            "title": "Grade",
+            "description": "Grade/feedback recorded on the trail step, when set",
+            "default": ""
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "ISO timestamp when the activity was marked complete; null if not completed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "activity_uuid",
+          "activity_id",
+          "name",
+          "activity_type",
+          "activity_sub_type",
+          "order",
+          "published",
+          "completed"
+        ],
+        "title": "TrailActivityProgress",
+        "description": "A single activity within a chapter, annotated with the user's completion state."
+      },
+      "TrailChapterProgress": {
+        "properties": {
+          "chapter_uuid": {
+            "type": "string",
+            "title": "Chapter Uuid"
+          },
+          "chapter_id": {
+            "type": "integer",
+            "title": "Chapter Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order"
+          },
+          "total_activities": {
+            "type": "integer",
+            "title": "Total Activities"
+          },
+          "completed_activities": {
+            "type": "integer",
+            "title": "Completed Activities"
+          },
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/TrailActivityProgress"
+            },
+            "type": "array",
+            "title": "Activities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "chapter_uuid",
+          "chapter_id",
+          "name",
+          "order",
+          "total_activities",
+          "completed_activities",
+          "activities"
+        ],
+        "title": "TrailChapterProgress",
+        "description": "A chapter inside a course with its activities and per-chapter counts."
+      },
+      "TrailCourseProgress": {
+        "properties": {
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          },
+          "course_id": {
+            "type": "integer",
+            "title": "Course Id"
+          },
+          "course_name": {
+            "type": "string",
+            "title": "Course Name"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "TrailRun status (STATUS_IN_PROGRESS, STATUS_COMPLETED, …); null when there is no enrollment row"
+          },
+          "enrolled_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrolled At",
+            "description": "ISO timestamp the user was enrolled; null when there is no enrollment row"
+          },
+          "total_activities": {
+            "type": "integer",
+            "title": "Total Activities"
+          },
+          "completed_activities": {
+            "type": "integer",
+            "title": "Completed Activities"
+          },
+          "completion_percentage": {
+            "type": "number",
+            "title": "Completion Percentage"
+          },
+          "chapters": {
+            "items": {
+              "$ref": "#/components/schemas/TrailChapterProgress"
+            },
+            "type": "array",
+            "title": "Chapters"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_uuid",
+          "course_id",
+          "course_name",
+          "total_activities",
+          "completed_activities",
+          "completion_percentage",
+          "chapters"
+        ],
+        "title": "TrailCourseProgress",
+        "description": "A course the user is enrolled in (or has touched), with the full chapter/activity breakdown."
+      },
+      "TrailRead": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "trail_uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trail Uuid"
+          },
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "creation_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creation Date"
+          },
+          "update_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Update Date"
+          },
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/TrailRunRead"
+            },
+            "type": "array",
+            "title": "Runs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "org_id",
+          "user_id",
+          "runs"
+        ],
+        "title": "TrailRead"
+      },
+      "TrailRunRead": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusEnum",
+            "default": "STATUS_IN_PROGRESS"
+          },
+          "trail_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trail Id"
+          },
+          "course_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Id"
+          },
+          "org_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Org Id"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "course": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course"
+          },
+          "creation_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creation Date"
+          },
+          "update_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Update Date"
+          },
+          "course_total_steps": {
+            "type": "integer",
+            "title": "Course Total Steps",
+            "default": 0
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/TrailStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "title": "TrailRunRead"
+      },
+      "TrailStep": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete"
+          },
+          "teacher_verified": {
+            "type": "boolean",
+            "title": "Teacher Verified"
+          },
+          "grade": {
+            "type": "string",
+            "title": "Grade"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          },
+          "trailrun_id": {
+            "type": "integer",
+            "title": "Trailrun Id"
+          },
+          "trail_id": {
+            "type": "integer",
+            "title": "Trail Id"
+          },
+          "activity_id": {
+            "type": "integer",
+            "title": "Activity Id"
+          },
+          "course_id": {
+            "type": "integer",
+            "title": "Course Id"
+          },
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "creation_date": {
+            "type": "string",
+            "title": "Creation Date"
+          },
+          "update_date": {
+            "type": "string",
+            "title": "Update Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "complete",
+          "teacher_verified",
+          "grade",
+          "trailrun_id",
+          "trail_id",
+          "activity_id",
+          "course_id",
+          "org_id",
+          "user_id",
+          "creation_date",
+          "update_date"
+        ],
+        "title": "TrailStep"
+      },
+      "UnenrollResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "UnenrollResponse"
+      },
+      "UpdateUserRequest": {
+        "properties": {
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320,
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "avatar_image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Image"
+          },
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile"
+          }
+        },
+        "type": "object",
+        "title": "UpdateUserRequest",
+        "description": "Fields that can be updated via the admin profile PATCH."
+      },
+      "UserDataExportResponse": {
+        "properties": {
+          "profile": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Profile",
+            "description": "The user's profile (scrubbed of sensitive fields)"
+          },
+          "memberships": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Memberships",
+            "description": "Org memberships scoped to the caller's org"
+          },
+          "trails": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Trails",
+            "description": "Learning trails in the caller's org"
+          },
+          "trail_runs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Trail Runs",
+            "description": "Course enrollments / trail runs"
+          },
+          "trail_steps": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Trail Steps",
+            "description": "Activity completions"
+          },
+          "certificates": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Certificates",
+            "description": "Certificates awarded in the caller's org"
+          },
+          "user_groups": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "User Groups",
+            "description": "Cohort memberships in the caller's org"
+          },
+          "exported_at": {
+            "type": "string",
+            "title": "Exported At",
+            "description": "ISO8601 timestamp when the export was generated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile",
+          "memberships",
+          "trails",
+          "trail_runs",
+          "trail_steps",
+          "certificates",
+          "user_groups",
+          "exported_at"
+        ],
+        "title": "UserDataExportResponse",
+        "description": "Full GDPR data export bundle."
+      },
+      "UserGroupCourseResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "usergroup_uuid": {
+            "type": "string",
+            "title": "Usergroup Uuid"
+          },
+          "course_uuid": {
+            "type": "string",
+            "title": "Course Uuid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "usergroup_uuid",
+          "course_uuid"
+        ],
+        "title": "UserGroupCourseResponse"
+      },
+      "UserGroupMemberListItem": {
+        "properties": {
+          "user": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "User"
+          },
+          "added_at": {
+            "type": "string",
+            "title": "Added At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "added_at"
+        ],
+        "title": "UserGroupMemberListItem"
+      },
+      "UserGroupMemberResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "usergroup_uuid": {
+            "type": "string",
+            "title": "Usergroup Uuid"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "usergroup_uuid",
+          "user_id"
+        ],
+        "title": "UserGroupMemberResponse"
+      },
+      "UserGroupResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id"
+          },
+          "usergroup_uuid": {
+            "type": "string",
+            "title": "Usergroup Uuid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "creation_date": {
+            "type": "string",
+            "title": "Creation Date"
+          },
+          "update_date": {
+            "type": "string",
+            "title": "Update Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "org_id",
+          "usergroup_uuid",
+          "name",
+          "description",
+          "creation_date",
+          "update_date"
+        ],
+        "title": "UserGroupResponse",
+        "description": "A user group / cohort."
+      },
+      "UserRead": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "first_name": {
+            "type": "string",
+            "title": "First Name"
+          },
+          "last_name": {
+            "type": "string",
+            "title": "Last Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "avatar_image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Image",
+            "default": ""
+          },
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio",
+            "default": ""
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile"
+          },
+          "extra_metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra Metadata"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_uuid": {
+            "type": "string",
+            "title": "User Uuid"
+          },
+          "email_verified": {
+            "type": "boolean",
+            "title": "Email Verified",
+            "default": false
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "signup_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signup Method"
+          },
+          "is_backoffice_staff": {
+            "type": "boolean",
+            "title": "Is Backoffice Staff",
+            "default": false
+          },
+          "ui_preferences": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui Preferences"
+          },
+          "is_superadmin": {
+            "type": "boolean",
+            "title": "Is Superadmin",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "first_name",
+          "last_name",
+          "email",
+          "id",
+          "user_uuid",
+          "is_superadmin"
+        ],
+        "title": "UserRead"
+      },
+      "UserTrailDetail": {
+        "properties": {
+          "trail_uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trail Uuid",
+            "description": "Null if the user has never started a trail in this org"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id"
+          },
+          "creation_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creation Date"
+          },
+          "update_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Update Date"
+          },
+          "courses": {
+            "items": {
+              "$ref": "#/components/schemas/TrailCourseProgress"
+            },
+            "type": "array",
+            "title": "Courses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "org_id",
+          "courses"
+        ],
+        "title": "UserTrailDetail",
+        "description": "Full breakdown of a user's trail across courses in the org."
+      },
+      "UserUserGroupItem": {
+        "properties": {
+          "usergroup": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Usergroup"
+          },
+          "added_at": {
+            "type": "string",
+            "title": "Added At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "usergroup",
+          "added_at"
+        ],
+        "title": "UserUserGroupItem"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
