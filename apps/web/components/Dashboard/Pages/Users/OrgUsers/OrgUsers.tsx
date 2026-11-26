@@ -845,7 +845,7 @@ function OrgUsers() {
       )}
 
       {view === 'invited' ? (
-        <div className="bg-white rounded-2xl nice-shadow overflow-hidden">
+        <div className="bg-white rounded-2xl nice-shadow overflow-hidden pt-3 sm:pt-4">
           <InvitationsList search={searchValue} onInvite={() => setInviteOpen(true)} />
         </div>
       ) : (
