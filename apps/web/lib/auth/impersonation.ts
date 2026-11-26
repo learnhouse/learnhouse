@@ -144,6 +144,35 @@ export function impersonationCode(body: unknown): string | null {
   return typeof code === 'string' && code.startsWith('IMPERSONATION_') ? code : null
 }
 
+// A page of another org: the impersonation is held to the org it was opened
+// for, so the API refuses it (as the impersonation, or through that org's
+// session policy). Shown as a notice; the session goes on.
+const OTHER_ORG_CODES = ['IMPERSONATION_WRONG_ORG', 'SESSION_NOT_BOUND_TO_ORG', 'AUTH_METHOD_NOT_ALLOWED']
+
+export type ImpersonationRefusal =
+  | { kind: 'end'; reason: ImpersonationEndReason }
+  | { kind: 'notice'; code: string }
+  | null
+
+/**
+ * What a refused API call means while impersonating. Only the API saying the
+ * session is over (IMPERSONATION_ENDED) ends it; a refused page or action
+ * shows a notice under the badge and the session goes on.
+ */
+export function impersonationRefusal(status: number, body: unknown, method: string = 'GET'): ImpersonationRefusal {
+  if (status !== 401 && status !== 403) return null
+  const detail = (body as any)?.detail
+  const code = detail && typeof detail === 'object' && typeof detail.code === 'string' ? detail.code : null
+  if (code === 'IMPERSONATION_ENDED') return { kind: 'end', reason: normalizeEndReason(endReasonOf(body)) }
+  if (status !== 403 || !code) return null
+  if (OTHER_ORG_CODES.includes(code)) return { kind: 'notice', code: 'IMPERSONATION_WRONG_ORG' }
+  // Only what the person did (a write) gets the notice; a page's own
+  // background reads that the session may not make stay quiet.
+  const verb = (method || 'GET').toUpperCase()
+  if (code.startsWith('IMPERSONATION_') && verb !== 'GET' && verb !== 'HEAD') return { kind: 'notice', code }
+  return null
+}
+
 /** The console URL a session returns to: the stored path on the console origin. */
 export function consoleUrl(returnUrl: string | null | undefined, frontendDomain?: string | null): string {
   const path = returnUrl && returnUrl.startsWith('/backoffice') ? returnUrl : '/backoffice'

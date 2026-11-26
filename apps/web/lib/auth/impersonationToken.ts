@@ -33,16 +33,42 @@ export function impersonationCookieMaxAge(token: string, nowMs: number = Date.no
   return Math.max(0, Math.floor(exp - nowMs / 1000))
 }
 
-/** Why a session is ended by the proxy itself: its owner's own sign-in is gone. */
-export const OWNER_SIGNED_OUT_REASON = 'logout'
-
-/** The person who opened the session can no longer refresh their own sign-in
- *  (no LH_refresh cookie): the session must not outlive it. */
-export function ownerSessionGone(refreshCookie: string | null | undefined): boolean {
-  return !refreshCookie
-}
-
 /** The API answered that the session is over (as opposed to unreachable or busy). */
 export function sessionIsOver(status: number): boolean {
   return status === 401 || status === 404 || status === 410
+}
+
+export type ImpersonationCheck =
+  | { state: 'active'; session: unknown }
+  | { state: 'ended'; body: unknown }
+  | { state: 'unknown' }
+
+/**
+ * Whether the impersonation in LH_imp is still live, as the API sees it.
+ *
+ * Only the API decides. Whether this host can see the staff member's own
+ * LH_refresh says nothing: that cookie can be host-only on the console's
+ * host, or shadowed by a stale copy on an org subdomain, while the staff
+ * member is still signed in. Ending the session on that guess bounced staff
+ * straight back to the console. The API already ends every session a staff
+ * member opened when they sign out, and refuses one whose opener's sessions
+ * were revoked.
+ */
+export async function checkImpersonation(
+  fetchStatus: () => Promise<Response | null>,
+): Promise<ImpersonationCheck> {
+  let res: Response | null = null
+  try {
+    res = await fetchStatus()
+  } catch {
+    res = null
+  }
+  if (!res || (!res.ok && !sessionIsOver(res.status))) return { state: 'unknown' }
+  let body: unknown = {}
+  try {
+    body = await res.json()
+  } catch {
+    body = {}
+  }
+  return res.ok ? { state: 'active', session: body } : { state: 'ended', body }
 }

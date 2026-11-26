@@ -103,6 +103,21 @@ async def is_user_backoffice_staff(user_id: int, db_session: AsyncSession) -> bo
     return value
 
 
+async def is_backoffice_staff_account(user_id: int, db_session: AsyncSession) -> bool:
+    """Whether the account itself is backoffice staff, even on a request where
+    its own session counts as an ordinary user's (block_backoffice_org_bypass).
+
+    Only for checks that refuse a session and never grant anything, such as an
+    org's sign-in method policy: membership and RBAC still decide what the
+    staff member may reach.
+    """
+    _cache = getattr(db_session, '_backoffice_cache', None)
+    if isinstance(_cache, dict) and user_id in _cache:
+        return _cache[user_id]
+    result = (await db_session.execute(select(User.is_backoffice_staff).where(User.id == user_id))).scalars().first()
+    return bool(result)
+
+
 async def _get_current_user_lazy(request: Request, db_session: AsyncSession = Depends(get_db_session)):
     """Lazy wrapper to avoid circular import (rbac -> backoffice -> auth -> users -> rbac)."""
     from src.security.auth import get_current_user

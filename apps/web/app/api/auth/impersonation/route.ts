@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { ACCESS_TOKEN_COOKIE, IMPERSONATION_COOKIE, REFRESH_TOKEN_COOKIE } from '@services/auth/cookies'
-import { OWNER_SIGNED_OUT_REASON, jwtPurpose, ownerSessionGone, sessionIsOver } from '@/lib/auth/impersonationToken'
+import { ACCESS_TOKEN_COOKIE, IMPERSONATION_COOKIE } from '@services/auth/cookies'
+import { checkImpersonation, jwtPurpose } from '@/lib/auth/impersonationToken'
 import { endReasonOf } from '@/lib/auth/impersonation'
-import { BACKEND_URL, clearCookie, endOnServer, forwardHeaders, isCrossSite, readJson, setCookie } from './_lib'
+import { BACKEND_URL, clearCookie, forwardHeaders, isCrossSite, readJson, setCookie } from './_lib'
 
 // Impersonation, browser side.
 //
@@ -11,9 +11,8 @@ import { BACKEND_URL, clearCookie, endOnServer, forwardHeaders, isCrossSite, rea
 //          API with the backoffice staff member's own session; the returned token goes into
 //          the httpOnly LH_imp cookie. The backoffice staff member's own LH_access /
 //          LH_refresh stay untouched, so ending is just dropping LH_imp.
-//   GET    status of the impersonation this browser holds (badge, other tabs).
-//          Ends it when the person who opened it can no longer refresh their
-//          own sign-in.
+//   GET    status of the impersonation this browser holds (badge, other tabs),
+//          as the API sees it (it ends the session when its opener signs out).
 //   DELETE end it (server-side record first, then the cookie).
 //   ./switch, ./targets: the badge's menu.
 //
@@ -64,34 +63,25 @@ export async function GET(request: NextRequest) {
   const jar = await cookies()
   const token = jar.get(IMPERSONATION_COOKIE)?.value
   if (!token) return NextResponse.json({ active: false })
-  if (ownerSessionGone(jar.get(REFRESH_TOKEN_COOKIE)?.value)) {
-    await endOnServer(request, token)
-    const response = NextResponse.json({ active: false, ended: true, reason: OWNER_SIGNED_OUT_REASON })
-    clearCookie(response, request)
-    return response
-  }
-  let res: Response | null = null
-  try {
-    res = await fetch(`${BACKEND_URL}/api/v1/auth/impersonation/status`, {
+  const check = await checkImpersonation(() =>
+    fetch(`${BACKEND_URL}/api/v1/auth/impersonation/status`, {
       headers: forwardHeaders(request, token),
       cache: 'no-store',
       signal: AbortSignal.timeout(5000),
-    })
-  } catch {
-    res = null
-  }
-  if (!res || (!res.ok && !sessionIsOver(res.status))) {
+    }),
+  )
+  if (check.state === 'unknown') {
     // Unknown, not ended (down, busy, rate limited): the caller keeps the
     // session and asks again.
     return NextResponse.json({ active: true, unknown: true })
   }
-  if (!res.ok) {
+  if (check.state === 'ended') {
     // Over: say why, so the badge can.
-    const response = NextResponse.json({ active: false, ended: true, reason: endReasonOf(await readJson(res)) })
+    const response = NextResponse.json({ active: false, ended: true, reason: endReasonOf(check.body) })
     clearCookie(response, request)
     return response
   }
-  return NextResponse.json({ active: true, session: await readJson(res) })
+  return NextResponse.json({ active: true, session: check.session })
 }
 
 export async function DELETE(request: NextRequest) {
