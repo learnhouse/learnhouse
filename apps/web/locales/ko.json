@@ -5462,6 +5462,12 @@
       "update_failed": "역할을 업데이트하는 중 오류가 발생했습니다",
       "submit": "사용자 역할 업데이트",
       "updating": "역할을 업데이트하는 중..."
+    },
+    "names": {
+      "admin": "관리자",
+      "maintainer": "유지관리자",
+      "instructor": "강사",
+      "user": "사용자"
     }
   },
   "time": {

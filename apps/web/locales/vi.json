@@ -5462,6 +5462,12 @@
       "update_failed": "Lỗi khi cập nhật vai trò",
       "submit": "Cập nhật vai trò người dùng",
       "updating": "Đang cập nhật vai trò..."
+    },
+    "names": {
+      "admin": "Quản trị viên",
+      "maintainer": "Người duy trì",
+      "instructor": "Giảng viên",
+      "user": "Người dùng"
     }
   },
   "time": {

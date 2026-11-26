@@ -5477,6 +5477,12 @@
       "update_failed": "Error while updating role",
       "submit": "Update user role",
       "updating": "Updating role..."
+    },
+    "names": {
+      "admin": "Admin",
+      "maintainer": "Maintainer",
+      "instructor": "Instructor",
+      "user": "User"
     }
   },
   "time": {

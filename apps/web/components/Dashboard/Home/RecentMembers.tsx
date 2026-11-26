@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { roleLabel } from '@components/Dashboard/Pages/Users/usersUi'
 import { useTranslation } from 'react-i18next'
 import { Users, ShieldCheck, Clock } from '@phosphor-icons/react'
 import { formatDate } from '@/lib/format'
@@ -81,7 +82,7 @@ function MemberRow({ member }: { member: any }) {
       )}
       {role && (
         <Chip className="shrink-0" icon={<ShieldCheck size={12} />}>
-          {role.name}
+          {roleLabel(role, t)}
         </Chip>
       )}
     </li>

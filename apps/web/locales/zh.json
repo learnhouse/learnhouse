@@ -5464,6 +5464,12 @@
       "update_failed": "更新角色时出错",
       "submit": "更新用户角色",
       "updating": "正在更新角色..."
+    },
+    "names": {
+      "admin": "管理员",
+      "maintainer": "维护者",
+      "instructor": "讲师",
+      "user": "用户"
     }
   },
   "time": {

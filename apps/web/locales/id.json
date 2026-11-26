@@ -5462,6 +5462,12 @@
       "update_failed": "Terjadi kesalahan saat memperbarui peran",
       "submit": "Perbarui peran pengguna",
       "updating": "Memperbarui peran..."
+    },
+    "names": {
+      "admin": "Admin",
+      "maintainer": "Maintainer",
+      "instructor": "Instruktur",
+      "user": "Pengguna"
     }
   },
   "time": {

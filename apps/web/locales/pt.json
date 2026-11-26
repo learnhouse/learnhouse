@@ -5564,6 +5564,12 @@
       "update_failed": "Erro ao atualizar a função",
       "submit": "Atualizar função do usuário",
       "updating": "Atualizando função..."
+    },
+    "names": {
+      "admin": "Admin",
+      "maintainer": "Mantenedor",
+      "instructor": "Instrutor",
+      "user": "Usuário"
     }
   },
   "time": {

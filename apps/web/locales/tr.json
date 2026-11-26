@@ -5483,6 +5483,12 @@
       "update_failed": "Rol güncellenirken hata oluştu",
       "submit": "Kullanıcı rolünü güncelle",
       "updating": "Rol güncelleniyor..."
+    },
+    "names": {
+      "admin": "Yönetici",
+      "maintainer": "Sorumlu",
+      "instructor": "Eğitmen",
+      "user": "Kullanıcı"
     }
   },
   "time": {

@@ -5483,6 +5483,12 @@
       "update_failed": "Fout bij het bijwerken van de rol",
       "submit": "Gebruikersrol bijwerken",
       "updating": "Rol bijwerken..."
+    },
+    "names": {
+      "admin": "Beheerder",
+      "maintainer": "Onderhouder",
+      "instructor": "Instructeur",
+      "user": "Gebruiker"
     }
   },
   "time": {

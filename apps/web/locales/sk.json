@@ -5663,6 +5663,12 @@
       "update_failed": "Chyba pri aktualizácii roly",
       "submit": "Aktualizovať rolu používateľa",
       "updating": "Aktualizuje sa rola..."
+    },
+    "names": {
+      "admin": "Admin",
+      "maintainer": "Správca",
+      "instructor": "Inštruktor",
+      "user": "Používateľ"
     }
   },
   "time": {

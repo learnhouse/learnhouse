@@ -5483,6 +5483,12 @@
       "update_failed": "Fehler beim Aktualisieren der Rolle",
       "submit": "Benutzerrolle aktualisieren",
       "updating": "Rolle wird aktualisiert..."
+    },
+    "names": {
+      "admin": "Admin",
+      "maintainer": "Verwalter",
+      "instructor": "Lehrer",
+      "user": "Benutzer"
     }
   },
   "time": {

@@ -5464,6 +5464,12 @@
       "update_failed": "ロールの更新中にエラーが発生しました",
       "submit": "ユーザーのロールを更新",
       "updating": "ロールを更新中..."
+    },
+    "names": {
+      "admin": "管理者",
+      "maintainer": "メンテナー",
+      "instructor": "講師",
+      "user": "ユーザー"
     }
   },
   "time": {

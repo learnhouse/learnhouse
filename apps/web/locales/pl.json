@@ -5663,6 +5663,12 @@
       "update_failed": "Błąd podczas aktualizacji roli",
       "submit": "Zaktualizuj rolę użytkownika",
       "updating": "Aktualizowanie roli..."
+    },
+    "names": {
+      "admin": "Administrator",
+      "maintainer": "Moderator",
+      "instructor": "Instruktor",
+      "user": "Użytkownik"
     }
   },
   "time": {

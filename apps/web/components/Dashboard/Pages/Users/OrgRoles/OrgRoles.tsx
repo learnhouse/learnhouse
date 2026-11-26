@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { roleLabel } from '../usersUi'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -176,7 +177,7 @@ function OrgRoles() {
                                         <button type="button" onClick={open} className="min-w-0 flex-1 text-start">
                                             <span className="flex items-center gap-2 min-w-0">
                                                 <span className="text-sm font-semibold text-neutral-900 truncate group-hover:underline underline-offset-2" dir="auto">
-                                                    {role.name}
+                                                    {roleLabel(role, t)}
                                                 </span>
                                                 {system ? (
                                                     <Chip tone="violet" icon={<Globe size={11} />}>
