@@ -21,7 +21,9 @@ export function createTrailResource(http: HttpCore) {
       })
     },
     /**
-     * Enroll the current user in a course (start it). Idempotent.
+     * Enroll the current user in a course (start it). Answers 400
+     * (`TrailRun already exists`) when they already are: check
+     * `courseProgress(trail, course).enrolled` first, or treat that 400 as done.
      * `POST /api/v1/trail/add_course/{course_uuid}`
      */
     startCourse(courseUuid: string, options?: BaseRequestOptions): Promise<Trail> {

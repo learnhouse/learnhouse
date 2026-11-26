@@ -87,7 +87,10 @@ export function createCommunitiesResource(http: HttpCore) {
         params: { path: { community_uuid: communityUuid }, query: { page, limit, sort_by: sortBy, label } },
       })
     },
-    /** Start a discussion. `POST /api/v1/communities/{community_uuid}/discussions` */
+    /**
+     * Start a discussion. It comes with the author's own upvote.
+     * `POST /api/v1/communities/{community_uuid}/discussions`
+     */
     createDiscussion(communityUuid: string, input: NewDiscussionInput, options?: BaseRequestOptions): Promise<DiscussionWithVote> {
       return http.POST('/api/v1/communities/{community_uuid}/discussions', {
         ...options,
@@ -167,7 +170,7 @@ export function createDiscussionsResource(http: HttpCore) {
     deleteComment(commentUuid: string, options?: BaseRequestOptions): Promise<Record<string, unknown>> {
       return http.DELETE('/api/v1/comments/{comment_uuid}', { ...options, params: { path: { comment_uuid: commentUuid } } })
     },
-    /** Upvote a discussion. `POST /api/v1/discussions/{discussion_uuid}/vote` */
+    /** Upvote a discussion. A second upvote answers 400. `POST /api/v1/discussions/{discussion_uuid}/vote` */
     vote(discussionUuid: string, options?: BaseRequestOptions): Promise<DiscussionVote> {
       return http.POST('/api/v1/discussions/{discussion_uuid}/vote', {
         ...options,

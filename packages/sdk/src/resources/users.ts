@@ -35,7 +35,9 @@ export function createUsersResource(http: HttpCore) {
       return http.GET('/api/v1/users/session', options)
     },
     /**
-     * The signed-in user's own account record (email included).
+     * The signed-in user's own account record (email included). An anonymous
+     * caller gets a placeholder record (id 0), not an error: check
+     * `users.session()` or `auth.me()` to tell whether someone is signed in.
      * `GET /api/v1/users/profile`
      */
     profile(options?: BaseRequestOptions): Promise<User> {
