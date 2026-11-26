@@ -53,14 +53,14 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
                     }`}
                   >
                     {item.icon}
-                    <span className="truncate max-w-[110px] sm:max-w-[150px]">{item.label}</span>
+                    <span className="truncate max-w-[110px] sm:max-w-[150px] lg:max-w-[260px]">{item.label}</span>
                   </Link>
                 ) : (
                   <span className={`flex items-center min-w-0 h-full text-gray-900 ${
                     isFirst && item.icon ? 'gap-1.5 px-2.5' : 'px-2.5'
                   }`}>
                     {item.icon}
-                    <span className="truncate max-w-[200px]">{item.label}</span>
+                    <span className="truncate max-w-[200px] lg:max-w-[320px]">{item.label}</span>
                   </span>
                 )}
               </li>
