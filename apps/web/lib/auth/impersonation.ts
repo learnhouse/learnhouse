@@ -95,10 +95,52 @@ export function authRefreshUrl(): string {
 }
 
 let active: ImpersonationSession | null = null
+// Whether this tab ever ran on an impersonation the server confirmed (from
+// /users/session). Only such a tab may be sent back to the console.
+let confirmedHere = false
 
 /** Recorded from /users/session; drives the banner, analytics and refusals. */
 export function setActiveImpersonation(session: ImpersonationSession | null | undefined) {
   active = session && !isPlatformContext() ? session : null
+  if (active) confirmedHere = true
+}
+
+/** This tab ran on an impersonation the server confirmed. An "ended" signal
+ *  anywhere else (a spent cookie, a stale reply) must not move the page. */
+export function impersonationConfirmedHere(): boolean {
+  return confirmedHere
+}
+
+/** Test seam: forget this tab's impersonation state. */
+export function resetImpersonationTabState() {
+  active = null
+  confirmedHere = false
+  endedBeforeMount = null
+}
+
+/**
+ * Trade the cookies for an access token in this tab.
+ *
+ * Never from the HTTP cache: browsers keep a 410 with no cache headers as
+ * fresh forever, and one such reply used to bounce every later visit to that
+ * org. A 410 means a spent impersonation cookie, which the proxy has just
+ * dropped; a tab that never ran on that impersonation asks once more and
+ * carries on as the person signed in.
+ */
+export async function fetchAuthRefresh(
+  doFetch: (_input: string, _init: RequestInit) => Promise<Response>,
+  headers?: Record<string, string>,
+): Promise<Response> {
+  const init: RequestInit = { method: 'GET', credentials: 'include', cache: 'no-store', ...(headers ? { headers } : {}) }
+  const res = await doFetch(authRefreshUrl(), init)
+  if (res.status !== 410 || confirmedHere) return res
+  return doFetch(authRefreshUrl(), init)
+}
+
+/** A 410 from the token refresh: only a tab that ran on the impersonation
+ *  goes back to the console and says why. */
+export function impersonationRefreshGone(body: unknown) {
+  if (confirmedHere) dispatchImpersonationEnded(normalizeEndReason(endReasonOf(body)))
 }
 
 export function activeImpersonation(): ImpersonationSession | null {

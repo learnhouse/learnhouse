@@ -480,7 +480,7 @@ export default function CreateNewOrgPage() {
     if (!created) return
     // The dashboard opens on the welcome tour, then the launch plan.
     try {
-      await fetch('/api/auth/refresh', { credentials: 'include' })
+      await fetch('/api/auth/refresh', { credentials: 'include', cache: 'no-store' })
     } catch {
       /* the shared session cookie still carries over */
     }

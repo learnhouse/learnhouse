@@ -13,6 +13,7 @@ import {
 import { isLocalhost } from '@services/utils/ts/hostUtils'
 import { endReasonOf } from '@/lib/auth/impersonation'
 import { checkImpersonation } from '@/lib/auth/impersonationToken'
+import { noStore } from '@/lib/auth/noStore'
 
 const BACKEND_URL = getServerBackendUrl('http://localhost:1338')
 
@@ -496,21 +497,21 @@ async function proxyRequest(
 }
 
 export async function GET(request: NextRequest) {
-  return proxyRequest(request, 'GET')
+  return noStore(await proxyRequest(request, 'GET'))
 }
 
 export async function POST(request: NextRequest) {
-  return proxyRequest(request, 'POST')
+  return noStore(await proxyRequest(request, 'POST'))
 }
 
 export async function PUT(request: NextRequest) {
-  return proxyRequest(request, 'PUT')
+  return noStore(await proxyRequest(request, 'PUT'))
 }
 
 export async function PATCH(request: NextRequest) {
-  return proxyRequest(request, 'PATCH')
+  return noStore(await proxyRequest(request, 'PATCH'))
 }
 
 export async function DELETE(request: NextRequest) {
-  return proxyRequest(request, 'DELETE')
+  return noStore(await proxyRequest(request, 'DELETE'))
 }

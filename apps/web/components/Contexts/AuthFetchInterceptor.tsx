@@ -7,12 +7,11 @@ import { hasSessionMarker } from '@services/auth/sessionMarker'
 import { LICENSE_LOCKED_STATUS, dispatchLicenseLocked, isLicenseLockedBody } from '@/lib/license/lock'
 import {
   activeImpersonation,
-  authRefreshUrl,
   dispatchImpersonationEnded,
   dispatchImpersonationRefused,
-  endReasonOf,
+  fetchAuthRefresh,
+  impersonationRefreshGone,
   impersonationRefusal,
-  normalizeEndReason,
 } from '@/lib/auth/impersonation'
 
 const AUTH_RETRY_HEADER = 'X-LH-Auth-Retry'
@@ -54,16 +53,10 @@ export default function AuthFetchInterceptor() {
 
       refreshPromise = (async () => {
         try {
-          const response = await originalFetch(authRefreshUrl(), {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-              [AUTH_RETRY_HEADER]: '1',
-            },
-          })
+          const response = await fetchAuthRefresh(originalFetch, { [AUTH_RETRY_HEADER]: '1' })
 
           if (response.status === 410) {
-            dispatchImpersonationEnded(normalizeEndReason(endReasonOf(await response.json().catch(() => null))))
+            impersonationRefreshGone(await response.json().catch(() => null))
             return null
           }
 
