@@ -1964,9 +1964,11 @@ async def update_org_watermark_config(
     if _is_v2_config(updated_config):
         updated_config.setdefault("customization", {}).setdefault("general", {})
         updated_config["customization"]["general"]["watermark"] = watermark_enabled
+        updated_config["customization"]["general"]["watermark_opt_in"] = watermark_enabled
     else:
         updated_config.setdefault("general", {})
         updated_config["general"]["watermark"] = watermark_enabled
+        updated_config["general"]["watermark_opt_in"] = watermark_enabled
 
     config_before = org_config.config
     org_config.config = updated_config

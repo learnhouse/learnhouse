@@ -7188,7 +7188,7 @@
         "watermark_label": "\"Made with LearnHouse\" filigranı",
         "watermark_desc": "Organizasyon sayfalarınızda LearnHouse marka filigranını gösterin",
         "watermark_free_plan": "Filigran ücretsiz planda her zaman gösterilir",
-        "watermark_ee": "Enterprise Edition lisansınız tarafından gizlendi"
+        "watermark_opt_in": "Planınızda gizlidir. Rozeti kuruluşunuzun sayfalarında göstermek için açın."
       },
       "images": {
         "title": "Resimler ve Önizlemeler",

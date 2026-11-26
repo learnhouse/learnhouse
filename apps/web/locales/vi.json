@@ -7166,7 +7166,7 @@
         "watermark_label": "Watermark \"Made with LearnHouse\"",
         "watermark_desc": "Hiển thị watermark thương hiệu LearnHouse trên các trang tổ chức của bạn",
         "watermark_free_plan": "Watermark luôn được hiển thị trên gói miễn phí",
-        "watermark_ee": "Bị ẩn bởi giấy phép Enterprise Edition của bạn"
+        "watermark_opt_in": "Bị ẩn trong gói của bạn. Bật để hiển thị huy hiệu trên các trang của tổ chức."
       },
       "images": {
         "title": "Hình ảnh & Xem trước",

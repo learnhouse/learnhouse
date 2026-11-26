@@ -7168,7 +7168,7 @@
         "watermark_label": "\"Made with LearnHouse\"透かし",
         "watermark_desc": "組織ページにLearnHouseブランドの透かしを表示",
         "watermark_free_plan": "無料プランでは透かしが常に表示されます",
-        "watermark_ee": "Enterprise Editionライセンスによって非表示になっています"
+        "watermark_opt_in": "ご利用のプランでは非表示です。オンにすると組織のページにバッジが表示されます。"
       },
       "images": {
         "title": "画像とプレビュー",

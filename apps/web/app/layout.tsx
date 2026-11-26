@@ -59,6 +59,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   appleWebApp: { capable: true, statusBarStyle: 'default' },
   formatDetection: { telephone: false },
+  generator: 'LearnHouse',
 }
 
 export default async function RootLayout({

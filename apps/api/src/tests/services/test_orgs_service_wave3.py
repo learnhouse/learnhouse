@@ -910,6 +910,7 @@ class TestOrgConfigBranchesWave3:
         assert stored.config["general"]["footer_text"] == "Footer text"
         assert stored.config["general"]["font"] == "Inter"
         assert stored.config["general"]["watermark"] is False
+        assert stored.config["general"]["watermark_opt_in"] is False
         assert stored.config["general"]["auth_branding"]["welcome_message"] == "Welcome"
         assert stored.config.get("landing") in (None, {})
         assert stored.config["seo"]["default_meta_description"] == "SEO desc"
@@ -1077,6 +1078,7 @@ class TestOrgConfigBranchesWave3:
         assert stored.config["customization"]["general"]["footer_text"] == "Footer v2"
         assert stored.config["customization"]["general"]["font"] == "Manrope"
         assert stored.config["customization"]["general"]["watermark"] is True
+        assert stored.config["customization"]["general"]["watermark_opt_in"] is True
         assert stored.config["customization"]["auth_branding"]["welcome_message"] == "Welcome v2"
         assert (stored.config["customization"].get("landing") or {}) == {}
         assert stored.config["customization"]["seo"]["default_meta_description"] == "SEO v2"

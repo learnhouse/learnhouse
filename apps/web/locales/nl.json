@@ -7188,7 +7188,7 @@
         "watermark_label": "\"Made with LearnHouse\"-watermerk",
         "watermark_desc": "LearnHouse-watermerk tonen op organisatiepagina's",
         "watermark_free_plan": "Watermerk wordt altijd getoond bij het gratis plan",
-        "watermark_ee": "Verborgen door je Enterprise Edition-licentie"
+        "watermark_opt_in": "Verborgen in je abonnement. Zet dit aan om de badge op de pagina's van je organisatie te tonen."
       },
       "images": {
         "title": "Afbeeldingen & Previews",

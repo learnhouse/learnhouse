@@ -9,8 +9,9 @@ import { Switch } from '@components/ui/switch'
 import { Code, Plus, Trash, PencilSimple, Warning, Stamp, FileCode } from '@phosphor-icons/react'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { getAPIUrl, getDeploymentMode, getTenancy } from '@services/config/config'
+import { getAPIUrl, getTenancy } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
+import { isWhiteLabelPlan, showLearnHouseBranding } from '@components/Hooks/useLearnHouseBranding'
 import { useTranslation } from 'react-i18next'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import {
@@ -38,7 +39,6 @@ const OrgEditOther: React.FC = () => {
   const queryClient = useQueryClient()
   const plan = usePlan()
   const isFree = plan === 'free'
-  const isEE = getDeploymentMode() === 'ee'
   // Matches lib/orgScripts: on a multi-tenant deployment scripts only run on
   // the org's custom domain.
   const isMultiTenant = getTenancy() === 'multi'
@@ -51,9 +51,8 @@ const OrgEditOther: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = React.useState<Script | null>(null)
 
   // Watermark state
-  const [watermarkEnabled, setWatermarkEnabled] = React.useState<boolean>(
-    (org?.config?.config?.customization?.general?.watermark ?? org?.config?.config?.general?.watermark) !== false
-  )
+  const isWhiteLabel = isWhiteLabelPlan(plan)
+  const [watermarkEnabled, setWatermarkEnabled] = React.useState<boolean>(() => showLearnHouseBranding(org, plan))
   const [isWatermarkSaving, setIsWatermarkSaving] = React.useState(false)
 
   const updateWatermark = async (enabled: boolean) => {
@@ -150,8 +149,8 @@ const OrgEditOther: React.FC = () => {
         <SettingRow
           title={<label htmlFor="watermark" className="cursor-pointer">{t('dashboard.organization.settings.watermark_label')}</label>}
           description={
-            isEE
-              ? t('dashboard.organization.settings.watermark_ee')
+            isWhiteLabel
+              ? t('dashboard.organization.settings.watermark_opt_in')
               : isFree
                 ? t('dashboard.organization.settings.watermark_free_plan')
                 : t('dashboard.organization.settings.watermark_desc')
@@ -159,9 +158,9 @@ const OrgEditOther: React.FC = () => {
           control={
             <Switch
               id="watermark"
-              checked={isEE ? false : watermarkEnabled}
+              checked={watermarkEnabled}
               onCheckedChange={updateWatermark}
-              disabled={isWatermarkSaving || isFree || isEE}
+              disabled={isWatermarkSaving || isFree}
             />
           }
         />

@@ -7293,7 +7293,7 @@
         "watermark_label": "Marca de agua \"Hecho con LearnHouse\"",
         "watermark_desc": "Mostrar la marca de agua de LearnHouse en las páginas de tu organización",
         "watermark_free_plan": "La marca de agua siempre se muestra en el plan gratuito",
-        "watermark_ee": "Oculto por tu licencia Enterprise Edition"
+        "watermark_opt_in": "Oculta en tu plan. Actívala para mostrar la insignia en las páginas de tu organización."
       },
       "images": {
         "title": "Imágenes y vistas previas",

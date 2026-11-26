@@ -7418,7 +7418,7 @@
         "watermark_label": "Vodoznak \"Made with LearnHouse\"",
         "watermark_desc": "Zobraziť vodoznak LearnHouse na stránkach organizácie",
         "watermark_free_plan": "Vodoznak je vždy zobrazený na bezplatnom pláne",
-        "watermark_ee": "Skrytý vaším Enterprise Edition licenciou"
+        "watermark_opt_in": "Vo vašom pláne je skryté. Zapnite ho, ak chcete zobraziť odznak na stránkach organizácie."
       },
       "images": {
         "title": "Obrázky a náhľady",

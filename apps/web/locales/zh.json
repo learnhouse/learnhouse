@@ -7168,7 +7168,7 @@
         "watermark_label": "\"Made with LearnHouse\" 水印",
         "watermark_desc": "在您的组织页面上显示 LearnHouse 品牌水印",
         "watermark_free_plan": "免费方案始终显示水印",
-        "watermark_ee": "已被您的企业版许可证隐藏"
+        "watermark_opt_in": "你的套餐默认隐藏。开启后会在组织页面显示徽章。"
       },
       "images": {
         "title": "图像与预览",

@@ -7418,7 +7418,7 @@
         "watermark_label": "Znak wodny \"Made with LearnHouse\"",
         "watermark_desc": "Pokaż znak wodny LearnHouse na stronach organizacji",
         "watermark_free_plan": "Znak wodny jest zawsze widoczny w planie darmowym",
-        "watermark_ee": "Ukryte przez licencję Enterprise Edition"
+        "watermark_opt_in": "Ukryte w Twoim planie. Włącz, aby pokazać odznakę na stronach organizacji."
       },
       "images": {
         "title": "Obrazy i podglądy",

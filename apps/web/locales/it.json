@@ -7293,7 +7293,7 @@
         "watermark_label": "Watermark \"Made with LearnHouse\"",
         "watermark_desc": "Mostra il watermark LearnHouse sulle pagine della tua organizzazione",
         "watermark_free_plan": "Il watermark è sempre mostrato nel piano gratuito",
-        "watermark_ee": "Nascosto dalla tua licenza Enterprise Edition"
+        "watermark_opt_in": "Nascosto con il tuo piano. Attivalo per mostrare il badge nelle pagine della tua organizzazione."
       },
       "images": {
         "title": "Immagini e anteprime",

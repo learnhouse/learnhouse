@@ -7188,7 +7188,7 @@
         "watermark_label": "\"Made with LearnHouse\"-Wasserzeichen",
         "watermark_desc": "LearnHouse-Wasserzeichen auf Ihren Organisationsseiten anzeigen",
         "watermark_free_plan": "Das Wasserzeichen wird im kostenlosen Plan immer angezeigt",
-        "watermark_ee": "Durch Ihre Enterprise Edition-Lizenz ausgeblendet"
+        "watermark_opt_in": "In deinem Tarif ausgeblendet. Aktiviere die Option, um das Badge auf den Seiten deiner Organisation anzuzeigen."
       },
       "images": {
         "title": "Bilder & Vorschaubilder",
