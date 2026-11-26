@@ -503,7 +503,13 @@
     "theme_dark": "Tối",
     "switch_to_dark": "Chuyển sang chế độ tối",
     "switch_to_light": "Chuyển sang chế độ sáng",
-    "appearance": "Giao diện"
+    "appearance": "Giao diện",
+    "no_access": {
+      "title": "Bạn không có quyền truy cập",
+      "community": "Bạn không có quyền xem cộng đồng này.",
+      "discussion": "Bạn không có quyền xem cuộc thảo luận này.",
+      "podcast": "Bạn không có quyền xem podcast này."
+    }
   },
   "banner": {
     "viewing_as_guest": "Bạn đang xem {{name}} với tư cách khách.",

@@ -503,7 +503,13 @@
     "theme_dark": "ダーク",
     "switch_to_dark": "ダークモードに切り替え",
     "switch_to_light": "ライトモードに切り替え",
-    "appearance": "外観"
+    "appearance": "外観",
+    "no_access": {
+      "title": "アクセス権がありません",
+      "community": "このコミュニティを表示する権限がありません。",
+      "discussion": "このディスカッションを表示する権限がありません。",
+      "podcast": "このポッドキャストを表示する権限がありません。"
+    }
   },
   "banner": {
     "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",

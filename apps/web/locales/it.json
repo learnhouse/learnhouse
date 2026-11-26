@@ -504,7 +504,13 @@
     "theme_dark": "Scuro",
     "switch_to_dark": "Passa alla modalità scura",
     "switch_to_light": "Passa alla modalità chiara",
-    "appearance": "Aspetto"
+    "appearance": "Aspetto",
+    "no_access": {
+      "title": "Non hai accesso",
+      "community": "Non hai il permesso di visualizzare questa community.",
+      "discussion": "Non hai il permesso di visualizzare questa discussione.",
+      "podcast": "Non hai il permesso di visualizzare questo podcast."
+    }
   },
   "banner": {
     "viewing_as_guest": "Stai visualizzando {{name}} come ospite.",

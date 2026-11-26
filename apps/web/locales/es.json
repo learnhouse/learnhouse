@@ -504,7 +504,13 @@
     "theme_dark": "Oscuro",
     "switch_to_dark": "Cambiar al modo oscuro",
     "switch_to_light": "Cambiar al modo claro",
-    "appearance": "Apariencia"
+    "appearance": "Apariencia",
+    "no_access": {
+      "title": "No tienes acceso",
+      "community": "No tienes permiso para ver esta comunidad.",
+      "discussion": "No tienes permiso para ver esta conversación.",
+      "podcast": "No tienes permiso para ver este pódcast."
+    }
   },
   "banner": {
     "viewing_as_guest": "Estás viendo {{name}} como invitado.",

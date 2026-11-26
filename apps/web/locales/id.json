@@ -503,7 +503,13 @@
     "theme_dark": "Gelap",
     "switch_to_dark": "Beralih ke mode gelap",
     "switch_to_light": "Beralih ke mode terang",
-    "appearance": "Tampilan"
+    "appearance": "Tampilan",
+    "no_access": {
+      "title": "Anda tidak memiliki akses",
+      "community": "Anda tidak memiliki izin untuk melihat komunitas ini.",
+      "discussion": "Anda tidak memiliki izin untuk melihat diskusi ini.",
+      "podcast": "Anda tidak memiliki izin untuk melihat podcast ini."
+    }
   },
   "banner": {
     "viewing_as_guest": "Anda melihat {{name}} sebagai tamu.",

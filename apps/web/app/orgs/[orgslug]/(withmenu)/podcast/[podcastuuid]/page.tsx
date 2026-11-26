@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import NoAccessNotice from '@components/Objects/StyledElements/Error/NoAccessNotice'
 import { notFound } from 'next/navigation'
 import { getPodcastMeta, PodcastMeta } from '@services/podcasts/podcasts'
 import { getPodcastThumbnailMediaDirectory } from '@services/media/media'
@@ -67,9 +68,7 @@ export default async function PodcastPage({ params }: { params: PageParams }) {
 
   if (!meta) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <p className="text-gray-500">You do not have permission to view this podcast.</p>
-      </div>
+      <NoAccessNotice kind="podcast" />
     )
   }
 

@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import NoAccessNotice from '@components/Objects/StyledElements/Error/NoAccessNotice'
 import { notFound } from 'next/navigation'
 import { getServerSession } from '@/lib/auth/server'
 import { getCommunity } from '@services/communities/communities'
@@ -91,12 +92,7 @@ const CommunityPage = async (props: MetadataProps) => {
 
   if (!community) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-600">You don't have access</h1>
-          <p className="text-gray-400 mt-2">You do not have permission to view this community.</p>
-        </div>
-      </div>
+      <NoAccessNotice kind="community" />
     )
   }
 

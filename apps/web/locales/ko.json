@@ -503,7 +503,13 @@
     "theme_dark": "다크",
     "switch_to_dark": "다크 모드로 전환",
     "switch_to_light": "라이트 모드로 전환",
-    "appearance": "모양"
+    "appearance": "모양",
+    "no_access": {
+      "title": "접근 권한이 없습니다",
+      "community": "이 커뮤니티를 볼 권한이 없습니다.",
+      "discussion": "이 토론을 볼 권한이 없습니다.",
+      "podcast": "이 팟캐스트를 볼 권한이 없습니다."
+    }
   },
   "banner": {
     "viewing_as_guest": "{{name}}을(를) 게스트로 보고 있습니다.",

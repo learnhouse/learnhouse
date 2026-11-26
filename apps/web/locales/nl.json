@@ -504,7 +504,13 @@
     "theme_dark": "Donker",
     "switch_to_dark": "Overschakelen naar donkere modus",
     "switch_to_light": "Overschakelen naar lichte modus",
-    "appearance": "Weergave"
+    "appearance": "Weergave",
+    "no_access": {
+      "title": "Je hebt geen toegang",
+      "community": "Je hebt geen toestemming om deze community te bekijken.",
+      "discussion": "Je hebt geen toestemming om deze discussie te bekijken.",
+      "podcast": "Je hebt geen toestemming om deze podcast te bekijken."
+    }
   },
   "banner": {
     "viewing_as_guest": "Je bekijkt {{name}} als gast.",

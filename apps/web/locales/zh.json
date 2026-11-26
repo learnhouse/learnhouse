@@ -503,7 +503,13 @@
     "theme_dark": "深色",
     "switch_to_dark": "切换到深色模式",
     "switch_to_light": "切换到浅色模式",
-    "appearance": "外观"
+    "appearance": "外观",
+    "no_access": {
+      "title": "您没有访问权限",
+      "community": "你没有权限查看此社区。",
+      "discussion": "你没有权限查看此讨论。",
+      "podcast": "你没有权限查看此播客。"
+    }
   },
   "banner": {
     "viewing_as_guest": "您正在以访客身份浏览 {{name}}。",
