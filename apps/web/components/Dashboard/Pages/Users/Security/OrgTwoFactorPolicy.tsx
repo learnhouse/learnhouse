@@ -381,6 +381,7 @@ const OrgTwoFactorPolicy: React.FC = () => {
 
                 {/* Grace period */}
                 <SettingRow
+                  stackOnMobile
                   icon={<Hourglass size={18} />}
                   title={
                     <label htmlFor="grace-period">
