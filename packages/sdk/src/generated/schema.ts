@@ -23660,6 +23660,11 @@ export interface components {
              */
             watermark?: boolean;
             /**
+             * Watermark Opt In
+             * @default false
+             */
+            watermark_opt_in?: boolean;
+            /**
              * Favicon Image
              * @default
              */
