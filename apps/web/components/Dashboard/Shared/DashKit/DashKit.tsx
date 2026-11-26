@@ -577,7 +577,7 @@ export function SectionCard({
   return (
     <section className={`bg-white rounded-2xl nice-shadow ${className}`}>
       {(title || actions) && (
-        <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-5">
+        <div className={`flex flex-wrap items-start justify-between gap-3 px-5 pt-5 ${children ? '' : 'pb-5'}`}>
           <div className="flex items-start gap-3 min-w-0">
             {icon && (
               <div className="w-9 h-9 rounded-xl bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">{icon}</div>
