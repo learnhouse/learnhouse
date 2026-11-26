@@ -148,7 +148,7 @@ export function StatCard({
     <>
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}>{icon}</div>
       <div className="min-w-0 text-start">
-        <p className="text-xs text-neutral-500 truncate">{label}</p>
+        <p className="text-xs text-neutral-500 leading-snug max-sm:line-clamp-2 sm:truncate">{label}</p>
         {value === null ? (
           <div className="mt-1 h-5 w-8 rounded bg-neutral-100 animate-pulse" />
         ) : (
