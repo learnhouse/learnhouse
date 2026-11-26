@@ -19,7 +19,8 @@ export interface LearnHouseActivityData {
   name: string
   activity_type: string
   activity_sub_type?: string
-  content: any
+  /** The document. Optional so an activity from `@learnhouse/sdk` (whose type marks it optional) fits as is. */
+  content?: any
   published?: boolean
   [key: string]: any
 }
