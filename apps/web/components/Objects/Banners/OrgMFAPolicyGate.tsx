@@ -342,6 +342,7 @@ function OrgAuthMethodBanner({
 export function OrgMFAPolicyGate() {
   const { org, orgslug } = useOrgMembership()
   const pathname = usePathname()
+  const session = useLHSession() as any
   const { data } = useOrgMFACompliance(org?.id)
 
   if (!data) return null
@@ -350,7 +351,9 @@ export function OrgMFAPolicyGate() {
 
   // The org's auth policy refused this session, so prompt a scoped re-sign-in.
   // Shown everywhere EXCEPT the org's own login route (where they fix it).
+  // An impersonation can't sign in anywhere: the badge says why instead.
   if (data.authBlock) {
+    if (session?.data?.impersonation) return null
     const segments = (pathname || '').split('/').filter(Boolean)
     const onLoginRoute = segments.includes('login')
     if (onLoginRoute) return null

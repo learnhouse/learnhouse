@@ -11,7 +11,7 @@ import {
   dispatchImpersonationEnded,
   dispatchImpersonationRefused,
   endReasonOf,
-  impersonationCode,
+  impersonationRefusal,
   normalizeEndReason,
 } from '@/lib/auth/impersonation'
 
@@ -109,8 +109,9 @@ export default function AuthFetchInterceptor() {
         return response
       }
 
-      // Inside an impersonation: a refused write shows the banner's notice,
-      // and a spent session goes back to the console (never a sign-out).
+      // Inside an impersonation: a refused page or write shows the banner's
+      // notice, and only a spent session goes back to the console (never a
+      // sign-out).
       if (
         activeImpersonation()
         && url
@@ -118,15 +119,12 @@ export default function AuthFetchInterceptor() {
         && (response.status === 403 || response.status === 401)
       ) {
         const body = await response.clone().json().catch(() => null)
-        const code = impersonationCode(body)
-        if (code === 'IMPERSONATION_ENDED') {
-          dispatchImpersonationEnded(normalizeEndReason(endReasonOf(body)))
+        const refusal = impersonationRefusal(response.status, body, init?.method)
+        if (refusal?.kind === 'end') {
+          dispatchImpersonationEnded(refusal.reason)
           return response
         }
-        // Only what the person did (a write) gets the notice; a page's own
-        // background reads that the session may not make stay quiet.
-        const method = (init?.method || 'GET').toUpperCase()
-        if (code && method !== 'GET' && method !== 'HEAD') dispatchImpersonationRefused(code)
+        if (refusal?.kind === 'notice') dispatchImpersonationRefused(refusal.code)
       }
 
       if (

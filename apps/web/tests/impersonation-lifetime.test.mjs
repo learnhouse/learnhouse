@@ -35,12 +35,25 @@ describe("impersonation cookie lifetime", () => {
     expect(token.jwtClaims(`a.${Buffer.from("7").toString("base64url")}.c`)).toBeNull();
   });
 
-  test("a session ends with its owner's own sign-in", () => {
-    expect(token.ownerSessionGone(undefined)).toBe(true);
-    expect(token.ownerSessionGone("")).toBe(true);
-    expect(token.ownerSessionGone("refresh.jwt.value")).toBe(false);
-    expect(token.OWNER_SIGNED_OUT_REASON).toBe("logout");
-    expect(imp.normalizeEndReason(token.OWNER_SIGNED_OUT_REASON)).toBe("logout");
+  test("only the API ends a session, never a missing refresh cookie", async () => {
+    const res = (status, body) => new Response(JSON.stringify(body), { status });
+    expect(await token.checkImpersonation(async () => res(200, { session_uuid: "s" }))).toEqual({
+      state: "active",
+      session: { session_uuid: "s" },
+    });
+    expect(await token.checkImpersonation(async () => res(401, { detail: { reason: "logout" } }))).toEqual({
+      state: "ended",
+      body: { detail: { reason: "logout" } },
+    });
+    // Down, busy or refused for another reason: not over.
+    for (const status of [403, 429, 503]) {
+      expect(await token.checkImpersonation(async () => res(status, {}))).toEqual({ state: "unknown" });
+    }
+    expect(await token.checkImpersonation(async () => null)).toEqual({ state: "unknown" });
+    expect(await token.checkImpersonation(async () => { throw new Error("offline"); })).toEqual({ state: "unknown" });
+    const ended = await token.checkImpersonation(async () => new Response("not json", { status: 410 }));
+    expect(ended).toEqual({ state: "ended", body: {} });
+    expect(token.ownerSessionGone).toBeUndefined();
   });
 
   test("only 401/404/410 mean the session is over (busy or rate limited is not)", () => {
@@ -54,11 +67,16 @@ describe("impersonation cookie lifetime", () => {
     expect(lib).not.toContain("12 * 60 * 60");
     const status = readFileSync(new URL("../app/api/auth/impersonation/route.ts", import.meta.url), "utf8");
     const refresh = readFileSync(new URL("../app/api/auth/[...path]/route.ts", import.meta.url), "utf8");
-    // Both the badge poll and the token refresh end it once the owner's own
-    // refresh cookie is gone; neither ever mints or forwards another token.
-    expect(status).toContain("ownerSessionGone(jar.get(REFRESH_TOKEN_COOKIE)?.value)");
-    expect(refresh).toContain("impersonationRefresh(request, impersonationToken, refreshToken?.value)");
-    expect(refresh).toContain("if (ownerSessionGone(ownerRefreshToken))");
+    // Both the badge poll and the token refresh ask the API; neither ends a
+    // session on its own because this host can't see the staff member's
+    // refresh cookie, and neither ever mints or forwards another token.
+    expect(refresh).toContain("impersonationRefresh(request, impersonationToken)");
+    for (const src of [status, refresh]) {
+      expect(src).toContain("checkImpersonation(");
+      expect(src).not.toContain("REFRESH_TOKEN_COOKIE)?.value)");
+    }
+    // The refresh never ends a session itself.
+    expect(refresh).not.toContain("api/v1/auth/impersonation/end");
     for (const src of [status, refresh]) expect(src).not.toMatch(/renew/i);
   });
 });

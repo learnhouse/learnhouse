@@ -337,3 +337,85 @@ class TestCarrySessionClaimsOnRotation:
 
         carried = carry_session_claims({AMR_CLAIM: "google", LEGACY_GRACE_CLAIM: 1})
         assert LEGACY_GRACE_CLAIM not in carried
+
+
+@pytest.fixture
+def org_page_request():
+    """Mark the current request as a non-console one for a user (what
+    get_current_user does for a staff member's own session), then undo it."""
+    from src.security import backoffice
+
+    def mark(user_id):
+        backoffice.block_backoffice_org_bypass(user_id, "/api/v1/orgs/slug/acme")
+
+    yield mark
+    backoffice._org_bypass_blocked_for.set(None)
+
+
+async def _make_staff(db, user_id):
+    user = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
+    user.is_backoffice_staff = True
+    db.add(user)
+    await db.commit()
+
+
+@pytest.mark.asyncio
+class TestStaffAndImpersonationOnRestrictedOrgs:
+    """Staff and the sessions they open answer to the platform, not to the org's
+    own sign-in rules; members still do."""
+
+    async def test_staff_own_session_on_an_org_page_is_not_refused(self, db, org, regular_user, org_page_request):
+        await _set_auth_policy(
+            db, org.id, allowed_auth_methods=["sso"], allow_central_session_sharing=False,
+        )
+        await _make_staff(db, regular_user.id)
+        # Outside the console the staff member's session counts as a user's,
+        # which used to switch the exemption off too.
+        org_page_request(regular_user.id)
+        _prov(amr="google", org_id=None)
+        assert await evaluate_org_auth(db, regular_user.id, org.id) is None
+
+    async def test_staff_account_flag_is_read_when_not_memoized(self, db, org, regular_user):
+        from src.security.backoffice import is_backoffice_staff_account
+
+        await _make_staff(db, regular_user.id)
+        db._backoffice_cache = {}
+        assert await is_backoffice_staff_account(regular_user.id, db) is True
+        db._backoffice_cache = {regular_user.id: False}
+        assert await is_backoffice_staff_account(regular_user.id, db) is False
+
+    async def test_member_with_a_disallowed_method_is_still_refused(self, db, org, regular_user, org_page_request):
+        await _set_auth_policy(db, org.id, allowed_auth_methods=["sso"])
+        org_page_request(regular_user.id)
+        _prov(amr="google", org_id=org.id)
+        block = await evaluate_org_auth(db, regular_user.id, org.id)
+        assert block["code"] == METHOD_NOT_ALLOWED_CODE
+
+    async def test_impersonation_ignores_the_org_sign_in_rules(self, db, org, other_org, regular_user):
+        import asyncio
+        import contextvars
+
+        from src.security import impersonation as imp
+        from src.security.session_context import AUTH_METHOD_IMPERSONATION
+
+        await _set_auth_policy(
+            db, org.id, allowed_auth_methods=["sso"], allow_central_session_sharing=False,
+        )
+        _status, payload = imp.decode_impersonation_token(imp.mint_impersonation_token(
+            session_id="imp_x", jti="j", impersonator_id=99, org_id=org.id,
+            target_user_id=regular_user.id, target_email="regular@test.com", mode=imp.MODE_FULL,
+            kind=imp.KIND_USER, role_id=1, allow_messaging=False, expires_at=int(time.time()) + 600,
+        ))
+        ctx = imp.context_from_claims(payload)
+
+        async def run(org_id):
+            imp.set_impersonation(ctx)
+            set_session_provenance(SessionProvenance(amr=AUTH_METHOD_IMPERSONATION, org_id=ctx.org_id))
+            db._auth_policy_cache = {}
+            return await evaluate_org_auth(db, regular_user.id, org_id)
+
+        loop = asyncio.get_running_loop()
+        assert await loop.create_task(run(org.id), context=contextvars.copy_context()) is None
+        # Still held to the one org it was opened for.
+        other = await loop.create_task(run(other_org.id), context=contextvars.copy_context())
+        assert other == {"code": SESSION_NOT_BOUND_CODE}

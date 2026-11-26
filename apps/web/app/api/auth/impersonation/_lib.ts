@@ -65,17 +65,3 @@ export function setCookie(response: NextResponse, request: NextRequest, token: s
   // stored cap (idle limits are the API's, checked on every request).
   response.cookies.set(IMPERSONATION_COOKIE, token, { ...getCookieOptions(request), maxAge: impersonationCookieMaxAge(token) })
 }
-
-/** End the session on the API (best effort): its owner signed out. */
-export async function endOnServer(request: NextRequest, token: string): Promise<void> {
-  try {
-    await fetch(`${BACKEND_URL}/api/v1/auth/impersonation/end`, {
-      method: 'POST',
-      headers: forwardHeaders(request, token),
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
-    })
-  } catch {
-    /* the cookie goes regardless; the record ends at its cap or on the owner's sign-out */
-  }
-}

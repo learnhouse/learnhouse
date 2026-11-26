@@ -129,7 +129,7 @@ async def evaluate_org_auth(
     result: Optional[Dict[str, Any]] = None
     try:
         from src.security.impersonation import current_impersonation
-        from src.security.backoffice import is_user_backoffice_staff
+        from src.security.backoffice import is_backoffice_staff_account
 
         impersonation = current_impersonation()
         if impersonation is not None and impersonation.target_user_id == user_id:
@@ -140,8 +140,10 @@ async def evaluate_org_auth(
             if impersonation.org_id != org_id:
                 result = {"code": SESSION_NOT_BOUND_CODE}
         # Backoffice staff operate across tenants and must never be locked out of one
-        # by that tenant's own policy.
-        elif not await is_user_backoffice_staff(user_id, db_session):
+        # by that tenant's own policy. Their own session on an org page counts as
+        # an ordinary user's for access (block_backoffice_org_bypass), so this reads
+        # the account flag: the policy only refuses, it never grants anything.
+        elif not await is_backoffice_staff_account(user_id, db_session):
             policy = await get_org_auth_policy(db_session, org_id)
             provenance = get_session_provenance() or SessionProvenance()
             # A session signed in on an org's custom domain went through a host
