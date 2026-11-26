@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import type { TrailStore } from '@learnhouse/sdk'
 import type { LearnHouseEvent } from './types'
 import type { UseSessionReturn } from './shims/auth-context'
 
@@ -9,6 +10,8 @@ export interface LearnHouseInternal {
   emit: (event: LearnHouseEvent) => void
   /** A valid access token (refreshing the session first if needed), or null. */
   getAccessToken: () => Promise<string | null>
+  /** The learner's trail per org, shared by progress hooks and completion buttons. */
+  trailStore: TrailStore | null
 }
 
 const anonymous: UseSessionReturn = {
@@ -23,6 +26,7 @@ export const LearnHouseInternalContext = createContext<LearnHouseInternal>({
   session: anonymous,
   emit: () => {},
   getAccessToken: async () => null,
+  trailStore: null,
 })
 
 export const useLearnHouseInternal = () => useContext(LearnHouseInternalContext)

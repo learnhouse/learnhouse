@@ -1,5 +1,7 @@
 export { LearnHouseActivity } from './LearnHouseActivity'
 export { LearnHouseProvider, useLearnHouseClient, useLearnHouseSession } from './provider'
+export { useCourseProgress, useTrail } from './hooks'
+export type { UseCourseProgressReturn, UseTrailReturn } from './hooks'
 export type { LearnHouseProviderProps } from './types'
 export { SUPPORTED_LOCALES } from './i18n'
 export { themeToStyle } from './theme'
