@@ -93,6 +93,15 @@ export class TrailStore {
     return this.apply(orgId, this.client.trail.uncompleteActivity(activityUuid))
   }
 
+  /**
+   * Load every org that was loaded before again, e.g. after progress changed
+   * somewhere the store didn't see (an embedded activity's own button).
+   */
+  reload(): Promise<Array<Trail | null>> {
+    const orgs = [...this.states.entries()].filter(([, s]) => s.trail !== undefined || s.loading).map(([org]) => org)
+    return Promise.all(orgs.map((org) => this.load(org, { force: true })))
+  }
+
   /** Forget every org (e.g. after sign-out). */
   clear(): void {
     const orgs = [...this.states.keys()]

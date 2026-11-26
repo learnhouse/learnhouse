@@ -82,6 +82,21 @@ describe('TrailStore', () => {
     expect(store.get(1)).toBe(before)
   })
 
+  it('reload() loads again only the orgs already loaded', async () => {
+    const { m, store } = setup(json(trailWith([])))
+    await store.load(1)
+    await store.load(2)
+    await store.reload()
+    expect(m.calls.map((c) => c.url.slice(BASE.length))).toEqual([
+      '/api/v1/trail/org/1/trail',
+      '/api/v1/trail/org/2/trail',
+      '/api/v1/trail/org/1/trail',
+      '/api/v1/trail/org/2/trail',
+    ])
+    store.clear()
+    await expect(store.reload()).resolves.toEqual([])
+  })
+
   it('set() and clear()', () => {
     const { store } = setup(json({}))
     const listener = vi.fn()
