@@ -20424,7 +20424,8 @@
       "state_cancelled": "منتهٍ",
       "state_refunded": "مُسترد",
       "state_failed": "فشل الدفع",
-      "state_pending": "بدأ الدفع"
+      "state_pending": "بدأ الدفع",
+      "source_company_seat": "مقعد شركة"
     },
     "course_access": {
       "save_error": "تعذّر الحفظ",

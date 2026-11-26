@@ -19159,7 +19159,8 @@
       "state_cancelled": "Đã kết thúc",
       "state_refunded": "Đã hoàn tiền",
       "state_failed": "Thanh toán thất bại",
-      "state_pending": "Đã bắt đầu thanh toán"
+      "state_pending": "Đã bắt đầu thanh toán",
+      "source_company_seat": "Suất học của công ty"
     },
     "course_access": {
       "save_error": "Không thể lưu",

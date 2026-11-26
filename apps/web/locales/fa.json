@@ -19199,7 +19199,8 @@
       "state_cancelled": "پایان‌یافته",
       "state_refunded": "بازپرداخت شده",
       "state_failed": "پرداخت ناموفق",
-      "state_pending": "پرداخت شروع شده"
+      "state_pending": "پرداخت شروع شده",
+      "source_company_seat": "صندلی شرکت"
     },
     "course_access": {
       "save_error": "ذخیره ممکن نشد",

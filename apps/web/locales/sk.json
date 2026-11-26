@@ -19873,7 +19873,8 @@
       "state_cancelled": "Ukončené",
       "state_refunded": "Vrátené",
       "state_failed": "Platba zlyhala",
-      "state_pending": "Platba začatá"
+      "state_pending": "Platba začatá",
+      "source_company_seat": "Firemné miesto"
     },
     "course_access": {
       "save_error": "Nepodarilo sa uložiť",

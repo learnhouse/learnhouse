@@ -19199,7 +19199,8 @@
       "state_cancelled": "শেষ হয়েছে",
       "state_refunded": "রিফান্ড হয়েছে",
       "state_failed": "পেমেন্ট ব্যর্থ",
-      "state_pending": "চেকআউট শুরু হয়েছে"
+      "state_pending": "চেকআউট শুরু হয়েছে",
+      "source_company_seat": "কোম্পানির সিট"
     },
     "course_access": {
       "save_error": "সংরক্ষণ করা যায়নি",

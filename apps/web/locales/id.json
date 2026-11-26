@@ -19159,7 +19159,8 @@
       "state_cancelled": "Berakhir",
       "state_refunded": "Dana dikembalikan",
       "state_failed": "Pembayaran gagal",
-      "state_pending": "Pembayaran dimulai"
+      "state_pending": "Pembayaran dimulai",
+      "source_company_seat": "Kursi perusahaan"
     },
     "course_access": {
       "save_error": "Tidak dapat menyimpan",

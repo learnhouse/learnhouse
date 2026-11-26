@@ -19517,7 +19517,8 @@
       "state_cancelled": "Terminé",
       "state_refunded": "Remboursé",
       "state_failed": "Paiement échoué",
-      "state_pending": "Paiement commencé"
+      "state_pending": "Paiement commencé",
+      "source_company_seat": "Place d'entreprise"
     },
     "course_access": {
       "save_error": "Impossible d'enregistrer",

@@ -19517,7 +19517,8 @@
       "state_cancelled": "Finalizado",
       "state_refunded": "Reembolsado",
       "state_failed": "Pago fallido",
-      "state_pending": "Pago iniciado"
+      "state_pending": "Pago iniciado",
+      "source_company_seat": "Plaza de empresa"
     },
     "course_access": {
       "save_error": "No se pudo guardar",

@@ -19161,7 +19161,8 @@
       "state_cancelled": "已结束",
       "state_refunded": "已退款",
       "state_failed": "付款失败",
-      "state_pending": "已开始结账"
+      "state_pending": "已开始结账",
+      "source_company_seat": "企业席位"
     },
     "course_access": {
       "save_error": "无法保存",

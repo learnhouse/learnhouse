@@ -19226,7 +19226,8 @@
       "state_cancelled": "Ended",
       "state_refunded": "Refunded",
       "state_failed": "Payment failed",
-      "state_pending": "Checkout started"
+      "state_pending": "Checkout started",
+      "source_company_seat": "Company seat"
     },
     "course_access": {
       "save_error": "Could not save",

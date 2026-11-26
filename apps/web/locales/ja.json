@@ -19161,7 +19161,8 @@
       "state_cancelled": "終了",
       "state_refunded": "返金済み",
       "state_failed": "支払い失敗",
-      "state_pending": "チェックアウト開始済み"
+      "state_pending": "チェックアウト開始済み",
+      "source_company_seat": "企業シート"
     },
     "course_access": {
       "save_error": "保存できませんでした",

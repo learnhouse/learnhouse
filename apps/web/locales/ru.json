@@ -19873,7 +19873,8 @@
       "state_cancelled": "Завершён",
       "state_refunded": "Возвращено",
       "state_failed": "Ошибка оплаты",
-      "state_pending": "Оплата начата"
+      "state_pending": "Оплата начата",
+      "source_company_seat": "Место компании"
     },
     "course_access": {
       "save_error": "Не удалось сохранить",

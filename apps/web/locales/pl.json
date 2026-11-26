@@ -19873,7 +19873,8 @@
       "state_cancelled": "Zakończony",
       "state_refunded": "Zwrócony",
       "state_failed": "Płatność nieudana",
-      "state_pending": "Rozpoczęto płatność"
+      "state_pending": "Rozpoczęto płatność",
+      "source_company_seat": "Miejsce firmowe"
     },
     "course_access": {
       "save_error": "Nie udało się zapisać",

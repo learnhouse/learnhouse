@@ -19199,7 +19199,8 @@
       "state_cancelled": "समाप्त",
       "state_refunded": "रिफ़ंड किया गया",
       "state_failed": "भुगतान विफल",
-      "state_pending": "चेकआउट शुरू हुआ"
+      "state_pending": "चेकआउट शुरू हुआ",
+      "source_company_seat": "कंपनी सीट"
     },
     "course_access": {
       "save_error": "सहेजा नहीं जा सका",

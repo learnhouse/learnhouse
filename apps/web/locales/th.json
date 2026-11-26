@@ -19159,7 +19159,8 @@
       "state_cancelled": "สิ้นสุดแล้ว",
       "state_refunded": "คืนเงินแล้ว",
       "state_failed": "ชำระเงินไม่สำเร็จ",
-      "state_pending": "เริ่มชำระเงินแล้ว"
+      "state_pending": "เริ่มชำระเงินแล้ว",
+      "source_company_seat": "ที่นั่งของบริษัท"
     },
     "course_access": {
       "save_error": "ไม่สามารถบันทึกได้",

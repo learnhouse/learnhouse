@@ -19159,7 +19159,8 @@
       "state_cancelled": "종료됨",
       "state_refunded": "환불됨",
       "state_failed": "결제 실패",
-      "state_pending": "결제 시작됨"
+      "state_pending": "결제 시작됨",
+      "source_company_seat": "회사 좌석"
     },
     "course_access": {
       "save_error": "저장할 수 없습니다",

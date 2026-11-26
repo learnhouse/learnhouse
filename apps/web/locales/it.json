@@ -19517,7 +19517,8 @@
       "state_cancelled": "Terminato",
       "state_refunded": "Rimborsato",
       "state_failed": "Pagamento non riuscito",
-      "state_pending": "Checkout avviato"
+      "state_pending": "Checkout avviato",
+      "source_company_seat": "Posto aziendale"
     },
     "course_access": {
       "save_error": "Impossibile salvare",

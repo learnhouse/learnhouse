@@ -19199,7 +19199,8 @@
       "state_cancelled": "Sona erdi",
       "state_refunded": "İade edildi",
       "state_failed": "Ödeme başarısız",
-      "state_pending": "Ödeme başlatıldı"
+      "state_pending": "Ödeme başlatıldı",
+      "source_company_seat": "Şirket koltuğu"
     },
     "course_access": {
       "save_error": "Kaydedilemedi",

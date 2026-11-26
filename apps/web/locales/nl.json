@@ -19199,7 +19199,8 @@
       "state_cancelled": "Beëindigd",
       "state_refunded": "Terugbetaald",
       "state_failed": "Betaling mislukt",
-      "state_pending": "Afrekenen gestart"
+      "state_pending": "Afrekenen gestart",
+      "source_company_seat": "Bedrijfsplaats"
     },
     "course_access": {
       "save_error": "Kon niet opslaan",

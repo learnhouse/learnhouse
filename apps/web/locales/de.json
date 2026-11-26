@@ -19199,7 +19199,8 @@
       "state_cancelled": "Beendet",
       "state_refunded": "Erstattet",
       "state_failed": "Zahlung fehlgeschlagen",
-      "state_pending": "Checkout begonnen"
+      "state_pending": "Checkout begonnen",
+      "source_company_seat": "Firmenplatz"
     },
     "course_access": {
       "save_error": "Konnte nicht gespeichert werden",
