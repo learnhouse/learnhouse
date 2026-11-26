@@ -176,7 +176,8 @@ export const ChoiceTile = React.forwardRef<HTMLDivElement, ChoiceTileProps>(func
         <Icon size={18} />
       </div>
       <div className="min-w-0 grow">
-        <div className="flex items-center justify-between gap-2">
+        {/* min-h-6 = the Active chip's height, so the text doesn't jump when the tile is picked */}
+        <div className="flex min-h-6 items-center justify-between gap-2">
           <span className="text-sm font-semibold text-neutral-900">{title}</span>
           {selected && activeLabel && (
             <Chip tone="emerald" icon={<Check size={12} weight="bold" />}>
