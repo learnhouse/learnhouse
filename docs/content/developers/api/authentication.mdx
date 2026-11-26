@@ -53,6 +53,8 @@ Logins are rate-limited by IP, and repeated failed attempts can temporarily lock
 | `POST` | `/api/v1/auth/resend-verification` | Resend the verification email |
 
 The two-factor management endpoints (`/api/v1/auth/mfa/...`) are listed in the [API Reference](/reference/auth).
+In TypeScript, each of these has an SDK method (`lh.auth.login`, `lh.auth.verifyMagicLink`, `lh.auth.mfa.setup`…); see
+[Accounts and sign-in](/developers/sdk/accounts).
 
 ### Embed sessions
 
@@ -74,7 +76,8 @@ vouches for the learner. See
 [Signed-in learners](/developers/react/learners).
 
 Like every Admin API route (`/api/v1/admin/{org_slug}/...`), it only takes an API token: a request without
-credentials gets `401`, and a user session gets `403`.
+credentials gets `401`, and a user session gets `403`. The SDK wraps the whole Admin API as
+[`lh.admin`](/developers/sdk/admin).
 
 ## API tokens
 

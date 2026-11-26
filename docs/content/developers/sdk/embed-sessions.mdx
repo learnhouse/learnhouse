@@ -1,0 +1,98 @@
+---
+title: Embed Sessions
+description: "Mint short-lived LearnHouse learner sessions on your server with @learnhouse/sdk and use them in the browser: what they can do, renewal, and the routes they reach."
+seoTitle: "LMS Embed Sessions: Signed-in Learners on Your Site – @learnhouse/sdk"
+---
+
+import { Callout, Steps } from '@/components/mdx'
+
+# Embed sessions
+
+When learners sign in to **your** app, not LearnHouse, an embed session lets them act as themselves in LearnHouse
+(record progress, hand in assignments, chat with the copilot) from your pages, without a LearnHouse password and
+without your API token ever reaching the browser.
+
+<Steps>
+
+### Mint it on your server
+
+```ts filename="app/api/learnhouse-session/route.ts"
+import { createClient } from '@learnhouse/sdk'
+
+const lh = createClient({ baseUrl: process.env.LEARNHOUSE_URL!, token: process.env.LEARNHOUSE_TOKEN! })
+
+export async function POST(req: Request) {
+  const learnhouseUserId = await currentLearnhouseUserId(req) // your mapping from your user to theirs
+  const session = await lh.embed.createSession({ orgSlug: 'your-school', userId: learnhouseUserId, ttlSeconds: 900 })
+  // Send only what the browser needs.
+  return Response.json({ access_token: session.access_token, expires_at: session.expires_at })
+}
+
+declare function currentLearnhouseUserId(req: Request): Promise<number>
+```
+
+`embed.createSession({ orgSlug, userId, ttlSeconds? })` → `EmbedSession`
+(`access_token`, `expires_in`, `expires_at` in Unix seconds, `user_id`, `user_uuid`, `org_id`).
+`POST /api/v1/admin/{org_slug}/auth/embed-session`. The token needs **Users: update**. Lifetime 60 to 3600 seconds,
+default 900. It rejects in a browser before any request.
+
+Don't have the learner in LearnHouse yet? [`admin.users.provision()`](/developers/sdk/admin#users) creates them.
+
+### Use it in the browser
+
+```ts
+import { createClient } from '@learnhouse/sdk'
+
+const learner = createClient({
+  baseUrl: 'https://learn.your-school.com',
+  getSession: () => fetch('/api/learnhouse-session', { method: 'POST' }).then((r) => r.json()),
+})
+
+await learner.trail.completeActivity('activity_…')
+const progress = await learner.trail.getCourseProgress(1, 'course_…')
+```
+
+`getSession` runs when there is no session yet, shortly before the current one expires (a minute before, or a third
+of a short session), and once more when the API answers `401`, after which the request is retried. Pass `session`
+instead if you already have one. `@learnhouse/react` and `@learnhouse/vue` take the same `session` / `getSession`
+props and share one session between every activity on the page.
+
+</Steps>
+
+## What an embed session can do
+
+It acts as that learner, inside that organization only, and only on the routes the embed components use. Everything
+else answers `403` with code `EMBED_SESSION_ROUTE_NOT_ALLOWED`.
+
+| Allowed | Methods |
+| --- | --- |
+| Read content | `courses.get`, `courses.getById`, `courses.getMeta`, `chapters.listForCourse`, `activities.get`, `activities.getById`, `orgs.get`, `orgs.getByUuid`, `instance.info` |
+| Their progress | `trail.getForOrg`, `trail.getCourseProgress`, `trail.completeActivity`, `trail.uncompleteActivity` |
+| Their assignments | `assignments.get`, `getForActivity`, `listTasks`, `getTask`, `listMine`, `getMyTaskSubmissions`, `getMyTaskSubmission`, `saveTaskSubmission`, `uploadTaskFile`, `submit`, `getMySubmission`, `getGrade` (own), `retry` |
+| Who they are | `users.session`, `users.getById`, `users.getByUuid`, `users.getByUsername` |
+| The copilot | the learner side of `agent` (Enterprise) |
+
+Not allowed, among others: enrolling (`trail.startCourse`; enroll them from your server with
+`admin.enrollments.enroll`), the catalog (`courses.list`, `search`), notifications, notes, account changes,
+two-factor, communities and the Admin API. The complete list is in [Auth modes](/developers/sdk/auth-modes).
+
+Embed sessions have no refresh token, can't be minted for org admins, maintainers or accounts that also belong to
+another organization, and count as signed in for that org's sign-in method and two-factor rules (your server vouches
+for the learner, like an LTI launch).
+
+<Callout type="warning">
+  `auth.logout()` with an embed session signs that learner out of **every** LearnHouse session, not just this one. To
+  end an embed session, drop it on your side and stop minting new ones.
+</Callout>
+
+## Errors
+
+| Status | `err.code` | When |
+| --- | --- | --- |
+| `401` | | The session expired (the client asks `getSession` once, then gives up) |
+| `403` | `EMBED_SESSION_ROUTE_NOT_ALLOWED` | A route outside the list above |
+| `403` | `SESSION_NOT_BOUND_TO_ORG` | Another organization's data |
+| `403` | | Minting: the token lacks **Users: update**, or the learner is privileged or in another org |
+
+`createClient({ session })` throws `ApiTokenInBrowserError` when given an `lh_` API token: the browser must only ever
+see the minted session.

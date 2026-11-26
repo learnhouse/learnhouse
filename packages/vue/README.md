@@ -45,9 +45,22 @@ const { activity, loading, error, refresh } = useActivity(() => props.id)
 const client = useLearnHouseClient()
 ```
 
-Events: `@load`, `@ready`, `@complete`, `@media`, `@resize`, `@error`, `@event` (all of them) and `@link-click` (return `false` to stop the navigation). Slots: `fallback`, `header`, `footer`, `error`.
+Events: `@load`, `@ready`, `@complete`, `@progress`, `@session-expired`, `@media`, `@resize`, `@error`, `@event` (all of them) and `@link-click` (return `false` to stop the navigation). Slots: `fallback`, `header`, `footer`, `error`.
 
-Never pass an `lh_` API token to the browser. Use the signed-in user's access token, and keep API tokens on your server with `@learnhouse/sdk`.
+Never pass an `lh_` API token to the browser. Give the provider an embed session your server minted with `@learnhouse/sdk` (`session` / `get-session`), and keep API tokens on your server.
+
+## Progress
+
+`useCourseProgress(orgId, course)` and `useTrail(orgId)` share one copy of the learner's trail under the provider. Changes made through them, or with an activity's own **Mark as complete** button, reach every one of them.
+
+```ts
+import { useCourseProgress } from '@learnhouse/vue'
+
+const { progress, loading, enroll, complete, isCompleted } = useCourseProgress(() => props.orgId, () => props.courseUuid)
+// progress.value: { enrolled, completed, total, percent, completedActivityIds } | null
+```
+
+`enroll()` needs a full LearnHouse sign-in; with an embed session, enroll learners from your server (`lh.admin.enrollments.enroll`).
 
 ## Agent API
 

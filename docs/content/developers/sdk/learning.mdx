@@ -1,0 +1,261 @@
+---
+title: SDK Progress, Assignments and Certificates
+description: "@learnhouse/sdk methods for a learner's progress: enroll, complete activities, course progress, assignments with file uploads and grades, certificates, learning paths, notes and calendar."
+seoTitle: "LMS Progress, Assignments and Certificates API in TypeScript – @learnhouse/sdk"
+---
+
+import { Callout } from '@/components/mdx'
+
+# Progress, assignments and certificates
+
+These methods act for the signed-in learner. Use a user session, or an embed session where the
+[auth modes](/developers/sdk/auth-modes#learning) table says so. To do the same for any learner from your server, use
+the [Admin API](/developers/sdk/admin).
+
+## Enrollment and progress
+
+A learner's **trail** is their progress record: one *run* per course they started, one *step* per completed activity.
+
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `trail.get()` | `GET /api/v1/trail/` | `Trail`, every org | Session |
+| `trail.getForOrg(orgId)` | `GET /api/v1/trail/org/{org_id}/trail` | `Trail` in one org | Session, embed |
+| `trail.startCourse(courseUuid)` | `POST /api/v1/trail/add_course/{course_uuid}` | `Trail` | Session |
+| `trail.leaveCourse(courseUuid)` | `DELETE /api/v1/trail/remove_course/{course_uuid}` | `Trail` | Session |
+| `trail.completeActivity(activityUuid)` | `POST /api/v1/trail/add_activity/{activity_uuid}` | `Trail` | Session, embed |
+| `trail.uncompleteActivity(activityUuid)` | `DELETE /api/v1/trail/remove_activity/{activity_uuid}` | `Trail` | Session, embed |
+| `trail.getCourseProgress(orgId, course)` | `getForOrg()` + `courseProgress()` | `CourseProgress` | Session, embed |
+
+```ts
+await lh.trail.startCourse('course_…')             // enroll
+await lh.trail.completeActivity('activity_…')      // "Mark as complete"
+const p = await lh.trail.getCourseProgress(org.id!, 'course_…')
+console.log(`${p.completed}/${p.total} (${p.percent}%)`)
+```
+
+- `startCourse` answers `400` (`TrailRun already exists`) when the learner is already enrolled. Check
+  `courseProgress(trail, course).enrolled` first, or treat that `400` as done.
+- `completeActivity` enrolls the learner in the course if needed. Assignment activities are refused: they complete when
+  the assignment is submitted.
+- `leaveCourse` deletes the run and every completion in it.
+- Completing the last activity can award the course certificate and send the `course_completed`
+  [webhook](/developers/sdk/webhooks).
+
+### `courseProgress(trail, course)`
+
+```ts signature
+import { courseProgress, isActivityCompleted, findCourseRun } from '@learnhouse/sdk'
+
+courseProgress(trail: Trail | null | undefined, course: number | string): CourseProgress
+```
+
+A pure function: no request. `course` is the course's numeric id, or its uuid with or without the `course_` prefix.
+
+| Field | |
+| --- | --- |
+| `enrolled` | The trail has a run for the course |
+| `completed` | Distinct completed activities |
+| `total` | Activities in the course when the run was read (`0` if unknown) |
+| `percent` | `0`–`100`, rounded down, so 100 means done |
+| `completedActivityIds` | Numeric ids of the completed activities |
+| `run` | The `TrailRun`, or `null` |
+
+`isActivityCompleted(trail, course, activityId)` and `findCourseRun(trail, course)` read the same data.
+
+### Sharing progress across a page: `TrailStore`
+
+When several parts of a page show progress, `TrailStore` keeps one copy of the trail per org, loads it once, and hands
+every change made through it to all subscribers, from the trail the API returns (no second request).
+`@learnhouse/react`'s [`useCourseProgress`](/developers/react/learners#progress-hooks) and the Vue composables use one
+per provider.
+
+```ts
+import { TrailStore, courseProgress } from '@learnhouse/sdk'
+
+const store = new TrailStore(lh)
+const off = store.subscribe((orgId) => {
+  const { trail, loading, error } = store.get(orgId)
+  render(courseProgress(trail, 'course_…'))
+})
+await store.load(org.id!)                    // once, shared by concurrent callers
+await store.complete(org.id!, 'activity_…')  // calls the API, then notifies
+off()
+```
+
+| Method | |
+| --- | --- |
+| `get(orgId)` | `{ trail, loading, error }`. `trail` is `undefined` before loading and `null` when it couldn't load |
+| `load(orgId, { force? })` | Loads once (resolves `null` on failure and keeps the error) |
+| `enroll(orgId, courseUuid)`, `leave(…)`, `complete(orgId, activityUuid)`, `uncomplete(…)` | Call the API, store the returned trail, notify. A failure throws and changes nothing |
+| `set(orgId, trail)` | Store a trail you got elsewhere |
+| `reload()` | Load every org loaded so far again |
+| `clear()` | Forget everything (sign-out, another learner) |
+| `subscribe(listener)` | `listener(orgId)` on every change; returns the unsubscribe |
+
+## Assignments
+
+An assignment is an activity of type `TYPE_ASSIGNMENT` with ordered tasks. The learner saves an answer per task (as
+often as they like), uploads files for file tasks, then submits. Auto-graded tasks are graded on submit; the rest wait
+for the teacher.
+
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `assignments.listMine(orgId, { gradedLimit })` | `GET /api/v1/assignments/me` | `MyAssignment[]` with status and grade | Session, embed |
+| `assignments.listForCourse(courseUuid)` | `GET /api/v1/assignments/course/{course_uuid}` | `Assignment[]` | Session, API token |
+| `assignments.get(uuid, { lang })` | `GET /api/v1/assignments/{assignment_uuid}` | `Assignment` | Session, API token, embed |
+| `assignments.getForActivity(activityUuid, { lang })` | `GET /api/v1/assignments/activity/{activity_uuid}` | `Assignment` | Session, API token, embed |
+| `assignments.listTasks(uuid, { lang })` | `GET /api/v1/assignments/{assignment_uuid}/tasks` | `AssignmentTask[]` | Session, API token, embed |
+| `assignments.getTask(taskUuid)` | `GET /api/v1/assignments/task/{assignment_task_uuid}` | `AssignmentTask` | Session, API token, embed |
+| `assignments.getMyTaskSubmissions(uuid)` | `GET …/{assignment_uuid}/tasks/submissions/me` | `Record<taskUuid, AssignmentTaskSubmission \| null>` | Session, embed |
+| `assignments.getMyTaskSubmission(uuid, taskUuid)` | `GET …/tasks/{task}/submissions/me` | `AssignmentTaskSubmission` (404 if none) | Session, embed |
+| `assignments.saveTaskSubmission(uuid, taskUuid, input, { onBehalfOfUserId })` | `PUT …/tasks/{task}/submissions` | `AssignmentTaskSubmission` | Session, embed, API token (on behalf) |
+| `assignments.uploadTaskFile(uuid, taskUuid, file, { filename })` | `POST …/tasks/{task}/sub_file` | `{ file_uuid }` | Session, embed |
+| `assignments.submit(uuid, { onBehalfOfUserId })` | `POST …/{assignment_uuid}/submissions` | `AssignmentSubmission` | Session, embed, API token (on behalf) |
+| `assignments.getMySubmission(uuid)` | `GET …/{assignment_uuid}/submissions/me` | `AssignmentSubmission[]` (empty before submitting) | Session, embed |
+| `assignments.getGrade(uuid, userId)` | `GET …/submissions/{user_id}/grade` | `AssignmentGrade` | Session and embed (own), API token |
+| `assignments.retry(uuid)` | `POST …/submissions/me/retry` | `AssignmentRetry` | Session, embed |
+
+`…` stands for `/api/v1/assignments`. `lang` reads the assignment in one of its course's translated languages.
+
+### A full attempt
+
+```ts
+const assignment = await lh.assignments.getForActivity(activityUuid)
+const tasks = await lh.assignments.listTasks(assignment.assignment_uuid)
+const saved = await lh.assignments.getMyTaskSubmissions(assignment.assignment_uuid) // resume
+
+for (const task of tasks) {
+  if (task.assignment_type === 'FILE_SUBMISSION') {
+    const { file_uuid } = await lh.assignments.uploadTaskFile(assignment.assignment_uuid, task.assignment_task_uuid, file)
+    await lh.assignments.saveTaskSubmission(assignment.assignment_uuid, task.assignment_task_uuid, {
+      taskSubmission: { fileUUID: file_uuid },
+    })
+  } else {
+    await lh.assignments.saveTaskSubmission(assignment.assignment_uuid, task.assignment_task_uuid, {
+      taskSubmission: { answer: 'My answer' },
+      submissionUuid: saved[task.assignment_task_uuid]?.assignment_task_submission_uuid,
+    })
+  }
+}
+
+await lh.assignments.submit(assignment.assignment_uuid)
+```
+
+- **`taskSubmission`** is stored as given. Its shape depends on the task type: `{ fileUUID }` for file tasks, the
+  quiz/form answers the LearnHouse UI writes for built-in types, or any JSON for `CUSTOM` tasks (see
+  [Headless assignments](/developers/api/headless-assignments)).
+- Pass **`submissionUuid`** to update an existing answer; without it a new one is created.
+- **Uploads** must be PDF, JPEG, PNG, GIF, WebP, DOCX, XLSX, PPTX, ZIP, MP3, WAV, OGG, M4A, MP4 or WebM (`400`
+  otherwise), and are rate limited per learner (`429` with `Retry-After`, which the SDK waits out).
+- `submit()` returns the submission with its `submission_status` (`SUBMITTED`, `GRADED` once auto-graded, or `LATE`
+  after the due date).
+
+### Grades and retries
+
+```ts
+const assignment = await lh.assignments.get(assignmentUuid)
+const grade = await lh.assignments.getGrade(assignment.assignment_uuid, me.id)
+grade.display_grade   // formatted for the grading type: "B", "85.00%", "Pass", "3.0", "85/100"
+grade.passed
+grade.tasks           // per task: grade, max_grade, percentage, feedback
+grade.overall_feedback
+
+if (assignment.allow_retries && !grade.passed) {
+  const { attempt_number } = await lh.assignments.retry(assignment.assignment_uuid)
+}
+```
+
+`getGrade` answers `404` until there is a submission. `retry` needs a graded submission, `allow_retries`, and attempts
+left (`max_retries`, 0 = unlimited): otherwise `400` or `403`. It clears the task answers and revokes the course
+certificate if the assignment had earned it.
+
+### For a learner, from your server
+
+An API token with the `assignments` **create** right can save answers and submit for a learner (their LearnHouse user
+id; they must belong to the token's org):
+
+```ts
+await server.assignments.saveTaskSubmission(assignmentUuid, taskUuid, { taskSubmission: { answer: 42 } }, { onBehalfOfUserId: 42 })
+await server.assignments.submit(assignmentUuid, { onBehalfOfUserId: 42 })
+```
+
+Authoring and grading (create assignments and tasks, grade submissions) use the typed escape hatch:
+`lh.POST('/api/v1/assignments/', { body })`. See [Headless assignments](/developers/api/headless-assignments).
+
+## Certificates
+
+Course certificates are awarded when a learner completes a course that has one. Pro plan on LearnHouse Cloud.
+
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `certificates.listMine({ orgId, lang })` | `GET /api/v1/certifications/user/all` | `Certificate[]` | Session |
+| `certificates.listMineForCourse(courseUuid)` | `GET /api/v1/certifications/user/course/{course_uuid}` | `Certificate[]` (empty until earned) | Session |
+| `certificates.get(uuid, { lang })` | `GET /api/v1/certifications/certificate/{user_certification_uuid}` | `Certificate` | Anyone |
+| `certificates.verify(uuid, { lang })` | Same | `Certificate \| null` | Anyone |
+| `certificates.getForCourse(courseUuid)` | `GET /api/v1/certifications/course/{course_uuid}` | `Certification[]` (the course's certificate settings) | Anyone, API token |
+
+A `Certificate` has `certificate_user` (with `user_certification_uuid`, the id printed on the certificate and used in
+its public URL), `certification` (its settings), `course` and `user` (name only).
+
+```ts fragment
+// A public "verify a certificate" page.
+const cert = await lh.certificates.verify(idFromUrl)
+if (!cert) return 'No such certificate'
+return `${cert.user.first_name} ${cert.user.last_name} completed ${cert.course?.name}`
+```
+
+`verify` is `get` that resolves `null` for an unknown or revoked id (`404`) instead of throwing; other errors still
+throw.
+
+## Learning paths
+
+Ordered sets of courses, with an optional path certificate. Pro plan on LearnHouse Cloud.
+
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `paths.list(orgId)` | `GET /api/v1/paths/org/{org_id}` | `LearningPath[]` | Anyone, API token |
+| `paths.listForCourse(courseUuid)` | `GET /api/v1/paths/course/{course_uuid}` | `LearningPath[]` | Anyone, API token |
+| `paths.get(pathUuid)` | `GET /api/v1/paths/{path_uuid}` | `LearningPath`, with `progress` when signed in | Anyone, API token |
+| `paths.listMine(orgId)` | `GET /api/v1/paths/me/org/{org_id}` | `LearningPath[]` they're enrolled in | Session |
+| `paths.enroll(pathUuid)` | `POST /api/v1/paths/{path_uuid}/enroll` | `LearningPath` | Session |
+| `paths.leave(pathUuid)` | `DELETE /api/v1/paths/{path_uuid}/enroll` | `object` | Session |
+| `paths.listMyCertificates()` | `GET /api/v1/paths/certificates/me` | `object[]` | Session |
+| `paths.getCertificate(uuid)` | `GET /api/v1/paths/certificates/{certificate_uuid}` | `object` | Anyone |
+
+## Notes
+
+Private notes a learner keeps on activities. **Auth:** session only.
+
+| Method | Endpoint | Returns |
+| --- | --- | --- |
+| `notes.list(orgId, { courseUuid, q, limit })` | `GET /api/v1/notes` | `NoteList` (`notes`, `total`) |
+| `notes.listForActivity(activityUuid)` | `GET /api/v1/notes/activity/{activity_uuid}` | `Note[]` |
+| `notes.create(activityUuid, { content, anchor })` | `POST /api/v1/notes/activity/{activity_uuid}` | `Note` |
+| `notes.update(noteUuid, { content, anchor, clearAnchor })` | `PATCH /api/v1/notes/{note_uuid}` | `Note` |
+| `notes.delete(noteUuid)` | `DELETE /api/v1/notes/{note_uuid}` | |
+
+`content` is a rich-text document in Tiptap JSON; `anchor` pins the note to a block or a video time
+(`{ kind: 'video', seconds: 12 }`).
+
+```ts
+await lh.notes.create(activityUuid, {
+  content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Review this' }] }] },
+  anchor: { kind: 'video', seconds: 95 },
+})
+```
+
+## Calendar
+
+`calendar.events(orgId, { start, end })` → `CalendarEvent[]`. `GET /api/v1/calendar/org/{org_id}/events`.
+**Auth:** session. Due dates, drip releases and other dated items for the learner between `start` and `end` (`Date`s or
+ISO 8601 strings).
+
+```ts
+const now = new Date()
+const week = await lh.calendar.events(org.id!, { start: now, end: new Date(now.getTime() + 7 * 864e5) })
+```
+
+<Callout type="info">
+  Errors common to everything on this page: `401` when signed out, `403` for a mode the route doesn't take (see
+  [auth modes](/developers/sdk/auth-modes)) or a course the learner can't open, `404` for an unknown id.
+</Callout>

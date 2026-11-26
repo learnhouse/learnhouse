@@ -1,8 +1,20 @@
 {
   "index": "Quickstart",
   "authentication": "Authentication",
+  "auth-modes": "Auth Modes",
   "resources": "Resources",
+  "accounts": "Accounts & Sign-in",
+  "learning": "Progress & Assignments",
+  "community": "Community & Notifications",
+  "admin": "Admin API",
+  "embed-sessions": "Embed Sessions",
   "requests": "Typed Requests & Errors",
   "webhooks": "Webhooks",
+  "-- Guides": {
+    "type": "separator",
+    "title": "Guides"
+  },
+  "learner-app": "Build a Learner App",
+  "server": "Server-side Usage",
   "react-native": "React Native"
 }

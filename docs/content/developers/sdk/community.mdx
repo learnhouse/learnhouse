@@ -1,0 +1,116 @@
+---
+title: SDK Communities, Notifications and Groups
+description: "@learnhouse/sdk methods for community discussions (post, reply, vote, react), the notification inbox and push devices, and user groups."
+seoTitle: "LMS Community, Notifications and Groups API in TypeScript – @learnhouse/sdk"
+---
+
+import { Callout } from '@/components/mdx'
+
+# Communities, notifications and groups
+
+## Communities
+
+Communities are forums, each optionally tied to a course. Standard plan or higher on LearnHouse Cloud.
+
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `communities.list(orgId, { page, limit })` | `GET /api/v1/communities/org/{org_id}/page/{page}/limit/{limit}` | `Community[]` | Anyone, API token |
+| `communities.listAll(orgId, { pageSize })` | The same, page after page | async iterator of `Community` | Anyone, API token |
+| `communities.get(uuid)` | `GET /api/v1/communities/{community_uuid}` | `Community` | Anyone (public) |
+| `communities.getForCourse(courseUuid)` | `GET /api/v1/communities/course/{course_uuid}` | `Community \| null` | Anyone (public) |
+| `communities.summary(orgId)` | `GET /api/v1/communities/org/{org_id}/summary` | `CommunitySummary[]`: counts and last activity | Anyone, API token |
+| `communities.activity(orgId)` | `GET /api/v1/communities/org/{org_id}/activity` | `CommunityActivity[]` | Admins, API token |
+| `communities.listDiscussions(uuid, { sortBy, label, page, limit })` | `GET /api/v1/communities/{community_uuid}/discussions` | `Discussion[]` | Anyone (public) |
+| `communities.createDiscussion(uuid, { title, content, label, emoji })` | `POST /api/v1/communities/{community_uuid}/discussions` | `DiscussionWithVote` | Session |
+
+`sortBy` is `recent` (default), `upvotes` or `hot`; `label` is a label id from `discussions.labels()`. Pages default to
+20 communities or 10 discussions.
+
+## Discussions
+
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `discussions.labels()` | `GET /api/v1/discussions/labels` | `DiscussionLabel[]` | Anyone |
+| `discussions.get(uuid)` | `GET /api/v1/discussions/{discussion_uuid}` | `Discussion` (counts, `has_voted`) | Anyone (public) |
+| `discussions.update(uuid, { title, content, label, emoji })` | `PUT /api/v1/discussions/{discussion_uuid}` | `DiscussionWithVote` | Session (author, moderators) |
+| `discussions.delete(uuid)` | `DELETE /api/v1/discussions/{discussion_uuid}` | `object` | Session (author, moderators) |
+| `discussions.listComments(uuid, { page, limit })` | `GET /api/v1/discussions/{discussion_uuid}/comments` | `DiscussionComment[]`, oldest first | Anyone (public) |
+| `discussions.countComments(uuid)` | `GET /api/v1/discussions/{discussion_uuid}/comments/count` | `{ count }` | Anyone (public) |
+| `discussions.reply(uuid, content)` | `POST /api/v1/discussions/{discussion_uuid}/comments` | `DiscussionComment` | Session |
+| `discussions.updateComment(commentUuid, content)` | `PUT /api/v1/comments/{comment_uuid}` | `DiscussionComment` | Session (author) |
+| `discussions.deleteComment(commentUuid)` | `DELETE /api/v1/comments/{comment_uuid}` | `object` | Session (author, moderators) |
+| `discussions.vote(uuid)` / `unvote(uuid)` | `POST` / `DELETE /api/v1/discussions/{discussion_uuid}/vote` | `DiscussionVote` / `object` | Session |
+| `discussions.voteComment(commentUuid)` / `unvoteComment(commentUuid)` | `POST` / `DELETE /api/v1/comments/{comment_uuid}/vote` | `DiscussionCommentVote` / `object` | Session |
+| `discussions.listReactions(uuid)` | `GET /api/v1/discussions/{discussion_uuid}/reactions` | `DiscussionReaction[]` (`emoji`, `count`, `has_reacted`) | Anyone (public) |
+| `discussions.react(uuid, emoji, { active })` | `POST /api/v1/discussions/{discussion_uuid}/reactions` | `{ action: 'added' \| 'removed' }` | Session |
+
+```ts
+const community = await lh.communities.getForCourse('course_…')
+if (community) {
+  const discussion = await lh.communities.createDiscussion(community.community_uuid, {
+    title: 'Stuck on exercise 3',
+    content: 'The loop never ends. What am I missing?',
+  })
+  await lh.discussions.reply(discussion.discussion_uuid, 'Check the exit condition.')
+  await lh.discussions.react(discussion.discussion_uuid, '👀')
+}
+```
+
+- A new discussion comes with its author's upvote (`upvote_count: 1`). A second upvote by the same user answers `400`;
+  `unvote()` first.
+- `react()` toggles the emoji; pass `active: true` or `false` to set it instead.
+- Posts are checked against the community's moderation words (`400` when a post is blocked). Locked discussions refuse
+  replies (`403`).
+
+## Notifications
+
+The signed-in user's inbox, unread counts, preferences and push devices. **Auth:** session only.
+
+| Method | Endpoint | Returns |
+| --- | --- | --- |
+| `notifications.list(options)` | `GET /api/v1/notifications` | `NotificationPage` (`items`, `next_cursor`) |
+| `notifications.listAll(options)` | The same, following `next_cursor` | async iterator of `Notification` |
+| `notifications.unreadCount({ orgId, audience })` | `GET /api/v1/notifications/unread_count` | `NotificationUnread` |
+| `notifications.counts({ orgId })` | `GET /api/v1/notifications/counts` | `{ personal, admin }` unread counts |
+| `notifications.markRead({ uuids } \| { all: true, … })` | `POST /api/v1/notifications/read` | `NotificationChange` |
+| `notifications.markOneRead(uuid)` / `markOneUnread(uuid)` | `POST /api/v1/notifications/{uuid}/read` / `unread` | `NotificationChange` |
+| `notifications.archive(uuid)` / `unarchive(uuid)` | `POST /api/v1/notifications/{uuid}/archive` / `unarchive` | `NotificationChange` |
+| `notifications.delete(uuid)` | `DELETE /api/v1/notifications/{uuid}` | `{ deleted }` |
+| `notifications.getPreferences()` | `GET /api/v1/notifications/preferences` | `object` |
+| `notifications.updatePreferences(input)` | `PUT /api/v1/notifications/preferences` | `object` |
+| `notifications.listDevices()` | `GET /api/v1/notifications/devices` | the user's push devices |
+| `notifications.registerDevice({ token, platform, orgId, deviceName, appVersion })` | `POST /api/v1/notifications/devices` | |
+| `notifications.unregisterDevice(token)` | `POST /api/v1/notifications/devices/unregister` | |
+
+`list()` options: `orgId`, `unreadOnly`, `category` (`messages`, `assignments`, `courses`, `live`, `community`,
+`groups`, …), `audience` (`personal` by default, `admin`, `all`), `archived`, `type`, `important`, `q` (search),
+`cursor` and `limit` (up to 100). Every change answers with fresh unread counts, so a badge can update without another
+call.
+
+```ts
+// An inbox with a badge.
+const { unread_count } = await lh.notifications.unreadCount({ orgId: org.id! })
+for await (const n of lh.notifications.listAll({ orgId: org.id!, unreadOnly: true })) {
+  console.log(n.title, n.path)
+}
+await lh.notifications.markRead({ all: true, orgId: org.id! })
+```
+
+A notification's `path` is where it points in the LearnHouse app (`/course/…/activity/…`), and `data` carries the ids
+it is about. For push on phones see [React Native](/developers/sdk/react-native#push-notifications).
+
+## User groups
+
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `usergroups.listMine(orgId)` | `GET /api/v1/usergroups/org/{org_id}/mine` | `UserGroupMembership`: `member_of`, `manages` | Session |
+| `usergroups.join(code)` | `POST /api/v1/usergroups/join` | `{ status: 'joined' \| 'already_member', usergroup_uuid, name, expires_at }` | Session |
+
+Join codes are created by group managers in the dashboard. An unknown or expired code answers `404`, a code used up
+`409`, and a user who isn't a member of the organization yet `403`.
+Managing groups from a server is in the [Admin API](/developers/sdk/admin#user-groups).
+
+<Callout type="info">
+  Messaging (direct messages, the `/messaging` routes) is not wrapped yet; call it with the typed
+  [`lh.GET` / `lh.POST`](/developers/sdk/requests).
+</Callout>

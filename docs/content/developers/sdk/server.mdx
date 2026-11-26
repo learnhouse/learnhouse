@@ -1,0 +1,135 @@
+---
+title: Server-side Usage with API Tokens
+description: "Use @learnhouse/sdk on your server with an org API token: read content, sync users from your system, enroll, track progress, submit for learners and react to webhooks."
+seoTitle: "Server-side LMS Integration with API Tokens in TypeScript – LearnHouse"
+---
+
+import { Callout } from '@/components/mdx'
+
+# Server-side usage with API tokens
+
+An org API token (`lh_…`) lets your backend act for the organization: read its content, manage its learners through
+the [Admin API](/developers/sdk/admin), and submit assignment work for them. It never acts as a person, so the routes
+that belong to a signed-in user (their progress, inbox, account) refuse it.
+
+## Set up
+
+Create a token in **Dashboard → Developers → API Access** and give it only the rights you need (see
+[API tokens](/developers/api/authentication#permissions)). Then:
+
+```ts filename="lib/learnhouse.server.ts"
+import { createClient } from '@learnhouse/sdk'
+
+export const lh = createClient({
+  baseUrl: process.env.LEARNHOUSE_URL!,   // origin, without /api/v1
+  token: process.env.LEARNHOUSE_TOKEN!,   // lh_…
+  timeoutMs: 15_000,
+  retry: { retries: 3, maxDelayMs: 30_000 }, // a background job can afford to wait out rate limits
+})
+
+const me = await lh.auth.me()
+console.log(me.is_api_token, me.org_slug) // true 'your-school'
+```
+
+<Callout type="warning">
+  The token is a password for your organization. Keep it in server environment variables, never in browser code, a
+  mobile app or a repository. `createClient({ session: 'lh_…' })` throws to stop it reaching a browser by mistake.
+</Callout>
+
+## Read content
+
+```ts
+const { org_slug } = await lh.auth.me()
+for await (const course of lh.courses.listAll(org_slug!)) {
+  const meta = await lh.courses.getMeta(course.course_uuid!, { slim: true })
+  console.log(course.name, meta.chapters.length)
+}
+```
+
+`orgs.get()` refuses API tokens; use `auth.me()` for the org's id and slug. The [auth modes](/developers/sdk/auth-modes)
+page lists every method a token can call.
+
+## Sync users from your system
+
+Create LearnHouse accounts for your users, look them up by email, and keep their enrollments in step with your own
+records (a purchase, an HR system, a cohort):
+
+```ts
+import { isLearnHouseError } from '@learnhouse/sdk'
+
+const ORG = 'your-school' // the token's org (auth.me().org_slug)
+
+async function ensureLearner(email: string, username: string) {
+  try {
+    return await lh.admin.users.getByEmail(ORG, email)
+  } catch (err) {
+    if (!isLearnHouseError(err) || err.status !== 404) throw err
+    return lh.admin.users.provision(ORG, { email, username })
+  }
+}
+
+const learner = await ensureLearner('ada@example.com', 'ada')
+await lh.admin.enrollments.enroll(ORG, learner.id, 'course_…')
+await lh.admin.enrollments.bulkEnroll(ORG, 'course_…', [learner.id])
+```
+
+## Track and set progress
+
+```ts
+const progress = await lh.admin.progress.get(ORG, learner.id, 'course_…')
+if (progress.completion_percentage === 100) {
+  const certs = await lh.admin.certificates.listForUser(ORG, learner.id)
+}
+
+// Credit work done elsewhere (an in-person session, another tool):
+await lh.admin.progress.completeActivity(ORG, learner.id, 'activity_…')
+```
+
+## Submit assignment work for a learner
+
+With the `assignments` **create** right, the token can store a learner's answer and hand the assignment in for them:
+
+```ts
+await lh.assignments.saveTaskSubmission(
+  'assignment_…',
+  'assignmenttask_…',
+  { taskSubmission: { answer: 'from our quiz engine', score: 9 } },
+  { onBehalfOfUserId: learner.id },
+)
+await lh.assignments.submit('assignment_…', { onBehalfOfUserId: learner.id })
+```
+
+## Send learners into LearnHouse, signed in
+
+```ts
+const link = await lh.admin.auth.magicLink(ORG, { userId: learner.id, redirectTo: '/course/abc' })
+// Redirect the learner's browser to link.url (valid once, for 5 minutes by default).
+```
+
+To render lessons inside your own pages instead, mint [embed sessions](/developers/sdk/embed-sessions).
+
+## React to events
+
+Combine the Admin API with [webhooks](/developers/sdk/webhooks): verify the delivery, then act.
+
+```ts
+import { parseWebhook } from '@learnhouse/sdk'
+
+export async function POST(req: Request) {
+  const { event, data } = await parseWebhook<{ user?: { user_uuid?: string } }>({
+    payload: await req.text(),
+    headers: req.headers,
+    secret: process.env.LEARNHOUSE_WEBHOOK_SECRET!,
+  })
+  if (event === 'course_completed') {
+    // e.g. unlock the next module in your system
+  }
+  return Response.json({ received: true })
+}
+```
+
+## Rate limits and retries
+
+Writes are never retried automatically except after a `429` (the API refused before doing anything), so a job can
+call them without double-applying. Raise `maxDelayMs` so long `Retry-After` waits are honoured instead of thrown. See
+[Errors and retries](/developers/sdk/requests#timeouts-retries-cancellation).

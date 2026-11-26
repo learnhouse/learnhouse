@@ -46,18 +46,42 @@ Wrap several activities in a provider to share one client, one session and the s
 ```tsx
 import { LearnHouseProvider, LearnHouseActivity } from '@learnhouse/react'
 
-<LearnHouseProvider
-  baseUrl="https://learn.example.com"
-  getToken={() => session.accessToken}   // user token, refreshed on demand
-  theme={{ accent: '#7c3aed' }}
-  locale="fr"
-  onEvent={(e) => analytics.track(e.type, e)}
->
-  <LearnHouseActivity activityId="activity_…" />
-</LearnHouseProvider>
+export const Course = () => (
+  <LearnHouseProvider
+    baseUrl="https://learn.example.com"
+    // A learner session your server minted with @learnhouse/sdk's embed.createSession()
+    getSession={() => fetch('/api/learnhouse-session', { method: 'POST' }).then((r) => r.json())}
+    theme={{ accent: '#7c3aed' }}
+    locale="fr"
+    onEvent={(e) => analytics.track(e.type, e)}
+  >
+    <LearnHouseActivity activityId="activity_…" />
+  </LearnHouseProvider>
+)
 ```
 
-Never pass an `lh_` API token to the browser. In a browser, use a user's access token. Keep API tokens on your server, together with `@learnhouse/sdk`.
+Never pass an `lh_` API token to the browser: the provider throws if you try. Keep API tokens on your server, together with `@learnhouse/sdk`, and give the browser an embed session (`session` / `getSession`). See [Signed-in learners](https://docs.learnhouse.app/developers/react/learners).
+
+## Progress hooks
+
+Under a provider, `useCourseProgress(orgId, course)` and `useTrail(orgId)` give you the learner's progress as state. They share one copy of the trail with every activity's **Mark as complete** button, so a course header updates the moment a lesson is completed, without another request.
+
+```tsx
+import { useCourseProgress } from '@learnhouse/react'
+
+export function CourseHeader({ orgId, courseUuid }: { orgId: number; courseUuid: string }) {
+  const { progress, complete } = useCourseProgress(orgId, courseUuid)
+  if (!progress) return null
+  return (
+    <header>
+      {progress.completed}/{progress.total} lessons ({progress.percent}%)
+      <button onClick={() => complete('activity_…')}>Mark the intro done</button>
+    </header>
+  )
+}
+```
+
+It also returns `enroll()`, `leave()`, `uncomplete()`, `isCompleted(activityId)`, `loading`, `error` and `refresh()`. `useLearnHouseClient()` gives you the provider's `@learnhouse/sdk` client for everything else.
 
 ## Customization
 
@@ -76,25 +100,29 @@ Never pass an `lh_` API token to the browser. In a browser, use a user's access 
 | `className`, `style`, `unstyled` | Hooks into the root element |
 
 ```tsx
-const Callout = ({ Default, ...props }) => (
+import { LearnHouseActivity, type BlockOverrideProps } from '@learnhouse/react'
+
+const Callout = ({ Default, ...props }: BlockOverrideProps) => (
   <aside className="my-callout">
     <Default {...props} />
   </aside>
 )
 
-<LearnHouseActivity
-  activityId="activity_…"
-  components={{ callout: Callout }}
-  hideBlocks={['blockQuiz']}
-  theme={{ mode: 'auto', accent: '#0ea5e9', contentWidth: 720, radius: 8 }}
-/>
+export const Lesson = () => (
+  <LearnHouseActivity
+    activityId="activity_…"
+    components={{ callout: Callout }}
+    hideBlocks={['blockQuiz']}
+    theme={{ mode: 'auto', accent: '#0ea5e9', contentWidth: 720, radius: 8 }}
+  />
+)
 ```
 
 In dark mode, text and background follow the theme. Blocks keep the light cards they use in LearnHouse.
 
 ## Events
 
-`onEvent` receives `load`, `ready`, `error`, `link_click`, `media` (`play`/`pause`/`ended`/`progress` for video and audio), `resize` (useful for sizing an iframe or modal), `visible`, `complete` (the end of the activity scrolled into view, with `trackCompletion`) and `analytics` (the events LearnHouse's own blocks send). There are also `onLoad` and `onError` callbacks.
+`onEvent` receives `load`, `ready`, `error`, `progress` (a signed-in learner's completion was saved), `session_expired`, `link_click`, `media` (`play`/`pause`/`ended`/`progress` for video and audio), `resize` (useful for sizing an iframe or modal), `visible`, `complete` (the end of the activity scrolled into view, with `trackCompletion`) and `analytics` (the events LearnHouse's own blocks send). There are also `onLoad` and `onError` callbacks.
 
 ## Custom element
 
@@ -123,7 +151,7 @@ stream resumes from the last event id.
 ```tsx
 import { useAgentConversation, AgentView } from '@learnhouse/react'
 
-const chat = useAgentConversation({ baseUrl, token, agent: 'copilot', create: { context: { course_uuid } } })
+const chat = useAgentConversation({ baseUrl, token, agent: 'copilot', create: { context: { course_uuid: 'course_…' } } })
 // chat.messages, chat.status ('idle' | 'loading' | 'streaming' | 'requires_action' | 'error'), chat.error
 // chat.send(text), chat.approve(id, phrase?), chat.deny(id, reason?), chat.cancel()
 // chat.submitToolResult(callId, output), chat.pendingApprovals, chat.pendingToolCalls, chat.suggestions
@@ -145,7 +173,7 @@ other component type shows its `fallback_markdown`, rendered as React elements
 
 ```tsx
 <AgentChat baseUrl={baseUrl} token={token} agent="copilot" siteUrl="https://learn.example.com"
-  renderers={{ table: MyTable }} renderView={(view, fallback) => fallback} theme="auto" />
+  renderView={(view, fallback) => fallback} theme="auto" />
 ```
 
 Override any component type with `renderers` (a renderer gets `component`,

@@ -1,0 +1,151 @@
+---
+title: SDK Admin API
+description: "lh.admin in @learnhouse/sdk: provision users, enroll them, read and set progress, award certificates, manage groups and mint sign-in links and tokens from your server with an org API token."
+seoTitle: "Headless LMS Admin API in TypeScript: Users, Enrollments, Progress – @learnhouse/sdk"
+---
+
+import { Callout } from '@/components/mdx'
+
+# Admin API
+
+`lh.admin` manages your organization's learners from your own server: create accounts, enroll them, read and change
+their progress, award certificates, manage groups, and sign them in. It wraps the headless Admin API
+(`/api/v1/admin/{org_slug}/...`), with types generated from the API like the rest of the SDK.
+
+```ts
+import { createClient } from '@learnhouse/sdk'
+
+const lh = createClient({ baseUrl: process.env.LEARNHOUSE_URL!, token: process.env.LEARNHOUSE_TOKEN! })
+const ORG = 'your-school'
+
+const user = await lh.admin.users.provision(ORG, { email: 'ada@example.com', username: 'ada', first_name: 'Ada' })
+await lh.admin.enrollments.enroll(ORG, user.id, 'course_…')
+const progress = await lh.admin.progress.get(ORG, user.id, 'course_…')
+console.log(progress.completion_percentage)
+```
+
+**Auth:** an org API token (`lh_…`) only. Every method takes the token's org slug first; another org's slug, a user
+session or a missing right answers `403`. Users are referenced by their numeric LearnHouse id (`user.id`). Pro plan on
+LearnHouse Cloud.
+
+<Callout type="warning">
+  The Admin API acts on your learners' accounts. Keep the token on your server, never in a browser or an app.
+</Callout>
+
+The **Right** column is the API token permission the method needs (Dashboard → Developers → API Access).
+
+## Users
+
+| Method | Endpoint | Returns | Right |
+| --- | --- | --- | --- |
+| `users.provision(org, input)` | `POST /admin/{org_slug}/users` | `AdminUser` | `users: create` |
+| `users.getByEmail(org, email)` | `GET /admin/{org_slug}/users/by-email/{email}` | `AdminOrgMember` | `users: read` |
+| `users.update(org, userId, input)` | `PATCH /admin/{org_slug}/users/{user_id}` | `AdminOrgMember` | `users: update` |
+| `users.changeRole(org, userId, roleId)` | `PATCH /admin/{org_slug}/users/{user_id}/role` | `{ user_id, role_id }` | `users: update` + `roles: update` |
+| `users.remove(org, userId)` | `DELETE /admin/{org_slug}/users/{user_id}` | `{ detail }` | `users: delete` |
+| `users.listGroups(org, userId)` | `GET /admin/{org_slug}/users/{user_id}/groups` | `AdminUserGroupOfUser[]` | `usergroups: read` |
+| `users.export(org, userId)` | `GET /admin/{org_slug}/users/{user_id}/export` | `AdminUserExport` (everything stored about them) | `users: read` |
+| `users.anonymize(org, userId)` | `POST /admin/{org_slug}/users/{user_id}/anonymize` | `{ detail, user_id, anonymized_email, api_tokens_revoked }` | `users: delete` |
+
+`provision` input: `email`, `username` (required), `first_name`, `last_name`, `password`, `role_id`, `extra_metadata`.
+It creates the account and adds it to the org in one call, with no email verification step (built for SSO / JIT
+provisioning). An email that already has an account answers `409` (invite that person instead); a taken username
+`400`. Without `password`, the user signs in with a [magic link](#sign-in-links-and-tokens) or SSO.
+
+`remove` takes the member out of the organization; the account stays. `anonymize` erases the person's identifying data
+and can't be undone.
+
+## Enrollments
+
+| Method | Endpoint | Returns | Right |
+| --- | --- | --- | --- |
+| `enrollments.enroll(org, userId, courseUuid)` | `POST /admin/{org_slug}/enrollments/{user_id}/{course_uuid}` | `AdminTrail` | `courses: update` |
+| `enrollments.unenroll(org, userId, courseUuid)` | `DELETE /admin/{org_slug}/enrollments/{user_id}/{course_uuid}` | `{ detail }` | `courses: update` |
+| `enrollments.listForUser(org, userId)` | `GET /admin/{org_slug}/enrollments/{user_id}` | `AdminTrail` | `courses: read` |
+| `enrollments.listForCourse(org, courseUuid, { page, limit })` | `GET /admin/{org_slug}/courses/{course_uuid}/enrollments` | `AdminCourseEnrollment[]` | `courses: read` |
+| `enrollments.bulkEnroll(org, courseUuid, userIds)` | `POST /admin/{org_slug}/enrollments/bulk` | `{ enrolled, already_enrolled, skipped }` | `courses: update` |
+| `enrollments.bulkUnenroll(org, courseUuid, userIds)` | `POST /admin/{org_slug}/enrollments/bulk/unenroll` | `{ unenrolled, not_enrolled }` | `courses: update` |
+| `enrollments.checkAccess(org, courseUuid, userId)` | `GET /admin/{org_slug}/courses/{course_uuid}/access/{user_id}` | `{ has_access, is_enrolled, is_public, is_published }` | `courses: read` |
+
+`AdminTrail` is the learner's trail, so [`courseProgress()`](/developers/sdk/learning#courseprogresstrail-course)
+works on it.
+
+## Progress
+
+| Method | Endpoint | Returns | Right |
+| --- | --- | --- | --- |
+| `progress.get(org, userId, courseUuid)` | `GET /admin/{org_slug}/progress/{user_id}/{course_uuid}` | `AdminCourseProgress` | `courses: read` |
+| `progress.listForUser(org, userId)` | `GET /admin/{org_slug}/progress/{user_id}` | `AdminProgressSummary[]`, one per enrolled course | `courses: read` |
+| `progress.getTrail(org, userId)` | `GET /admin/{org_slug}/trails/{user_id}` | `AdminTrailDetail`: courses → chapters → activities | `courses: read` |
+| `progress.getCourseTrail(org, userId, courseUuid)` | `GET /admin/{org_slug}/trails/{user_id}/courses/{course_uuid}` | `AdminTrailDetail` | `courses: read` |
+| `progress.completeActivity(org, userId, activityUuid)` | `POST /admin/{org_slug}/progress/{user_id}/activities/{activity_uuid}/complete` | `{ completed, is_new_completion, course_completed }` | `courses: update` |
+| `progress.uncompleteActivity(org, userId, activityUuid)` | `DELETE …/activities/{activity_uuid}/complete` | `{ completed }` | `courses: update` |
+| `progress.completeCourse(org, userId, courseUuid)` | `POST /admin/{org_slug}/progress/{user_id}/{course_uuid}/complete` | `{ completed_count, course_completed, certificate_awarded, … }` | `courses: update` |
+| `progress.reset(org, userId, courseUuid)` | `POST /admin/{org_slug}/progress/{user_id}/{course_uuid}/reset` | `{ steps_deleted }` | `courses: update` |
+
+`AdminCourseProgress` has `total_activities`, `completed_activities`, `completion_percentage` and
+`completed_activity_ids`. Completing activities from the server fires the same webhooks and certificate logic as a
+learner doing it.
+
+## Certificates
+
+| Method | Endpoint | Returns | Right |
+| --- | --- | --- | --- |
+| `certificates.listForUser(org, userId)` | `GET /admin/{org_slug}/certifications/{user_id}` | `AdminCertificate[]` | `certifications: read` |
+| `certificates.award(org, userId, courseUuid)` | `POST /admin/{org_slug}/certifications/{user_id}/{course_uuid}/award` | `{ user_certification_uuid, user_id, course_uuid }` | `certifications: create` |
+| `certificates.revoke(org, userId, userCertificationUuid)` | `DELETE /admin/{org_slug}/certifications/{user_id}/{user_certification_uuid}` | `{ detail, user_certification_uuid }` | `certifications: delete` |
+
+`award` needs a course with a certificate configured. Anyone can then check it with
+[`certificates.verify()`](/developers/sdk/learning#certificates); after `revoke` that returns `null`.
+
+## User groups
+
+| Method | Endpoint | Returns | Right |
+| --- | --- | --- | --- |
+| `usergroups.create(org, { name, description })` | `POST /admin/{org_slug}/usergroups` | `AdminUserGroup` | `usergroups: create` |
+| `usergroups.delete(org, usergroupUuid)` | `DELETE /admin/{org_slug}/usergroups/{usergroup_uuid}` | `{ detail, usergroup_uuid }` | `usergroups: delete` |
+| `usergroups.listMembers(org, usergroupUuid, { page, limit })` | `GET /admin/{org_slug}/usergroups/{usergroup_uuid}/members` | `AdminUserGroupMember[]` | `usergroups: read` |
+| `usergroups.addMember(org, usergroupUuid, userId)` | `POST …/usergroups/{usergroup_uuid}/members/{user_id}` | `{ status, … }` | `usergroups: update` |
+| `usergroups.removeMember(org, usergroupUuid, userId)` | `DELETE …/usergroups/{usergroup_uuid}/members/{user_id}` | `{ status, … }` | `usergroups: update` |
+| `usergroups.addCourse(org, usergroupUuid, courseUuid)` | `POST …/usergroups/{usergroup_uuid}/courses/{course_uuid}` | `{ detail, … }` | `usergroups: update` |
+| `usergroups.removeCourse(org, usergroupUuid, courseUuid)` | `DELETE …/usergroups/{usergroup_uuid}/courses/{course_uuid}` | `{ detail, … }` | `usergroups: update` |
+
+## Course analytics
+
+`courses.analytics(org, courseUuid)` returns `AdminCourseAnalytics`: `enrollment_count`, `completed_count`,
+`in_progress_count`, `total_activities`, `average_completion_percentage` and `certificate_count`.
+`GET /admin/{org_slug}/courses/{course_uuid}/analytics`. Right: `courses: read`.
+
+## Sign-in links and tokens
+
+Three ways to let one of your users act in LearnHouse. All need `users: update`, and all refuse org admins, maintainers
+and platform staff (`403`): an API token can't take over a privileged account.
+
+| Method | What you get | Lifetime | Use it for |
+| --- | --- | --- | --- |
+| `auth.magicLink(org, { userId, redirectTo, ttlSeconds, host })` | `{ url, token, expires_at }`: a one-time sign-in URL on the org's site | 60–900 s (default 300) | Sending the user into the LearnHouse site, signed in |
+| [`embed.createSession({ orgSlug, userId, ttlSeconds })`](/developers/sdk/embed-sessions) | A learner session limited to the embed routes | 60–3600 s (default 900) | Your page with `@learnhouse/react` / `@learnhouse/vue` |
+| `auth.issueToken(org, userId)` | `{ access_token, user_id, user_uuid }`: a full access token | 8 hours | Calling the API as the user **from your server** |
+
+```ts
+// "Continue to your course" button in your app: redirect the browser to link.url.
+const link = await lh.admin.auth.magicLink('your-school', { userId, redirectTo: '/course/abc' })
+```
+
+The link works once. `redirectTo` must be a path on the org's site; `host` picks one of the org's verified custom
+domains. A user with two-factor enabled is still asked for their code. Your own frontend can also redeem `link.token`
+with [`auth.verifyMagicLink()`](/developers/sdk/accounts#authverifymagiclinktoken-options).
+
+<Callout type="warning">
+  `issueToken` returns a full session for that user, not limited like an embed session. Never send it to a browser.
+</Callout>
+
+## Errors
+
+| Status | When |
+| --- | --- |
+| `401` | No token, or an invalid, expired or revoked one |
+| `403` | Not an API token, the slug isn't the token's org, the plan lacks the Admin API, the token lacks the right, or the target is privileged |
+| `404` | Unknown user, course, group or certificate, or the user isn't in this org |
+| `409` | `users.provision`: the email already has an account |
+| `429` | Rate limited; the SDK waits out `Retry-After` up to `maxDelayMs` |

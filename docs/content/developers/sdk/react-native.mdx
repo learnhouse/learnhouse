@@ -79,6 +79,37 @@ const course = await lh.courses.getMeta('course_…', { slim: true })
 await lh.trail.completeActivity('activity_…')             // mark a lesson done
 ```
 
+Everything in [Build a learner app](/developers/sdk/learner-app) works the same in an app.
+
+## Uploading files
+
+Uploads (`users.updateAvatar`, `assignments.uploadTaskFile`) take React Native's file object as it comes from an image
+or document picker. FormData on React Native sends `{ uri, name, type }` as a file:
+
+```ts
+const picked = { uri: 'file:///…/photo.jpg', name: 'photo.jpg', type: 'image/jpeg' } // from expo-image-picker
+await lh.users.updateAvatar(userId, picked)
+await lh.assignments.uploadTaskFile(assignmentUuid, taskUuid, { uri: 'file:///…/essay.pdf', name: 'essay.pdf', type: 'application/pdf' })
+```
+
+## Push notifications
+
+Register the device's push token after sign-in, and unregister it on sign-out, so LearnHouse notifications (grades,
+replies, announcements) reach the phone:
+
+```ts
+import * as Notifications from 'expo-notifications'
+
+const { data: token } = await Notifications.getExpoPushTokenAsync()
+await lh.notifications.registerDevice({ token, platform: 'ios', orgId: org.id!, deviceName: 'iPhone', appVersion: '1.0.0' })
+
+// On sign-out, before auth.logout():
+await lh.notifications.unregisterDevice(token)
+```
+
+Turn categories on or off with `notifications.updatePreferences({ push_enabled, push_categories })`. The inbox itself is
+`notifications.list()`; see [Notifications](/developers/sdk/community#notifications).
+
 <Callout type="info">
   Never ship an `lh_` API token inside an app: anyone can extract it from the bundle. Apps act as the signed-in
   learner, with their own tokens.

@@ -12,36 +12,63 @@ matches the LearnHouse release it was generated from.
 npm install @learnhouse/sdk
 ```
 
-## Browser (cookie session)
+## What's in it
 
-When your page shares the LearnHouse session cookie, send it along and the API
-treats the request as the signed-in user.
+| Area | Resources |
+| --- | --- |
+| Content | `orgs`, `courses`, `chapters`, `activities`, `search`, `podcasts`, `instance`, `media` |
+| Accounts | `auth` (login, two-factor, Google, signup, email verification, magic links, password reset, refresh, logout), `auth.mfa`, `users` (profile, avatar, password, preferences) |
+| Learning | `trail` (enroll, complete, `getCourseProgress`), `assignments` (answers, file uploads, submit, grade, retry), `certificates` (mine, verify), `paths`, `notes`, `calendar` |
+| Community | `communities`, `discussions` (post, reply, vote, react), `notifications` (inbox, push devices), `usergroups` |
+| Server | `admin` (provision users, enrollments, progress, certificates, groups, magic links, user tokens), `embed` (embed sessions) |
+| AI | `agent` (Agent API, Enterprise) |
+| Helpers | `courseProgress()`, `TrailStore`, `paginate()`, `parseWebhook()`, `LearnHouseError` |
+
+Full documentation: [docs.learnhouse.app/developers/sdk](https://docs.learnhouse.app/developers/sdk), including which
+credential each method takes (anonymous, user session, API token, embed session).
+
+## A signed-in learner
 
 ```ts
-import { createClient } from '@learnhouse/sdk'
+import { createClient, courseProgress, type AuthTokens } from '@learnhouse/sdk'
 
-const lh = createClient({ baseUrl: 'https://api.your-school.com', credentials: 'include' })
+let tokens: AuthTokens | null = null
+const lh = createClient({ baseUrl: 'https://learn.your-school.com', getToken: () => tokens?.access_token })
+
+const res = await lh.auth.login({ email, password, orgSlug: 'your-school' })
+if (res.mfa_required) throw new Error('ask for the code, then lh.auth.loginMfa()')
+tokens = res.tokens
 
 const org = await lh.orgs.get('your-school')
-const courses = await lh.courses.list('your-school', { limit: 12 })
-const course = await lh.courses.getMeta(courses[0].course_uuid!) // chapters + activities
+await lh.trail.startCourse('course_...')
+const trail = await lh.trail.completeActivity('activity_...')
+console.log(courseProgress(trail, 'course_...').percent)
 
-const thumb = lh.media.getCourseThumbnailMediaDirectory(
-  org.org_uuid!,
-  course.course_uuid!,
-  course.thumbnail_image!,
-)
+const assignment = await lh.assignments.getForActivity('activity_...')
+await lh.assignments.saveTaskSubmission(assignment.assignment_uuid, 'assignmenttask_...', {
+  taskSubmission: { answer: 'My answer' },
+})
+await lh.assignments.submit(assignment.assignment_uuid)
+
+const certificates = await lh.certificates.listMine({ orgId: org.id! })
 ```
+
+On the instance's own domain, `credentials: 'include'` sends the learner's session cookie instead.
 
 ## Node / server (API token)
 
-Create an API token in your org's settings (it starts with `lh_`). It acts on
-that one org.
+Create an API token in **Dashboard → Developers → API Access** (it starts with `lh_`). It acts on that one org, with
+the rights you give it. Keep it on the server.
 
 ```ts
 import { createClient, LearnHouseError } from '@learnhouse/sdk'
 
 const lh = createClient({ baseUrl: process.env.LEARNHOUSE_URL!, token: process.env.LEARNHOUSE_TOKEN! })
+
+// The Admin API: your learners, from your server.
+const user = await lh.admin.users.provision('your-school', { email: 'ada@example.com', username: 'ada' })
+await lh.admin.enrollments.enroll('your-school', user.id, 'course_...')
+const progress = await lh.admin.progress.get('your-school', user.id, 'course_...')
 
 try {
   const activity = await lh.activities.get('activity_...')
@@ -55,6 +82,26 @@ try {
 const meta = await lh.GET('/api/v1/courses/{course_uuid}/meta', {
   params: { path: { course_uuid: 'course_...' }, query: { slim: true } },
 })
+```
+
+`orgs.get()` refuses API tokens (the organizations router takes user sessions only); `lh.auth.me()` returns the
+token's `org_id` and `org_slug`.
+
+## Embed sessions
+
+Learners who sign in to your app can act in LearnHouse from your pages without a LearnHouse password: mint a
+short-lived session on your server and give it to the browser (or to `@learnhouse/react` / `@learnhouse/vue`).
+
+```ts
+// server
+const session = await lh.embed.createSession({ orgSlug: 'your-school', userId: 42 })
+
+// browser
+const learner = createClient({
+  baseUrl: 'https://learn.your-school.com',
+  getSession: () => fetch('/api/learnhouse-session', { method: 'POST' }).then((r) => r.json()),
+})
+await learner.trail.completeActivity('activity_...')
 ```
 
 ## React Native
@@ -79,12 +126,12 @@ if (!res.mfa_required) {
 }
 
 // Access tokens last 8 hours. Refresh tokens are single-use: store the new one.
-const tokens = await lh.auth.refresh({ refreshToken: await SecureStore.getItemAsync('lh_refresh') ?? undefined })
+const tokens = await lh.auth.refresh({ refreshToken: (await SecureStore.getItemAsync('lh_refresh')) ?? undefined })
 ```
 
-The package's `react-native` field points at the ESM build. It avoids
-`URL`/`URLSearchParams` (only partly implemented in React Native) and
-`DOMException` (missing on Hermes).
+Uploads (`users.updateAvatar`, `assignments.uploadTaskFile`) take a `File`, a `Blob` or React Native's
+`{ uri, name, type }`. The package's `react-native` field points at the ESM build. It avoids
+`URL`/`URLSearchParams` (only partly implemented in React Native) and `DOMException` (missing on Hermes).
 
 ## Client options
 
@@ -94,6 +141,7 @@ The package's `react-native` field points at the ESM build. It avoids
 | `token` | | Static bearer token: an `lh_` API token or a user access token |
 | `getToken` | | `() => string \| null \| Promise<...>`, called per request |
 | `credentials` | unset | Passed to `fetch`; use `'include'` for browser cookie sessions |
+| `session` / `getSession` | | An embed session, or a function that fetches one (renewed before expiry and on a 401) |
 | `mediaUrl` | `baseUrl` | Origin serving `content/...` files, if different |
 | `headers` | | Sent with every request |
 | `timeoutMs` | `30000` | Per attempt, including the response body. `0` disables |
@@ -122,9 +170,10 @@ for await (const page of lh.search.orgPages('your-school', 'payouts')) {
 }
 ```
 
-Both stop after the first short page and never request past the end. For any
-other page/limit endpoint, `paginate(({ page, pageSize, signal }) => ..., { pageSize })`
-does the same.
+Both stop after the first short page and never request past the end. So do
+`communities.listAll`, `podcasts.listAll` and `notifications.listAll` (cursor
+based). For any other page/limit endpoint,
+`paginate(({ page, pageSize, signal }) => ..., { pageSize })` does the same.
 
 ## Rendering an activity
 
@@ -133,9 +182,9 @@ prefix) or by name inside a course, the way `@learnhouse/react` does. Fetch on
 your server and pass the result to the component, so the browser needs no CORS
 setup and never sees your token:
 
-```tsx
+```tsx fragment
 const activity = await lh.activities.resolve({ courseId: 'course_...', activityName: 'How payouts work' })
-return <LearnHouseActivity activity={activity} courseId="course_..." baseUrl={LEARNHOUSE_URL} />
+return <LearnHouseActivity activity={activity} courseId="course_..." baseUrl={process.env.LEARNHOUSE_URL} />
 ```
 
 ## Webhooks
@@ -167,6 +216,8 @@ and exported from the package root (`Agent`, `Conversation`, `Message`, `View`,
 `AgentEvent`, ...).
 
 ```ts
+import { createClient } from '@learnhouse/sdk'
+
 const lh = createClient({ baseUrl, token }) // org API token (server), member JWT or embed session
 
 const conversation = await lh.agent.createConversation({ agent: 'copilot', context: { course_uuid: 'course_...' } })
@@ -174,9 +225,9 @@ const conversation = await lh.agent.createConversation({ agent: 'copilot', conte
 // Streamed: an AsyncIterable of typed events, parsed from SSE over fetch.
 const stream = lh.agent.streamMessage(conversation.id, 'What should I study next?')
 for await (const event of stream) {
-  if (event.type === 'text.delta') process.stdout.write(event.delta)
+  if (event.type === 'text.delta') console.log(event.delta)
   if (event.type === 'view') render(event.view)
-  if (event.type === 'approval.required') ask(event.approval)
+  if (event.type === 'approval.required') render(event.approval)
 }
 
 // Or fold a whole turn into a Message (same shape as listMessages()):
@@ -221,14 +272,17 @@ bun run generate        # regenerate openapi.json + src/generated/schema.ts from
 bun run generate:check  # fail if the committed output is stale (CI)
 bun run sync-version    # copy apps/web's version into package.json + src/version.ts
 bun run build
-bun run test            # unit tests + an integration test that runs if an API answers on :1338
+bun run test:unit       # unit, contract, type and doc-sample tests
+bun run test:integration # real flows against an API (see tests/integration.test.ts for the env)
+bun run docs:check      # type-check the code samples in the docs and READMEs
 bun run typecheck
 ```
 
 `generate` imports the FastAPI app and dumps `app.openapi()`; no server or
 database is needed. It finds Python through `$LEARNHOUSE_API_PYTHON`, then
-`apps/api/.venv`, then `uv`. Internal, dev, demo, admin and EE-only routes are
-left out.
+`apps/api/.venv`, then `uv`. Internal, dev, demo and EE-only routes are left
+out. The headless Admin API gets its own snapshot (`openapi.admin.json`,
+`src/generated/admin-schema.ts`), which types `lh.admin`.
 
 ## License
 

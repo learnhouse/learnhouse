@@ -1,0 +1,181 @@
+---
+title: Build a Custom Learner App
+description: "A complete learner app on @learnhouse/sdk: sign in, browse the catalog, enroll, learn, track progress, hand in assignments and show certificates."
+seoTitle: "Build a Custom LMS Learner App with the TypeScript SDK – LearnHouse"
+---
+
+import { Callout, Steps } from '@/components/mdx'
+
+# Build a custom learner app
+
+This guide builds the learner side of an LMS on top of LearnHouse: your own UI, LearnHouse's courses, progress and
+certificates. Each step is one or two SDK calls. The code runs in a browser, React Native or a server that holds the
+learner's tokens.
+
+<Steps>
+
+### Create the client
+
+Keep the learner's tokens yourself and hand the current access token to `getToken`, which runs before every request:
+
+```ts filename="lib/learnhouse.ts"
+import { createClient, type AuthTokens } from '@learnhouse/sdk'
+
+let tokens: AuthTokens | null = null
+
+export const lh = createClient({
+  baseUrl: 'https://learn.your-school.com',
+  getToken: () => tokens?.access_token,
+})
+
+export function setTokens(next: AuthTokens | null) {
+  tokens = next
+}
+```
+
+On the instance's own domain you can skip token handling and use `credentials: 'include'`: the session cookie does the
+work.
+
+### Sign up and sign in
+
+```ts
+import { lh, setTokens } from './lib/learnhouse'
+
+const org = await lh.orgs.get('your-school')
+
+export async function signUp(email: string, username: string, password: string) {
+  await lh.auth.signup({ email, username, password, orgId: org.id! })
+  return signIn(email, password)
+}
+
+export async function signIn(email: string, password: string, code?: string) {
+  const res = await lh.auth.login({ email, password, orgSlug: org.slug })
+  if (res.mfa_required) {
+    if (!code) return { needsCode: true as const, mfaToken: res.mfa_token }
+    const done = await lh.auth.loginMfa({ mfaToken: res.mfa_token, code })
+    setTokens(done.tokens)
+    return { user: done.user }
+  }
+  setTokens(res.tokens)
+  return { user: res.user }
+}
+```
+
+Passwordless works too: `auth.requestMagicLink({ email, orgSlug })` emails a link, and your page that receives it calls
+`auth.verifyMagicLink(token)`. See [Accounts](/developers/sdk/accounts) for verification, password reset and two-factor.
+
+### Keep the session alive
+
+Access tokens last 8 hours. Refresh before that, and on a `401`:
+
+```ts
+import { isLearnHouseError } from '@learnhouse/sdk'
+import { lh, setTokens } from './lib/learnhouse'
+
+export async function withSession<T>(call: () => Promise<T>, refreshToken: string): Promise<T> {
+  try {
+    return await call()
+  } catch (err) {
+    if (!isLearnHouseError(err) || err.status !== 401) throw err
+    const next = await lh.auth.refresh({ refreshToken }) // a new refresh token too: store both
+    setTokens(next)
+    return call()
+  }
+}
+```
+
+### Show the catalog
+
+```ts
+const courses = await lh.courses.list(org.slug, { limit: 24 })
+const results = await lh.courses.search(org.slug, 'python')
+const thumbnail = (c: (typeof courses)[number]) =>
+  lh.media.getCourseThumbnailMediaDirectory(org.org_uuid!, c.course_uuid!, c.thumbnail_image!)
+```
+
+### Enroll and open a course
+
+```ts
+import { courseProgress } from '@learnhouse/sdk'
+
+const trail = await lh.trail.getForOrg(org.id!)
+if (!courseProgress(trail, courseUuid).enrolled) {
+  await lh.trail.startCourse(courseUuid)
+}
+const course = await lh.courses.getMeta(courseUuid, { slim: true })
+const updates = await lh.courses.listUpdates(courseUuid) // announcements
+```
+
+### Learn: show an activity and record completion
+
+```ts
+const activity = await lh.activities.get(activityUuid)
+// Render activity.content with <LearnHouseActivity activity={activity} courseId={courseUuid} /> on the web,
+// or your own views on mobile.
+const after = await lh.trail.completeActivity(activityUuid)
+const progress = courseProgress(after, courseUuid)
+console.log(`${progress.percent}% done`)
+```
+
+In React, [`useCourseProgress`](/developers/react/learners#progress-hooks) gives you the same numbers as state, shared
+with the component's own "Mark as complete" button.
+
+### Hand in an assignment
+
+```ts
+const assignment = await lh.assignments.getForActivity(activityUuid)
+const [task] = await lh.assignments.listTasks(assignment.assignment_uuid)
+await lh.assignments.saveTaskSubmission(assignment.assignment_uuid, task.assignment_task_uuid, {
+  taskSubmission: { answer: 'My answer' },
+})
+await lh.assignments.submit(assignment.assignment_uuid)
+
+// Later: the grade and the teacher's feedback.
+const me = await lh.users.profile()
+const grade = await lh.assignments.getGrade(assignment.assignment_uuid, me.id)
+console.log(grade.display_grade, grade.overall_feedback)
+```
+
+File tasks upload first with `assignments.uploadTaskFile()`; see [Assignments](/developers/sdk/learning#assignments).
+
+### Show certificates
+
+```ts
+const certificates = await lh.certificates.listMine({ orgId: org.id! })
+for (const cert of certificates) {
+  console.log(cert.course?.name, cert.certificate_user.user_certification_uuid)
+}
+```
+
+A public verification page needs no sign-in: `lh.certificates.verify(id)` resolves the certificate or `null`.
+
+### Notifications and sign-out
+
+```ts
+import { lh, setTokens } from './lib/learnhouse'
+
+const { unread_count } = await lh.notifications.unreadCount({ orgId: org.id! })
+const inbox = await lh.notifications.list({ orgId: org.id!, limit: 20 })
+
+await lh.auth.logout() // revokes every session of the learner
+setTokens(null)
+```
+
+</Steps>
+
+## What else a learner app can use
+
+| Need | Methods |
+| --- | --- |
+| Profile and settings | `users.update`, `users.updateAvatar`, `users.changePassword`, `users.updatePreferences` |
+| Learning paths | `paths.list`, `paths.enroll`, `paths.listMine` |
+| Discussions | `communities.getForCourse`, `communities.createDiscussion`, `discussions.reply` |
+| Notes | `notes.create`, `notes.list` |
+| Due dates | `calendar.events` |
+| Groups | `usergroups.listMine`, `usergroups.join` |
+
+<Callout type="info">
+  Learners sign in to *your* app instead of LearnHouse? Don't collect their LearnHouse passwords: mint
+  [embed sessions](/developers/sdk/embed-sessions) on your server, or [provision](/developers/sdk/admin#users) them
+  and sign them in with magic links.
+</Callout>
