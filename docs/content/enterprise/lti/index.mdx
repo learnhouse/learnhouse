@@ -1,6 +1,7 @@
 ---
 title: LTI 1.3
 description: Add LearnHouse courses and content to Moodle, Canvas, Open edX and other LMSs with LTI 1.3, including deep linking, grade sync and class lists.
+seoTitle: "LTI 1.3 Tool for Moodle, Canvas and Open edX – LearnHouse"
 ---
 
 import { Callout } from '@/components/mdx'
@@ -140,3 +141,19 @@ A launch signs in straight away only in the browser that started it. If the sign
 ## Self-hosted: LMS on a private network
 
 LearnHouse only calls LMS addresses on the public internet (token, keyset, gradebook and roster URLs), and refuses URLs that point to private or internal addresses. If your LMS runs on a private network, set `LEARNHOUSE_LTI_ALLOW_PRIVATE_HOSTS=true` on the API. LearnHouse Cloud ignores this setting.
+
+## Frequently asked questions
+
+### Which LMSs can launch LearnHouse over LTI?
+
+Any LMS that supports LTI 1.3, including Moodle, Canvas, Open edX, Sakai, ILIAS, Chamilo and OpenOLAT. See the
+[LMS setup guides](/enterprise/lti/lms-setup).
+
+### Do grades go back to the LMS gradebook?
+
+Yes. Course progress, activity completion and assignment grades are sent to the LMS gradebook through Assignment and
+Grade Services (AGS) as they change.
+
+### Which plan includes LTI?
+
+The Business or Enterprise plan on LearnHouse Cloud, or the Enterprise Edition when self-hosted.

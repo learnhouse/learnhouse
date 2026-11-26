@@ -1,5 +1,6 @@
 ---
 description: Self-host LearnHouse on your own server with the LearnHouse CLI. Install it with one command, then configure, update, back up and monitor it.
+seoTitle: "Self-Hosted LMS: Run LearnHouse on Your Own Server"
 ---
 
 import { Callout } from '@/components/mdx'
@@ -45,6 +46,28 @@ npx learnhouse backup     # Back up the database, .env and uploaded content
 npx learnhouse update     # Update to the latest version
 npx learnhouse doctor     # Diagnose issues
 ```
+
+## Frequently asked questions
+
+### Can I self-host LearnHouse for free?
+
+Yes. LearnHouse is an open-source LMS under the AGPL-3.0 license. The Community Edition is free to self-host;
+Enterprise features such as SSO, SCORM and LTI need an [Enterprise Edition](/enterprise) license.
+
+### What do I need to self-host LearnHouse?
+
+A server with Docker and Compose v2, at least 2 GB of RAM (4 GB recommended), 10 GB of disk and one CPU core. See
+[Requirements](/self-hosting/installation/requirements).
+
+### How do I install it?
+
+Run `npx learnhouse@latest setup` on the server. The setup wizard writes the configuration and starts LearnHouse with
+Docker. See [Quick Install](/self-hosting/installation/quick-install).
+
+### Can I build on a self-hosted instance with the API and React components?
+
+Yes. The REST API, `@learnhouse/sdk`, `@learnhouse/react` and `@learnhouse/vue` work with self-hosted instances the
+same way they work with LearnHouse Cloud. Point them at your own domain. See [Developers](/developers).
 
 ## Documentation
 

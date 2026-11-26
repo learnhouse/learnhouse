@@ -1,6 +1,8 @@
 ---
 title: LearnHouse React Component
-description: Render LearnHouse activities inside any React app with @learnhouse/react — the same blocks and styles as LearnHouse, themed to match your product.
+description: "Render courses, quizzes, flipcards and code playgrounds in any React app with @learnhouse/react, an open-source (MIT) React LMS component for Next.js or Vite."
+seoTitle: "React LMS Components: Embed Courses & Quizzes in React"
+package: "@learnhouse/react"
 ---
 
 import { Callout, Steps, Tabs } from '@/components/mdx'
@@ -136,6 +138,36 @@ do inside LearnHouse.
   <Screenshot src="/img/developers/react-quiz-fr.png" alt="A quiz answered correctly, with the interface in French" caption="A quiz after answering, with locale=&quot;fr&quot;." />
   <Screenshot src="/img/developers/react-blocks-interactive.png" alt="Badge, button, a math equation and an interactive scenario" caption="Badges, buttons, KaTeX math and a branching scenario." />
 </Gallery>
+
+## Frequently asked questions
+
+### What is @learnhouse/react?
+
+`@learnhouse/react` is an open-source (MIT) React component library that renders LearnHouse course content inside your
+own React app. `<LearnHouseActivity>` shows pages, quizzes, flipcards, scenarios, code playgrounds, math, video and PDFs
+with LearnHouse's own blocks, themed to match your product.
+
+### Which React versions and frameworks are supported?
+
+React 18 and 19. It works in [Next.js (App Router) and Vite](/developers/react/frameworks), and in any other React
+setup that can import a stylesheet. `LearnHouseActivity` is a client component, so you can use it straight from a
+Next.js Server Component page.
+
+### Do I need a LearnHouse account to use the React component?
+
+You need a LearnHouse instance to hold the courses: a free LearnHouse Cloud organization or a self-hosted one. Public
+courses render without a token. To save progress as a learner, pass a short-lived session minted on your server: see
+[Signed-in learners](/developers/react/learners).
+
+### Does it work in React Native?
+
+No. The component renders with the DOM. In a React Native or Expo app, show lessons in a `WebView` pointed at the
+[embed URL](/developers/embed), or build native screens with the [SDK](/developers/sdk/react-native).
+
+### Can I change how blocks look?
+
+Yes. Pass a `theme` (accent, font, radius, content width), or replace any block with your own component through the
+`components` prop. See [Customization](/developers/react/customization).
 
 ## Next
 

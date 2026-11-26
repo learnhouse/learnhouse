@@ -32,6 +32,33 @@ function summarize(structured) {
   return first.slice(0, 157).replace(/\s+\S*$/, '') + '…'
 }
 
+// A "## Frequently asked questions" section, with one ### heading per
+// question, becomes FAQPage structured data. The questions stay ordinary page
+// content, so the .md routes and llms-full.txt carry them too.
+const FAQ_HEADING = /^(frequently asked questions|faq)$/i
+
+function extractFaq(toc, structured) {
+  const start = toc.findIndex((item) => item.depth === 2 && FAQ_HEADING.test(textOf(item.title).trim()))
+  if (start < 0) return []
+  const faq = []
+  for (const item of toc.slice(start + 1)) {
+    if (item.depth <= 2) break
+    if (item.depth !== 3) continue
+    const id = item.url.replace(/^#/, '')
+    const answer = (structured?.contents ?? [])
+      .filter((c) => c.heading === id)
+      .map((c) => c.content)
+      .join(' ')
+      // Plain text for structured data: no code ticks, link targets or hard wraps.
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+      .replace(/`/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (answer) faq.push({ question: textOf(item.title).trim(), answer })
+  }
+  return faq
+}
+
 // ── Pages ────────────────────────────────────────────────────────────────
 
 const pages = docs.docs.map((doc) => {
@@ -42,6 +69,9 @@ const pages = docs.docs.map((doc) => {
     slug: route === '/' ? [] : route.slice(1).split('/'),
     file: doc.info.path,
     title: doc.title || (h1 ? textOf(h1.title) : titleCase(route.split('/').pop() || 'Home')),
+    seoTitle: doc.seoTitle || null,
+    package: doc.package || null,
+    faq: extractFaq(doc.toc, doc.structuredData),
     description: doc.description || summarize(doc.structuredData),
     lastModified: doc.lastModified ?? null,
     body: doc.body,

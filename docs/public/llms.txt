@@ -4,6 +4,18 @@
 
 Every page below is plain Markdown at its URL. The complete text of all pages is at https://docs.learnhouse.app/llms-full.txt.
 
+## Building on LearnHouse (headless LMS)
+
+LearnHouse can be used as an open-source headless LMS: courses, learners and progress live in LearnHouse, and you build the interface. The developer packages are MIT-licensed and published on npm:
+
+- `@learnhouse/react` (`npm install @learnhouse/react`): React 18/19 components that render LearnHouse lessons, quizzes, flipcards, code playgrounds, math, video and PDFs inside any React app (Next.js, Vite). Docs: https://docs.learnhouse.app/developers/react.md
+- `@learnhouse/vue` (`npm install @learnhouse/vue`): the same renderer for Vue 3 and Nuxt. Docs: https://docs.learnhouse.app/developers/vue.md
+- `@learnhouse/sdk` (`npm install @learnhouse/sdk`): typed TypeScript/JavaScript client for the REST API, no dependencies, runs in browsers, Node, Bun, Deno and React Native. Docs: https://docs.learnhouse.app/developers/sdk.md
+- REST API at `/api/v1/` (Cloud: https://api.learnhouse.io/api/v1/), OpenAPI at https://docs.learnhouse.app/reference/openapi.json. Docs: https://docs.learnhouse.app/developers/api.md
+- No-code iframe embeds for any website. Docs: https://docs.learnhouse.app/developers/embed.md
+- Agent API to put LearnHouse AI agents in your own UI. Docs: https://docs.learnhouse.app/developers/agent-api.md
+- Step-by-step guide to build a learning platform with Next.js: https://docs.learnhouse.app/guides/build-learning-platform.md
+
 ## Get started
 
 - [Introduction](https://docs.learnhouse.app/getting-started.md): Learn what LearnHouse is, how these docs are organized, and the fastest way to start your academy on LearnHouse Cloud or on your own servers.
@@ -90,9 +102,10 @@ Every page below is plain Markdown at its URL. The complete text of all pages is
 - [Command Palette and Keyboard Shortcuts](https://docs.learnhouse.app/platform/search/keyboard-shortcuts.md): Use the LearnHouse command palette and keyboard shortcuts to search, jump between pages with g chords and move through courses and lessons without a mouse.
 - [Users and Access](https://docs.learnhouse.app/platform/users.md): Manage people in your LearnHouse organization: the Users dashboard tabs, which plan each needs, and member and admin seat limits on LearnHouse Cloud.
 - [Authentication](https://docs.learnhouse.app/platform/users/authentication.md): Choose which sign-in methods your LearnHouse organization allows, and learn about email verification, password resets, session lifetimes and login limits.
+- [Companies](https://docs.learnhouse.app/platform/users/companies.md): Train companies on LearnHouse: give a company's people access to your courses directly, cap how many can join, give them a branded space, and optionally sell them seats.
 - [Emails](https://docs.learnhouse.app/platform/users/emails.md): See every email LearnHouse sends for accounts, invitations, drip chapters, unread messages and live sessions, how it is branded and how to unsubscribe.
 - [Learner Analytics](https://docs.learnhouse.app/platform/users/learner-analytics.md): Open one learner's analytics record in LearnHouse to review their courses, assignments, sign-ins and certificates, then compare or export records.
-- [Members & Invites](https://docs.learnhouse.app/platform/users/members-and-invites.md): Manage LearnHouse members: search and export the Users list, set open or closed signup, create invite codes, add signup fields and invite people by email.
+- [Members & Invites](https://docs.learnhouse.app/platform/users/members-and-invites.md): Manage LearnHouse members: search and export the Users list, invite people by email with a role, groups and courses, follow and manage invitations, set open or closed signup, and create invite codes.
 - [Roles and Permissions](https://docs.learnhouse.app/platform/users/roles-and-permissions.md): Learn what the Admin, Maintainer, Instructor and User roles can do in LearnHouse, and create custom roles with their own permissions on the Pro plan.
 - [Two-Factor Authentication](https://docs.learnhouse.app/platform/users/two-factor.md): Turn on two-factor authentication for your LearnHouse account with an authenticator app, save backup codes and require 2FA across your organization.
 - [User Groups](https://docs.learnhouse.app/platform/users/user-groups.md): Create LearnHouse user groups to give a set of members access to courses, communities, folders, boards and podcasts in one step, and see how members join.
@@ -122,15 +135,15 @@ Every page below is plain Markdown at its URL. The complete text of all pages is
 
 ## Developers
 
-- [LearnHouse Headless](https://docs.learnhouse.app/developers.md): Build your own learning platform on LearnHouse: embed lessons, render them in React or Vue, or drive everything from the SDK and REST API.
+- [LearnHouse Headless](https://docs.learnhouse.app/developers.md): Use LearnHouse as an open-source headless LMS: embed lessons anywhere, render courses in React or Vue, or build your own learning app on the SDK and REST API.
 - [Agent API](https://docs.learnhouse.app/developers/agent-api.md): Build LearnHouse's Atlas admin agent or a learner Copilot into your own UI: conversations, streamed replies, tool calls, approvals, views and citations over one REST API.
 - [Agent API Approvals & Tools](https://docs.learnhouse.app/developers/agent-api/approvals.md): How Agent API approvals work for risky actions, who can approve, confirmation phrases for destructive ones, per-conversation tool allowlists, and client-side tools your app runs.
 - [Agent API Streaming Events](https://docs.learnhouse.app/developers/agent-api/events.md): Every Server-Sent Event the Agent API streams, with its payload, the order events arrive in, resuming with Last-Event-ID, cancellation and non-streaming mode.
 - [Agent API Output Modes & Templates](https://docs.learnhouse.app/developers/agent-api/output.md): Choose how Agent API replies come back: Markdown, structured views, or JSON validated against your schema with automatic retries, and render them with safe server-side templates.
 - [Agent API Quickstart](https://docs.learnhouse.app/developers/agent-api/quickstart.md): Start a conversation with Atlas or Copilot, stream the reply and approve a risky action, with curl, @learnhouse/sdk, React or Vue.
 - [Agent API Security & Limits](https://docs.learnhouse.app/developers/agent-api/security.md): What each Agent API credential can reach, how learner agents stay inside the courses a learner can open, AI switches and credits, rate and size limits, prompt-injection safeguards, audit logs and CORS.
-- [Agent API Views](https://docs.learnhouse.app/developers/agent-api/views.md): The structured views Atlas and the learner agents return: the view envelope, the schema endpoint, how to render them, and all 42 component types with their props and an example.
-- [REST API](https://docs.learnhouse.app/developers/api.md): Find your way around the LearnHouse REST API: base URLs, where the full endpoint reference lives, and the guides for tokens and headless grading.
+- [Agent API Views](https://docs.learnhouse.app/developers/agent-api/views.md): The structured views Atlas returns: the view envelope, the schema endpoint, how to render them, and all 42 component types with their props and an example.
+- [REST API](https://docs.learnhouse.app/developers/api.md): The LearnHouse REST API, an open-source LMS API for courses, learners, enrollments, progress and payments: base URLs, tokens, OpenAPI and webhooks.
 - [API Tokens and Sessions](https://docs.learnhouse.app/developers/api/authentication.md): Create and manage LearnHouse API tokens, choose their permissions, and sign in with user sessions, refresh cookies and two-factor codes.
 - [Headless Assignments](https://docs.learnhouse.app/developers/api/headless-assignments.md): Run LearnHouse assignments from your own frontend with an API token: create tasks with custom data, submit answers for learners and grade them.
 - [Architecture Overview](https://docs.learnhouse.app/developers/architecture.md): See how LearnHouse fits together: the Next.js web app, FastAPI backend, collaboration server, CLI, PostgreSQL, Redis and the single app image.
@@ -140,13 +153,13 @@ Every page below is plain Markdown at its URL. The complete text of all pages is
 - [Contributing to LearnHouse](https://docs.learnhouse.app/developers/contributing.md): Start contributing to LearnHouse: set up the dev environment, read the guidelines, and find good first issues or propose a feature on GitHub.
 - [Development Environment Setup](https://docs.learnhouse.app/developers/contributing/dev-environment.md): Set up a local LearnHouse development environment with one CLI command that starts PostgreSQL, Redis, the API, the web app and the collab server.
 - [Contribution Guidelines](https://docs.learnhouse.app/developers/contributing/guidelines.md): Follow the LearnHouse contribution workflow: branch naming, lockfiles, pull requests against dev, code style and the CI checks to run locally.
-- [Embed LearnHouse Activities](https://docs.learnhouse.app/developers/embed.md): Put a LearnHouse activity on any website with an iframe: fit it to its content, set colours and language, and react when learners finish.
+- [Embed LearnHouse Activities](https://docs.learnhouse.app/developers/embed.md): Embed LearnHouse lessons, quizzes, videos and PDFs on any website, blog, help center or Notion page with an iframe that resizes itself and reports completion.
 - [Migrating Content into LearnHouse](https://docs.learnhouse.app/developers/migration.md): Choose how to bring existing courses into LearnHouse: import another LMS export, script every call through the API, or let AI propose the structure.
 - [Activity Types Reference](https://docs.learnhouse.app/developers/migration/activity-types.md): Look up the content JSON each LearnHouse activity type expects, from Tiptap dynamic pages and media uploads to assignments, custom and SCORM.
 - [AI-Assisted Migration](https://docs.learnhouse.app/developers/migration/assisted.md): Upload a folder of videos, PDFs, images and audio, let LearnHouse AI propose chapters and activities, then create the whole course in one API call.
 - [Import from Another LMS](https://docs.learnhouse.app/developers/migration/from-another-lms.md): Import a Moodle, Canvas, Blackboard, Brightspace, Open edX or Common Cartridge export into LearnHouse from the dashboard, the CLI or the API.
 - [Programmatic Migration](https://docs.learnhouse.app/developers/migration/programmatic.md): Script a full course migration through the LearnHouse API: create the course, chapters and every activity type, upload media, reorder and publish.
-- [LearnHouse React Component](https://docs.learnhouse.app/developers/react.md): Render LearnHouse activities inside any React app with @learnhouse/react — the same blocks and styles as LearnHouse, themed to match your product.
+- [LearnHouse React Component](https://docs.learnhouse.app/developers/react.md): Render courses, quizzes, flipcards and code playgrounds in any React app with @learnhouse/react, an open-source (MIT) React LMS component for Next.js or Vite.
 - [Customize the React Component](https://docs.learnhouse.app/developers/react/customization.md): Theme LearnHouseActivity, replace or wrap any block, hide blocks, rewrite content, and add your own header and footer.
 - [React Component Events](https://docs.learnhouse.app/developers/react/events.md): Listen to what learners do in a LearnHouseActivity — loading, links, media playback, size changes, visibility and completion.
 - [React Component in Next.js & Vite](https://docs.learnhouse.app/developers/react/frameworks.md): Use LearnHouseActivity in the Next.js App Router (including server rendering and fetching on the server) and in Vite apps.
@@ -154,14 +167,14 @@ Every page below is plain Markdown at its URL. The complete text of all pages is
 - [Signed-in Learners](https://docs.learnhouse.app/developers/react/learners.md): Let embedded LearnHouse activities act as one of your learners. Mint a short-lived embed session on your server and pass it to the provider, so progress, code runs and assignments are saved for them.
 - [Localize the React Component](https://docs.learnhouse.app/developers/react/localization.md): Show LearnHouseActivity's interface in 22 languages, override any string, and render right-to-left.
 - [React Component Props Reference](https://docs.learnhouse.app/developers/react/reference.md): Every prop of LearnHouseActivity and LearnHouseProvider, and everything @learnhouse/react exports.
-- [LearnHouse JavaScript SDK](https://docs.learnhouse.app/developers/sdk.md): @learnhouse/sdk: a typed JavaScript and TypeScript client for the LearnHouse API with no dependencies, for browsers, Node, Bun, Deno and React Native.
+- [LearnHouse JavaScript SDK](https://docs.learnhouse.app/developers/sdk.md): @learnhouse/sdk: an open-source (MIT) TypeScript SDK for the LearnHouse LMS API. No dependencies; runs in browsers, Node, Bun, Deno and React Native.
 - [SDK Authentication](https://docs.learnhouse.app/developers/sdk/authentication.md): Authenticate @learnhouse/sdk with an org API token on servers, or as a signed-in learner in browsers and apps.
-- [LearnHouse SDK for React Native](https://docs.learnhouse.app/developers/sdk/react-native.md): Use @learnhouse/sdk in React Native and Expo apps — sign learners in, keep their tokens in secure storage, and refresh them.
+- [LearnHouse SDK for React Native](https://docs.learnhouse.app/developers/sdk/react-native.md): Build a mobile learning app with React Native or Expo and @learnhouse/sdk: sign learners in, store tokens securely, refresh sessions and track progress.
 - [SDK Typed Requests & Errors](https://docs.learnhouse.app/developers/sdk/requests.md): Call any LearnHouse API endpoint with full types, handle errors, and control timeouts, retries, rate limits, pagination, cancellation and hooks in @learnhouse/sdk.
 - [SDK Resources](https://docs.learnhouse.app/developers/sdk/resources.md): The @learnhouse/sdk resources (organizations, courses, chapters, activities, search, progress, users, auth and media URLs) and the endpoint each method calls.
 - [SDK Webhooks](https://docs.learnhouse.app/developers/sdk/webhooks.md): Verify LearnHouse webhook signatures with @learnhouse/sdk, turn deliveries into typed events, and skip duplicate or replayed deliveries.
 - [Versions & Releases](https://docs.learnhouse.app/developers/versioning.md): How @learnhouse/sdk, @learnhouse/react and @learnhouse/vue are versioned with LearnHouse releases, and which version to install for your instance.
-- [LearnHouse Vue Component](https://docs.learnhouse.app/developers/vue.md): Render LearnHouse activities in Vue 3 and Nuxt with @learnhouse/vue, using the same renderer and blocks as LearnHouse and @learnhouse/react.
+- [LearnHouse Vue Component](https://docs.learnhouse.app/developers/vue.md): Render courses, quizzes and code playgrounds in Vue 3 and Nuxt with @learnhouse/vue, an open-source (MIT) Vue LMS component with props, events and slots.
 
 ## Demos
 

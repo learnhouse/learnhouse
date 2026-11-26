@@ -48,6 +48,18 @@ const llms = [
   '',
   'Every page below is plain Markdown at its URL. The complete text of all pages is at ' + SITE_URL + '/llms-full.txt.',
   '',
+  '## Building on LearnHouse (headless LMS)',
+  '',
+  'LearnHouse can be used as an open-source headless LMS: courses, learners and progress live in LearnHouse, and you build the interface. The developer packages are MIT-licensed and published on npm:',
+  '',
+  `- \`@learnhouse/react\` (\`npm install @learnhouse/react\`): React 18/19 components that render LearnHouse lessons, quizzes, flipcards, code playgrounds, math, video and PDFs inside any React app (Next.js, Vite). Docs: ${SITE_URL}/developers/react.md`,
+  `- \`@learnhouse/vue\` (\`npm install @learnhouse/vue\`): the same renderer for Vue 3 and Nuxt. Docs: ${SITE_URL}/developers/vue.md`,
+  `- \`@learnhouse/sdk\` (\`npm install @learnhouse/sdk\`): typed TypeScript/JavaScript client for the REST API, no dependencies, runs in browsers, Node, Bun, Deno and React Native. Docs: ${SITE_URL}/developers/sdk.md`,
+  `- REST API at \`/api/v1/\` (Cloud: https://api.learnhouse.io/api/v1/), OpenAPI at ${SITE_URL}/reference/openapi.json. Docs: ${SITE_URL}/developers/api.md`,
+  `- No-code iframe embeds for any website. Docs: ${SITE_URL}/developers/embed.md`,
+  `- Agent API to put LearnHouse AI agents in your own UI. Docs: ${SITE_URL}/developers/agent-api.md`,
+  `- Step-by-step guide to build a learning platform with Next.js: ${SITE_URL}/guides/build-learning-platform.md`,
+  '',
 ]
 for (const tab of TAB_DATA) {
   const inTab = pages.filter((p) => tab.folders.some((f) => `/${p.slug}` === f || `/${p.slug}`.startsWith(f + '/')))

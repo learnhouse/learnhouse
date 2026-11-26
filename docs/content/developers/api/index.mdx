@@ -1,6 +1,7 @@
 ---
 title: "REST API"
-description: "Find your way around the LearnHouse REST API: base URLs, where the full endpoint reference lives, and the guides for tokens and headless grading."
+description: "The LearnHouse REST API, an open-source LMS API for courses, learners, enrollments, progress and payments: base URLs, tokens, OpenAPI and webhooks."
+seoTitle: "LMS REST API: Courses, Learners and Progress – LearnHouse"
 ---
 
 import { Callout } from '@/components/mdx'
@@ -46,3 +47,30 @@ The OpenAPI document the reference is built from is published at [/reference/ope
 On a self-hosted instance, the raw OpenAPI document (`/openapi.json`) and Swagger UI (`/docs`) are only served in
 development mode (`LEARNHOUSE_DEVELOPMENT_MODE=true`).
 </Callout>
+
+## Frequently asked questions
+
+### Does LearnHouse have a public API?
+
+Yes. LearnHouse is API-first: everything the app does goes through a JSON REST API under `/api/v1/`, on LearnHouse
+Cloud (`https://api.learnhouse.io/api/v1/`) and on self-hosted instances.
+
+### Is there an OpenAPI specification?
+
+Yes. The OpenAPI document is published at [/reference/openapi.json](/reference/openapi.json), and the
+[API Reference](/reference) is generated from it.
+
+### How do I authenticate API requests?
+
+Create an API token (it starts with `lh_`) in **Dashboard → Developers → API Access** and send it as a Bearer token
+from your server. See [API tokens](/developers/api/authentication).
+
+### Which languages can call the API?
+
+Any language that speaks HTTP. JavaScript and TypeScript projects can use the typed [SDK](/developers/sdk), and the
+API Reference includes cURL, JavaScript and Python examples.
+
+### Can I get notified when something happens?
+
+Yes. [Webhooks](/platform/automations/webhooks) send a signed request to your server on events such as enrollments,
+completions and payments.

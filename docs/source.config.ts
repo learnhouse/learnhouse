@@ -46,6 +46,15 @@ export const docs = defineDocs({
     schema: z.object({
       title: z.string().optional(),
       description: z.string().optional(),
+      // The search result title (<title>, Open Graph, JSON-LD headline), when it
+      // should differ from the page heading and sidebar label. Used as-is,
+      // without the " – LearnHouse Docs" suffix, so it can hold the words
+      // people actually search for.
+      seoTitle: z.string().optional(),
+      // npm package the page documents (e.g. @learnhouse/react). Adds
+      // SoftwareSourceCode structured data so search and AI engines can tie
+      // the page to the package.
+      package: z.string().optional(),
     }),
   },
 })

@@ -1,6 +1,8 @@
 ---
 title: LearnHouse Vue Component
-description: Render LearnHouse activities in Vue 3 and Nuxt with @learnhouse/vue, using the same renderer and blocks as LearnHouse and @learnhouse/react.
+description: "Render courses, quizzes and code playgrounds in Vue 3 and Nuxt with @learnhouse/vue, an open-source (MIT) Vue LMS component with props, events and slots."
+seoTitle: "Vue LMS Components: Embed Courses in Vue 3 and Nuxt"
+package: "@learnhouse/vue"
 ---
 
 import { Callout, Steps, Tabs } from '@/components/mdx'
@@ -326,6 +328,23 @@ the component mounts, only on pages that show an activity.
 The renderer costs the same as in a React app. Blocks are split into their own chunks, so a page only downloads the
 blocks it contains, the video player only for videos and the PDF viewer only for PDFs. See
 [Bundle size](/developers/react/frameworks#bundle-size).
+
+## Frequently asked questions
+
+### Is there a Vue component for LearnHouse courses?
+
+Yes. `@learnhouse/vue` renders LearnHouse activities in Vue 3.3+ and Nuxt, with Vue props, events, slots and
+composables. It is open source under the MIT license.
+
+### Does @learnhouse/vue use React?
+
+Yes. It wraps the same renderer as `@learnhouse/react`, so pages look and behave exactly as they do in LearnHouse.
+React loads lazily: the package adds about 6 KB gzipped to your entry bundle, and React plus the renderer load after
+(see [What it costs](#what-it-costs)).
+
+### Does it work with Nuxt?
+
+Yes. See the [Nuxt](#nuxt) section for setup.
 
 ## Props
 

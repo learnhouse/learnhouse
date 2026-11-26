@@ -1,6 +1,7 @@
 ---
 title: Embed LearnHouse Activities
-description: "Put a LearnHouse activity on any website with an iframe: fit it to its content, set colours and language, and react when learners finish."
+description: "Embed LearnHouse lessons, quizzes, videos and PDFs on any website, blog, help center or Notion page with an iframe that resizes itself and reports completion."
+seoTitle: "Embed Courses and Quizzes on Any Website (iframe) – LearnHouse"
 ---
 
 import { Callout, Steps } from '@/components/mdx'
@@ -150,6 +151,28 @@ Check `event.origin` against your LearnHouse address, since any frame on the pag
 
 The embed renders the activity without starting the editor, and loads each block's code only when the activity uses
 that block. A text-and-quiz lesson loads a fraction of what the full course player does.
+
+## Frequently asked questions
+
+### How do I embed a course lesson on my website?
+
+Open the activity, choose **Share → Embed**, and paste the copied iframe into any page that accepts HTML. Add the
+optional `embed.js` script to resize the iframe to its content and listen to learner events.
+
+### What can be embedded?
+
+Published pages (with every block, including quizzes and code playgrounds), Markdown pages, videos and PDF documents
+from public courses. Assignments and SCORM show a card that links to the activity instead.
+
+### Can I track when a learner finishes an embedded lesson?
+
+Yes. With `embed.js` on the page, the iframe fires DOM events such as `learnhouse:complete` that you can listen to
+on `document`. See [Events](#events).
+
+### Can I remove the LearnHouse badge?
+
+On LearnHouse Cloud paid plans, add `showlearnhouselogo=false`; white-label plans never show it. The Free plan always
+shows it. Self-hosted instances follow the organization's watermark setting.
 
 ## Embed vs. the React component
 

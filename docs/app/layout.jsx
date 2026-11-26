@@ -12,7 +12,7 @@ export const metadata = {
     template: '%s – LearnHouse Docs',
   },
   description:
-    'Official documentation for LearnHouse, the open-source learning management system (LMS). Guides for self-hosting, course creation, AI features, API reference, and more.',
+    'Docs for LearnHouse, the open-source LMS: self-host with Docker, build courses, and build on it with the REST API, TypeScript SDK and React and Vue components.',
   keywords: [
     'LearnHouse',
     'open source LMS',
@@ -21,6 +21,13 @@ export const metadata = {
     'course creation',
     'LearnHouse documentation',
     'LearnHouse docs',
+    'headless LMS',
+    'LMS API',
+    'LMS SDK',
+    'React LMS components',
+    'Vue LMS components',
+    'embed courses',
+    'TypeScript SDK',
   ],
   metadataBase: new URL('https://docs.learnhouse.app'),
   robots: {
@@ -40,7 +47,7 @@ export const metadata = {
     url: 'https://docs.learnhouse.app',
     siteName: 'LearnHouse Docs',
     description:
-      'Official documentation for LearnHouse, the open-source learning management system (LMS). Guides for self-hosting, course creation, AI features, API reference, and more.',
+      'Docs for LearnHouse, the open-source LMS: self-host with Docker, build courses, and build on it with the REST API, TypeScript SDK and React and Vue components.',
     images: [{ url: 'https://docs.learnhouse.app/og', alt: 'LearnHouse Docs', width: 1200, height: 630 }],
   },
   twitter: {
