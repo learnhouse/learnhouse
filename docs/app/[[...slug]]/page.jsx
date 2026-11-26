@@ -17,7 +17,16 @@ const textOf = (node) => {
   return textOf(node.props?.children)
 }
 
-const HOME_TITLE = 'LearnHouse Docs: Open-Source LMS Documentation'
+const HOME_TITLE = 'LearnHouse Docs: Open-Source LMS, API, SDK & React Components'
+
+const searchTitleOf = (page) => (page.route === '/' ? HOME_TITLE : page.seoTitle || page.title)
+
+const REPO = 'https://github.com/learnhouse/learnhouse'
+const PACKAGE_INFO = {
+  '@learnhouse/react': { dir: 'packages/react', runtime: 'React 18, React 19' },
+  '@learnhouse/vue': { dir: 'packages/vue', runtime: 'Vue 3, Nuxt' },
+  '@learnhouse/sdk': { dir: 'packages/sdk', runtime: 'Browsers, Node.js, Bun, Deno, edge runtimes, React Native' },
+}
 
 export async function generateMetadata(props) {
   const { slug = [] } = await props.params
@@ -27,19 +36,21 @@ export async function generateMetadata(props) {
   const md = `${SITE_URL}${page.route === '/' ? '/index' : page.route}.md`
   const image = { url: `${SITE_URL}/og${page.route === '/' ? '' : page.route}`, width: 1200, height: 630, alt: page.title }
   const description = clampDescription(page.description) || undefined
+  const searchTitle = searchTitleOf(page)
   return {
-    title: page.route === '/' ? { absolute: HOME_TITLE } : page.title,
+    // seoTitle is written for search results and used as-is; other pages get the site suffix.
+    title: page.route === '/' || page.seoTitle ? { absolute: searchTitle } : page.title,
     description,
     alternates: { canonical: url, types: { 'text/markdown': md } },
     openGraph: {
       type: 'article',
       url,
-      title: page.route === '/' ? HOME_TITLE : page.title,
+      title: searchTitle,
       description,
       siteName: 'LearnHouse Docs',
       images: [image],
     },
-    twitter: { card: 'summary_large_image', title: page.route === '/' ? HOME_TITLE : page.title, description, images: [image.url] },
+    twitter: { card: 'summary_large_image', title: searchTitle, description, images: [image.url] },
   }
 }
 
@@ -49,7 +60,12 @@ const ORGANIZATION = {
   name: 'LearnHouse',
   url: 'https://learnhouse.app',
   logo: `${SITE_URL}/img/logos/black_logo.png`,
-  sameAs: ['https://github.com/learnhouse/learnhouse', 'https://discord.gg/CMyZjjYZ6x'],
+  sameAs: [
+    'https://github.com/learnhouse/learnhouse',
+    'https://www.npmjs.com/org/learnhouse',
+    'https://x.com/getlearnhouse',
+    'https://discord.gg/CMyZjjYZ6x',
+  ],
 }
 
 function JsonLd({ page, crumbs }) {
@@ -66,11 +82,26 @@ function JsonLd({ page, crumbs }) {
             publisher: { '@id': 'https://learnhouse.app/#organization' },
           },
           ORGANIZATION,
+          {
+            '@type': 'SoftwareApplication',
+            '@id': 'https://learnhouse.app/#software',
+            name: 'LearnHouse',
+            description:
+              'Open-source learning management system (LMS) with a block editor, AI tutoring, assignments and payments. Runs on LearnHouse Cloud or self-hosted, with a REST API, a TypeScript SDK (@learnhouse/sdk) and React and Vue components (@learnhouse/react, @learnhouse/vue).',
+            applicationCategory: 'EducationalApplication',
+            operatingSystem: 'Linux, macOS, Windows (Docker), Web',
+            license: 'https://www.gnu.org/licenses/agpl-3.0.html',
+            url: 'https://learnhouse.app',
+            downloadUrl: REPO,
+            softwareHelp: SITE_URL,
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+            publisher: { '@id': 'https://learnhouse.app/#organization' },
+          },
         ]
       : [
           {
             '@type': 'TechArticle',
-            headline: page.title,
+            headline: searchTitleOf(page),
             description: page.description || undefined,
             url,
             dateModified: page.lastModified ? new Date(page.lastModified).toISOString() : undefined,
@@ -89,6 +120,32 @@ function JsonLd({ page, crumbs }) {
             })),
           },
         ]
+  if (page.faq?.length) {
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': `${url}#faq`,
+      mainEntity: page.faq.map(({ question, answer }) => ({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: { '@type': 'Answer', text: answer },
+      })),
+    })
+  }
+  const pkg = page.package && PACKAGE_INFO[page.package]
+  if (pkg) {
+    graph.push({
+      '@type': 'SoftwareSourceCode',
+      '@id': `${url}#package`,
+      name: page.package,
+      description: page.description || undefined,
+      codeRepository: `${REPO}/tree/dev/${pkg.dir}`,
+      programmingLanguage: ['TypeScript', 'JavaScript'],
+      runtimePlatform: pkg.runtime,
+      license: 'https://opensource.org/licenses/MIT',
+      url: `https://www.npmjs.com/package/${page.package}`,
+      author: { '@id': 'https://learnhouse.app/#organization' },
+    })
+  }
   const json = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c')
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />
 }

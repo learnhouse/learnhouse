@@ -16,6 +16,10 @@ import {
   GithubLogo,
   DiscordLogo,
   GraduationCap,
+  Atom,
+  Package,
+  FrameCorners,
+  FileVue,
 } from '@phosphor-icons/react/dist/ssr'
 import './home.css'
 
@@ -56,6 +60,10 @@ const TOPICS = [
   { href: '/self-hosting/configuration', icon: GearSix, title: 'Configuration', text: 'Domains, email, storage, AI keys' },
   { href: '/self-hosting/maintenance/updates', icon: ArrowsClockwise, title: 'Updates & backups', text: 'Keep an instance current' },
   { href: '/reference', icon: BracketsCurly, title: 'API reference', text: 'Every endpoint, with a playground' },
+  { href: '/developers/react', icon: Atom, title: 'React components', text: 'Render courses in your React app' },
+  { href: '/developers/vue', icon: FileVue, title: 'Vue components', text: 'Courses in Vue 3 and Nuxt' },
+  { href: '/developers/sdk', icon: Package, title: 'TypeScript SDK', text: 'Typed client for the LMS API' },
+  { href: '/developers/embed', icon: FrameCorners, title: 'Embed', text: 'Lessons on any website, no code' },
 ]
 
 export function HomeHero({ version, date }) {
@@ -64,7 +72,7 @@ export function HomeHero({ version, date }) {
       <span className="lhh-label">LearnHouse documentation</span>
       <h1 className="lhh-title">Run your academy. Build anything on top.</h1>
       <p className="lhh-lede">
-        Guides for teaching on LearnHouse, running your own instance, and building with its API, SDK and components.
+        Guides for teaching on LearnHouse, the open-source LMS, running your own instance, and building with its REST API, TypeScript SDK and React and Vue components.
       </p>
       {version && (
         <Link href="/releases" className="lhh-release">

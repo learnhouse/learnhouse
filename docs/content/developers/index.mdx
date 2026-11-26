@@ -1,6 +1,7 @@
 ---
 title: "LearnHouse Headless"
-description: "Build your own learning platform on LearnHouse: embed lessons, render them in React or Vue, or drive everything from the SDK and REST API."
+description: "Use LearnHouse as an open-source headless LMS: embed lessons anywhere, render courses in React or Vue, or build your own learning app on the SDK and REST API."
+seoTitle: "Headless LMS: API, SDK, React & Vue Components – LearnHouse"
 ---
 
 import { Callout } from '@/components/mdx'
@@ -113,3 +114,32 @@ Working on LearnHouse itself rather than on top of it?
 - [Architecture](/developers/architecture): how the web app, API and collaboration server fit together.
 - [Contributing](/developers/contributing): run the stack locally and open your first pull request.
 - [Migration](/developers/migration): bring courses over from another LMS.
+## Frequently asked questions
+
+### What is a headless LMS?
+
+A headless LMS keeps courses, learners, progress and grading in the learning platform, and lets you build the
+interface yourself. With LearnHouse you author courses in the LearnHouse editor, then show them in your own website,
+React or Vue app, mobile app or internal tool through the API, the SDK and the components.
+
+### Is LearnHouse an open-source headless LMS?
+
+Yes. The LearnHouse platform is open source under the AGPL-3.0 license, and the developer packages
+(`@learnhouse/sdk`, `@learnhouse/react` and `@learnhouse/vue`) are MIT-licensed. You can use LearnHouse Cloud or
+self-host it.
+
+### Does LearnHouse have React components?
+
+Yes. [`@learnhouse/react`](/developers/react) renders LearnHouse activities (pages, quizzes, flipcards, scenarios,
+code playgrounds, math, video and PDFs) inside any React 18 or 19 app, including Next.js and Vite.
+[`@learnhouse/vue`](/developers/vue) does the same for Vue 3 and Nuxt.
+
+### Is there a TypeScript SDK for the LearnHouse API?
+
+Yes. [`@learnhouse/sdk`](/developers/sdk) is a typed TypeScript and JavaScript client generated from the API schema.
+It has no dependencies and runs in browsers, Node, Bun, Deno, edge workers and React Native.
+
+### Can I embed LearnHouse courses without writing code?
+
+Yes. Every page, video and PDF activity has an [embed code](/developers/embed): an iframe you can paste into any
+website, blog, help center or Notion page.

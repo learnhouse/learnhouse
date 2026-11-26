@@ -1,6 +1,8 @@
 ---
 title: LearnHouse JavaScript SDK
-description: "@learnhouse/sdk: a typed JavaScript and TypeScript client for the LearnHouse API with no dependencies, for browsers, Node, Bun, Deno and React Native."
+description: "@learnhouse/sdk: an open-source (MIT) TypeScript SDK for the LearnHouse LMS API. No dependencies; runs in browsers, Node, Bun, Deno and React Native."
+seoTitle: "LMS TypeScript SDK: Typed API Client – @learnhouse/sdk"
+package: "@learnhouse/sdk"
 ---
 
 import { Callout, Steps, Tabs } from '@/components/mdx'
@@ -103,3 +105,31 @@ return <LearnHouseActivity activity={activity} courseId="course_…" baseUrl={LE
   The SDK's version is the LearnHouse release its types came from. Use the one that matches your instance; see
   [Versions & releases](/developers/versioning).
 </Callout>
+
+## Frequently asked questions
+
+### What is @learnhouse/sdk?
+
+`@learnhouse/sdk` is the official TypeScript and JavaScript client for the LearnHouse REST API. Every endpoint,
+parameter and response is typed from the API's own schema, so your editor autocompletes it and typos fail at compile
+time. It is open source under the MIT license.
+
+### Where does the SDK run?
+
+Anywhere with `fetch`: browsers, Node.js, Bun, Deno, edge runtimes and React Native (including Expo). It has no
+dependencies.
+
+### Should I use an API token or a learner session?
+
+Use an `lh_` API token on your server only; it acts for the whole organization. In a browser or a mobile app, act as
+the signed-in learner with their own session. See [Authentication](/developers/sdk/authentication).
+
+### Is there a Python SDK?
+
+There is no official Python package. The [REST API](/developers/api) works from any language, and the
+[API Reference](/reference) shows Python examples for every endpoint.
+
+### Which SDK version should I install?
+
+The one that matches your LearnHouse instance: SDK versions follow LearnHouse releases. See
+[Versions & releases](/developers/versioning).
