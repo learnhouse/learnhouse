@@ -1131,6 +1131,9 @@ async def test_a_platform_reset_keeps_where_the_person_was_going(world, mock_req
         )
     assert done == {"detail": "Password changed", "next": "/signup?invite=abc"}
     assert plain == "Password changed"
+    # Stamped in whole seconds: signing in right after must not be refused.
+    changed = (await db.execute(select(User).where(User.email == "admin@test.com"))).scalars().first()
+    assert changed.password_changed_at.microsecond == 0
 
 
 async def test_the_platform_reset_endpoint_takes_next(world, mock_request, db):

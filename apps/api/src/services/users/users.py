@@ -997,7 +997,7 @@ async def update_user_password(
     # get_current_user and /auth/refresh. Without this, a session stolen before
     # the password change survives it for the full refresh-token lifetime; the
     # reset-code flow already stamps it, this one did not.
-    user.password_changed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    user.password_changed_at = _session_epoch_now()
     user.update_date = str(datetime.now())
 
     # Update user in database

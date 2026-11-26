@@ -345,6 +345,9 @@ class TestPasswordResetService:
         assert refreshed is not None
         assert refreshed.password != old_password
         assert security_verify_password("NewPassword123!", refreshed.password)
+        # Whole seconds, so the session the user signs in with right after the
+        # reset (integer ``iat``) is not mistaken for one from before it.
+        assert refreshed.password_changed_at.microsecond == 0
         fake_redis.getdel.assert_called_once_with(redis_key)
 
     @pytest.mark.asyncio
