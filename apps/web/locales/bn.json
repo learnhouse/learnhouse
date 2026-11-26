@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "স্ট্যান্ডার্ড ফিচার",
           "description": "পিয়ার রিভিউ শুধুমাত্র স্ট্যান্ডার্ড প্ল্যান বা তার উপরের সংস্থাগুলির জন্য উপলব্ধ। আপগ্রেড করুন, যাতে শিক্ষার্থীরা রুব্রিক দিয়ে একে অপরের কাজ রিভিউ করতে পারে।"
+        },
+        "xapi": {
+          "title": "Business ফিচার",
+          "description": "xAPI Business প্ল্যান ও তার উপরে পাওয়া যায়। যেকোনো LRS-এ শেখার রেকর্ড পাঠাতে, Tin Can ও cmi5 প্যাকেজ চালাতে এবং বিল্ট-ইন LRS ব্যবহার করতে আপগ্রেড করুন।"
         }
       },
       "gate": {
@@ -1115,11 +1119,11 @@
       "lms_and_more": "এবং আরও {{count}}টি"
     },
     "scorm": {
-      "upload_package": "SCORM প্যাকেজ আপলোড করুন",
+      "upload_package": "SCORM / xAPI প্যাকেজ আপলোড করুন",
       "package_file": "প্যাকেজ ফাইল (.zip)",
       "click_to_upload": "আপলোড করতে ক্লিক করুন বা টেনে আনুন",
-      "supported_versions": "SCORM 1.2 বা SCORM 2004 প্যাকেজ",
-      "import_info": "আপনার SCORM প্যাকেজ আপলোড করে এর বিষয়বস্তু বিশ্লেষণ করুন। আপনি কোর্স কনফিগার করতে এবং অধ্যায়গুলিতে কার্যক্রম নির্ধারণ করতে পারবেন।",
+      "supported_versions": "SCORM 1.2, SCORM 2004, xAPI (Tin Can) বা cmi5 প্যাকেজ",
+      "import_info": "কনটেন্ট বিশ্লেষণ করতে আপনার SCORM, xAPI বা cmi5 প্যাকেজ আপলোড করুন। এরপর কোর্স কনফিগার করে অ্যাক্টিভিটি অধ্যায়ে বরাদ্দ করতে পারবেন।",
       "analyze_package": "প্যাকেজ বিশ্লেষণ করুন",
       "package_analyzed": "প্যাকেজ সফলভাবে বিশ্লেষণ করা হয়েছে",
       "assign_scos": "অধ্যায়গুলিতে কার্যক্রম নির্ধারণ করুন",
@@ -1138,8 +1142,8 @@
       "failed_import": "SCORM প্যাকেজ আমদানি করা যায়নি",
       "import_success_one": "{{count}}টি SCORM অ্যাক্টিভিটি সফলভাবে ইমপোর্ট হয়েছে",
       "import_success_other": "{{count}}টি SCORM অ্যাক্টিভিটি সফলভাবে আমদানি হয়েছে",
-      "package_zip": "SCORM প্যাকেজ (.zip)",
-      "supported_versions_max": "SCORM 1.2 বা SCORM 2004 প্যাকেজ (সর্বোচ্চ ৫GB)",
+      "package_zip": "SCORM, xAPI বা cmi5 প্যাকেজ (.zip)",
+      "supported_versions_max": "SCORM 1.2, SCORM 2004, xAPI (Tin Can) বা cmi5 প্যাকেজ (সর্বোচ্চ 5GB)",
       "uploading_package": "প্যাকেজ আপলোড হচ্ছে…",
       "analyzing_package": "প্যাকেজ বিশ্লেষণ করা হচ্ছে…",
       "import_info_chapter": "কনটেন্ট বিশ্লেষণ করতে আপনার SCORM প্যাকেজ আপলোড করুন। এর লার্নিং অবজেক্টগুলো এই অধ্যায়ে যোগ করা হবে।",
@@ -1331,6 +1335,13 @@
       "maintainer": "মেইনটেইনার",
       "contributor": "কন্ট্রিবিউটর",
       "reporter": "রিপোর্টার"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "এই অ্যাক্টিভিটি শুরু করা যায়নি। একটু পরে আবার চেষ্টা করুন।",
+        "own_window": "এই অ্যাক্টিভিটি নিজের উইন্ডোতে খোলে।",
+        "open": "অ্যাক্টিভিটি খুলুন"
+      }
     }
   },
   "communities": {
@@ -8742,7 +8753,8 @@
             "audit_logs": "অডিট লগ",
             "custom_domain": "কাস্টম ডোমেইন",
             "remove_watermark": "LearnHouse ওয়াটারমার্ক ছাড়া",
-            "peer_review": "সহপাঠী পর্যালোচনা"
+            "peer_review": "সহপাঠী পর্যালোচনা",
+            "xapi": "xAPI ও LRS"
           }
         },
         "next_invoice_label": "পরবর্তী ইনভয়েস",
@@ -32494,5 +32506,148 @@
     "copy": "কপি",
     "copied": "কপি হয়েছে",
     "copy_failed": "কপি করা যায়নি"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI ও LRS",
+      "page_subtitle": "যেকোনো LRS-এ শেখার রেকর্ড পাঠান, Tin Can ও cmi5 কনটেন্ট চালান, আর অন্য সিস্টেমকে আপনার বিল্ট-ইন LRS ব্যবহার করতে দিন",
+      "section": {
+        "overview": "সংক্ষিপ্ত বিবরণ",
+        "connections": "LRS সংযোগ",
+        "lrs": "বিল্ট-ইন LRS",
+        "statements": "স্টেটমেন্ট"
+      },
+      "record_title": "শেখার রেকর্ড",
+      "record_subtitle": "LearnHouse শিক্ষার্থীদের কাজকে xAPI স্টেটমেন্টে রূপান্তর করে, আপনার বিল্ট-ইন LRS-এ সংরক্ষণ করে এবং আপনার সংযোগগুলোতে পাঠায়।",
+      "platform_events": "শেখার ইভেন্ট xAPI স্টেটমেন্ট হিসেবে রেকর্ড করুন",
+      "platform_events_hint": "ভর্তি, পাঠ, কুইজ, অ্যাসাইনমেন্ট, সনদ এবং আরও অনেক কিছু। প্যাকেজ কনটেন্ট (Tin Can, cmi5) সবসময় রিপোর্ট করে।",
+      "actor_format": "শিক্ষার্থী শনাক্ত করুন",
+      "actor": {
+        "mbox": "ইমেইল ঠিকানা",
+        "mbox_sha1sum": "হ্যাশ করা ইমেইল (ব্যক্তিগত)",
+        "account": "আপনার সাইটে অ্যাকাউন্ট"
+      },
+      "actor_hint": {
+        "mbox": "স্টেটমেন্টে শিক্ষার্থীর ইমেইল থাকে, তাই যেকোনো LRS সেগুলো মানুষের সাথে মেলাতে পারে।",
+        "mbox_sha1sum": "স্টেটমেন্টে ইমেইলের SHA-1 থাকে: মেলানো যায়, কিন্তু ঠিকানা কখনো LearnHouse-এর বাইরে যায় না।",
+        "account": "স্টেটমেন্টে আপনার সাইটে শিক্ষার্থীর LearnHouse ID থাকে, ইমেইল থাকে না।"
+      },
+      "retention": "স্টেটমেন্ট রাখুন",
+      "retention_hint": "বিল্ট-ইন LRS কতদিন স্টেটমেন্ট রাখে। আপনার সংযোগগুলো নিজেদের কপি রাখে।",
+      "retention_forever": "চিরকাল",
+      "retention_days_one": "{{count}} দিন",
+      "retention_days_other": "{{count}} দিন",
+      "events_title_one": "{{count}}টি ইভেন্ট রেকর্ড হয়েছে",
+      "events_title_other": "{{count}}টি ইভেন্ট রেকর্ড হয়েছে",
+      "event": {
+        "course_enrolled": "কোর্সে ভর্তি হয়েছেন",
+        "course_left": "কোর্স ছেড়েছেন",
+        "course_completed": "কোর্স শেষ করেছেন",
+        "activity_view": "পাঠ খুলেছেন",
+        "activity_completed": "পাঠ শেষ করেছেন",
+        "video_progress": "ভিডিওর অগ্রগতি",
+        "quiz_submitted": "কুইজ জমা দিয়েছেন",
+        "assignment_submitted": "অ্যাসাইনমেন্ট জমা দিয়েছেন",
+        "assignment_graded": "অ্যাসাইনমেন্টের গ্রেডিং হয়েছে",
+        "code_submitted": "কোড জমা দিয়েছেন",
+        "certificate_claimed": "সনদ অর্জন করেছেন",
+        "path_enrolled": "লার্নিং পাথে ভর্তি হয়েছেন",
+        "path_completed": "লার্নিং পাথ শেষ করেছেন",
+        "live_session_joined": "লাইভ সেশনে যোগ দিয়েছেন",
+        "time_on_activity": "পাঠে কাটানো সময়",
+        "course_view": "কোর্স পেজ দেখেছেন",
+        "podcast_episode_played": "পডকাস্টের পর্ব চালিয়েছেন",
+        "discussion_posted": "আলোচনা পোস্ট করেছেন",
+        "comment_posted": "আলোচনায় মন্তব্য করেছেন",
+        "resource_downloaded": "রিসোর্স ডাউনলোড করেছেন",
+        "user_logged_in": "সাইন ইন করেছেন",
+        "user_joined_org": "প্রতিষ্ঠানে যোগ দিয়েছেন",
+        "ai_message_sent": "AI অ্যাসিস্ট্যান্টকে জিজ্ঞেস করেছেন"
+      },
+      "stat": {
+        "total": "সংরক্ষিত স্টেটমেন্ট",
+        "platform": "LearnHouse ইভেন্ট (৩০ দিন)",
+        "content": "প্যাকেজ থেকে (৩০ দিন)",
+        "external": "অন্য সিস্টেম থেকে (৩০ দিন)"
+      },
+      "connections_title": "LRS সংযোগ",
+      "connections_subtitle": "প্রতিটি স্টেটমেন্ট প্রতিটি সংযোগে পাঠানো হয়, পৌঁছানো পর্যন্ত আবার চেষ্টা করা হয়।",
+      "connections_help": "Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX বা যেকোনো xAPI 1.0.3 / 2.0 LRS সংযুক্ত করুন।",
+      "add_connection": "সংযোগ যোগ করুন",
+      "connection_added": "সংযোগ যোগ হয়েছে",
+      "no_connections": "কোনো LRS সংযুক্ত নেই",
+      "no_connections_hint": "সংযোগ যোগ না করা পর্যন্ত স্টেটমেন্ট আপনার বিল্ট-ইন LRS-এ থাকে।",
+      "provider": "LRS",
+      "name": "নাম",
+      "endpoint": "xAPI এন্ডপয়েন্ট",
+      "endpoint_hint": "সাধারণত দেখতে এমন: {{example}}",
+      "auth_type": "প্রমাণীকরণ",
+      "auth_basic": "কী ও সিক্রেট (Basic)",
+      "auth_bearer": "টোকেন (Bearer)",
+      "version": "xAPI সংস্করণ",
+      "key": "কী",
+      "secret": "সিক্রেট",
+      "token": "টোকেন",
+      "sources": "পাঠান",
+      "source": {
+        "all": "সব",
+        "platform": "LearnHouse ইভেন্ট",
+        "content": "প্যাকেজ কনটেন্ট",
+        "external": "অন্য সিস্টেম থেকে"
+      },
+      "sources_hint": "প্যাকেজ কনটেন্ট হলো যা Tin Can ও cmi5 অ্যাক্টিভিটি রিপোর্ট করে; অন্য সিস্টেম হলো যারা আপনার LRS ক্রেডেনশিয়াল ব্যবহার করে।",
+      "test": "টেস্ট",
+      "send_test": "টেস্ট স্টেটমেন্ট পাঠান",
+      "test_step": {
+        "about": "এন্ডপয়েন্ট xAPI-তে সাড়া দেয়",
+        "auth": "ক্রেডেনশিয়াল গৃহীত হয়েছে",
+        "write": "টেস্ট স্টেটমেন্ট সংরক্ষিত হয়েছে"
+      },
+      "test_elapsed": "{{ms}} ms-এ যাচাই হয়েছে",
+      "manage": "পরিচালনা",
+      "enabled": "চালু",
+      "paused": "থামানো",
+      "failed_count_one": "{{count}}টি ব্যর্থ",
+      "failed_count_other": "{{count}}টি ব্যর্থ",
+      "pending_count_one": "{{count}}টি অপেক্ষায়",
+      "pending_count_other": "{{count}}টি অপেক্ষায়",
+      "sent_one": "{{count}}টি স্টেটমেন্ট পাঠানো হয়েছে",
+      "sent_other": "{{count}}টি স্টেটমেন্ট পাঠানো হয়েছে",
+      "last_success": "সর্বশেষ ডেলিভারি: {{date}}",
+      "last_error": "সর্বশেষ ত্রুটি: {{error}} ({{date}})",
+      "retry": "ব্যর্থগুলো আবার চেষ্টা করুন",
+      "retry_queued_one": "{{count}}টি স্টেটমেন্ট আবার সারিতে দেওয়া হয়েছে",
+      "retry_queued_other": "{{count}}টি স্টেটমেন্ট আবার সারিতে দেওয়া হয়েছে",
+      "delete": "মুছুন",
+      "delete_connection": "সংযোগ মুছুন",
+      "delete_connection_confirm": "{{name}}-এ স্টেটমেন্ট পাঠানো বন্ধ করবেন? এখনো পৌঁছায়নি এমন স্টেটমেন্ট বাদ যাবে।",
+      "save": "সংরক্ষণ করুন",
+      "saved": "সংরক্ষিত হয়েছে",
+      "cancel": "বাতিল",
+      "lrs_title": "বিল্ট-ইন LRS",
+      "lrs_subtitle": "আপনার প্রতিষ্ঠানের জন্য xAPI 1.0.3 মান মেনে চলা একটি LRS। অন্য LMS, অথরিং টুল বা BI টুলকে স্টেটমেন্ট পাঠাতে বা পড়তে একটি কী দিন।",
+      "lrs_enabled": "ক্রেডেনশিয়াল গ্রহণ করুন",
+      "lrs_endpoint": "এন্ডপয়েন্ট",
+      "credential_name_placeholder": "কে ব্যবহার করে (যেমন Moodle, Power BI)",
+      "credential_default_name": "LRS ক্রেডেনশিয়াল",
+      "create_credential": "ক্রেডেনশিয়াল তৈরি করুন",
+      "secret_once": "সিক্রেট এখনই কপি করুন: এটি শুধু একবার দেখানো হয়।",
+      "done": "সম্পন্ন",
+      "no_credentials": "এখনো কোনো ক্রেডেনশিয়াল নেই",
+      "no_credentials_hint": "LearnHouse-এ চালু হওয়া প্যাকেজ নিজস্ব স্বল্পমেয়াদি কী ব্যবহার করে; ক্রেডেনশিয়াল অন্য সিস্টেমের জন্য।",
+      "last_used": "সর্বশেষ ব্যবহার: {{date}}",
+      "revoke": "ক্রেডেনশিয়াল বাতিল করুন",
+      "revoke_confirm": "{{name}} বাতিল করবেন? এটি ব্যবহারকারী সিস্টেমগুলো সাথে সাথে অ্যাক্সেস হারাবে।",
+      "copy": "কপি করুন",
+      "copied": "কপি হয়েছে",
+      "copy_failed": "কপি করা যায়নি",
+      "refresh": "রিফ্রেশ",
+      "loading": "লোড হচ্ছে…",
+      "no_statements": "এখনো কোনো স্টেটমেন্ট নেই",
+      "no_statements_hint": "শিক্ষার্থীরা কাজ করলে, প্যাকেজ রিপোর্ট করলে এবং অন্য সিস্টেম পাঠালে স্টেটমেন্ট এখানে দেখা যায়।",
+      "voided": "বাতিল করা",
+      "load_more": "আরও লোড করুন"
+    }
   }
 }

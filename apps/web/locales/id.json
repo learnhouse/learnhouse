@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Fitur Standard",
           "description": "Tinjauan sejawat hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade agar pelajar dapat meninjau hasil kerja satu sama lain dengan rubrik."
+        },
+        "xapi": {
+          "title": "Fitur Business",
+          "description": "xAPI tersedia di paket Business ke atas. Tingkatkan untuk mengirim catatan pembelajaran ke LRS mana pun, menjalankan paket Tin Can dan cmi5, dan memakai LRS bawaan."
         }
       },
       "gate": {
@@ -1105,11 +1109,11 @@
       "import_courses_one": "Impor {{count}} kursus"
     },
     "scorm": {
-      "upload_package": "Unggah Paket SCORM",
+      "upload_package": "Unggah paket SCORM / xAPI",
       "package_file": "File Paket (.zip)",
       "click_to_upload": "Klik untuk mengunggah atau seret dan lepas",
-      "supported_versions": "Paket SCORM 1.2 atau SCORM 2004",
-      "import_info": "Unggah paket SCORM Anda untuk menganalisis isinya. Anda dapat mengkonfigurasi kursus dan menetapkan aktivitas ke bab.",
+      "supported_versions": "Paket SCORM 1.2, SCORM 2004, xAPI (Tin Can) atau cmi5",
+      "import_info": "Unggah paket SCORM, xAPI, atau cmi5 Anda untuk menganalisis isinya. Setelah itu Anda dapat mengatur kursus dan menetapkan aktivitas ke bab.",
       "analyze_package": "Analisis Paket",
       "package_analyzed": "Paket Berhasil Dianalisis",
       "assign_scos": "Tetapkan Aktivitas ke Bab",
@@ -1126,8 +1130,8 @@
       "select_at_least_other": "Pilih setidaknya satu SCO untuk diimpor",
       "failed_import": "Gagal mengimpor paket SCORM",
       "import_success_other": "Berhasil mengimpor {{count}} aktivitas SCORM",
-      "package_zip": "Paket SCORM (.zip)",
-      "supported_versions_max": "Paket SCORM 1.2 atau SCORM 2004 (maks. 5GB)",
+      "package_zip": "Paket SCORM, xAPI, atau cmi5 (.zip)",
+      "supported_versions_max": "Paket SCORM 1.2, SCORM 2004, xAPI (Tin Can) atau cmi5 (maks. 5GB)",
       "uploading_package": "Mengunggah paket…",
       "analyzing_package": "Menganalisis paket…",
       "import_info_chapter": "Unggah paket SCORM Anda untuk menganalisis isinya. Objek pembelajarannya akan ditambahkan ke bab ini.",
@@ -1330,6 +1334,13 @@
       "maintainer": "Pengelola",
       "contributor": "Kontributor",
       "reporter": "Pelapor"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "Aktivitas ini tidak dapat dimulai. Coba lagi sebentar lagi.",
+        "own_window": "Aktivitas ini terbuka di jendelanya sendiri.",
+        "open": "Buka aktivitas"
+      }
     }
   },
   "communities": {
@@ -8716,7 +8727,8 @@
             "audit_logs": "Log audit",
             "custom_domain": "Domain kustom",
             "remove_watermark": "Tanpa watermark LearnHouse",
-            "peer_review": "Tinjauan sejawat"
+            "peer_review": "Tinjauan sejawat",
+            "xapi": "xAPI & LRS"
           }
         },
         "next_invoice_label": "Faktur berikutnya",
@@ -32450,5 +32462,148 @@
     "copy": "Salin",
     "copied": "Disalin",
     "copy_failed": "Tidak dapat menyalin"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI & LRS",
+      "page_subtitle": "Kirim catatan pembelajaran ke LRS mana pun, jalankan konten Tin Can dan cmi5, dan biarkan sistem lain memakai LRS bawaan Anda",
+      "section": {
+        "overview": "Ringkasan",
+        "connections": "Koneksi LRS",
+        "lrs": "LRS bawaan",
+        "statements": "Statement"
+      },
+      "record_title": "Catatan pembelajaran",
+      "record_subtitle": "LearnHouse mengubah aktivitas peserta didik menjadi statement xAPI, menyimpannya di LRS bawaan Anda, dan meneruskannya ke koneksi Anda.",
+      "platform_events": "Catat peristiwa pembelajaran sebagai statement xAPI",
+      "platform_events_hint": "Pendaftaran, pelajaran, kuis, tugas, sertifikat, dan lainnya. Konten paket (Tin Can, cmi5) selalu dilaporkan.",
+      "actor_format": "Identifikasi peserta didik dengan",
+      "actor": {
+        "mbox": "Alamat email",
+        "mbox_sha1sum": "Email ter-hash (privat)",
+        "account": "Akun di situs Anda"
+      },
+      "actor_hint": {
+        "mbox": "Statement membawa email peserta didik, sehingga LRS mana pun dapat mencocokkannya dengan orang.",
+        "mbox_sha1sum": "Statement membawa SHA-1 dari email: bisa dicocokkan, tetapi alamatnya tidak pernah keluar dari LearnHouse.",
+        "account": "Statement membawa ID LearnHouse peserta didik di situs Anda, tanpa email."
+      },
+      "retention": "Simpan statement",
+      "retention_hint": "Berapa lama LRS bawaan menyimpan statement. Koneksi Anda menyimpan salinannya sendiri.",
+      "retention_forever": "Selamanya",
+      "retention_days_one": "{{count}} hari",
+      "retention_days_other": "{{count}} hari",
+      "events_title_one": "{{count}} peristiwa tercatat",
+      "events_title_other": "{{count}} peristiwa tercatat",
+      "event": {
+        "course_enrolled": "Mendaftar di kursus",
+        "course_left": "Keluar dari kursus",
+        "course_completed": "Menyelesaikan kursus",
+        "activity_view": "Membuka pelajaran",
+        "activity_completed": "Menyelesaikan pelajaran",
+        "video_progress": "Kemajuan video",
+        "quiz_submitted": "Mengirim kuis",
+        "assignment_submitted": "Mengirim tugas",
+        "assignment_graded": "Tugas dinilai",
+        "code_submitted": "Mengirim kode",
+        "certificate_claimed": "Mendapat sertifikat",
+        "path_enrolled": "Mendaftar di jalur belajar",
+        "path_completed": "Menyelesaikan jalur belajar",
+        "live_session_joined": "Bergabung ke sesi langsung",
+        "time_on_activity": "Waktu di pelajaran",
+        "course_view": "Melihat halaman kursus",
+        "podcast_episode_played": "Memutar episode podcast",
+        "discussion_posted": "Memposting diskusi",
+        "comment_posted": "Mengomentari diskusi",
+        "resource_downloaded": "Mengunduh sumber daya",
+        "user_logged_in": "Masuk",
+        "user_joined_org": "Bergabung ke organisasi",
+        "ai_message_sent": "Bertanya ke asisten AI"
+      },
+      "stat": {
+        "total": "Statement tersimpan",
+        "platform": "Peristiwa LearnHouse (30 hari)",
+        "content": "Dari paket (30 hari)",
+        "external": "Dari sistem lain (30 hari)"
+      },
+      "connections_title": "Koneksi LRS",
+      "connections_subtitle": "Setiap statement dikirim ke setiap koneksi dan dicoba ulang sampai sampai.",
+      "connections_help": "Hubungkan Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX, atau LRS xAPI 1.0.3 / 2.0 mana pun.",
+      "add_connection": "Tambah koneksi",
+      "connection_added": "Koneksi ditambahkan",
+      "no_connections": "Tidak ada LRS terhubung",
+      "no_connections_hint": "Statement tetap di LRS bawaan Anda sampai Anda menambahkan koneksi.",
+      "provider": "LRS",
+      "name": "Nama",
+      "endpoint": "Endpoint xAPI",
+      "endpoint_hint": "Biasanya seperti {{example}}",
+      "auth_type": "Autentikasi",
+      "auth_basic": "Kunci dan secret (Basic)",
+      "auth_bearer": "Token (Bearer)",
+      "version": "Versi xAPI",
+      "key": "Kunci",
+      "secret": "Secret",
+      "token": "Token",
+      "sources": "Kirim",
+      "source": {
+        "all": "Semua",
+        "platform": "Peristiwa LearnHouse",
+        "content": "Konten paket",
+        "external": "Dari sistem lain"
+      },
+      "sources_hint": "Konten paket adalah yang dilaporkan aktivitas Tin Can dan cmi5; sistem lain adalah yang memakai kredensial LRS Anda.",
+      "test": "Uji",
+      "send_test": "Kirim statement uji",
+      "test_step": {
+        "about": "Endpoint menjawab xAPI",
+        "auth": "Kredensial diterima",
+        "write": "Statement uji tersimpan"
+      },
+      "test_elapsed": "Diperiksa dalam {{ms}} md",
+      "manage": "Kelola",
+      "enabled": "Aktif",
+      "paused": "Dijeda",
+      "failed_count_one": "{{count}} gagal",
+      "failed_count_other": "{{count}} gagal",
+      "pending_count_one": "{{count}} menunggu",
+      "pending_count_other": "{{count}} menunggu",
+      "sent_one": "{{count}} statement terkirim",
+      "sent_other": "{{count}} statement terkirim",
+      "last_success": "Pengiriman terakhir: {{date}}",
+      "last_error": "Galat terakhir: {{error}} ({{date}})",
+      "retry": "Coba ulang yang gagal",
+      "retry_queued_one": "{{count}} statement diantrekan lagi",
+      "retry_queued_other": "{{count}} statement diantrekan lagi",
+      "delete": "Hapus",
+      "delete_connection": "Hapus koneksi",
+      "delete_connection_confirm": "Berhenti mengirim statement ke {{name}}? Statement yang belum terkirim akan dibuang.",
+      "save": "Simpan",
+      "saved": "Tersimpan",
+      "cancel": "Batal",
+      "lrs_title": "LRS bawaan",
+      "lrs_subtitle": "LRS xAPI 1.0.3 yang sesuai standar untuk organisasi Anda. Beri LMS lain, alat penulisan, atau alat BI sebuah kunci untuk mengirim atau membaca statement.",
+      "lrs_enabled": "Terima kredensial",
+      "lrs_endpoint": "Endpoint",
+      "credential_name_placeholder": "Siapa yang memakainya (mis. Moodle, Power BI)",
+      "credential_default_name": "Kredensial LRS",
+      "create_credential": "Buat kredensial",
+      "secret_once": "Salin secret sekarang: hanya ditampilkan sekali.",
+      "done": "Selesai",
+      "no_credentials": "Belum ada kredensial",
+      "no_credentials_hint": "Paket yang dijalankan di LearnHouse memakai kunci berumur pendek sendiri; kredensial untuk sistem lain.",
+      "last_used": "Terakhir dipakai: {{date}}",
+      "revoke": "Cabut kredensial",
+      "revoke_confirm": "Cabut {{name}}? Sistem yang memakainya langsung kehilangan akses.",
+      "copy": "Salin",
+      "copied": "Tersalin",
+      "copy_failed": "Gagal menyalin",
+      "refresh": "Segarkan",
+      "loading": "Memuat…",
+      "no_statements": "Belum ada statement",
+      "no_statements_hint": "Statement muncul di sini saat peserta didik belajar, paket melapor, dan sistem lain mengirimnya.",
+      "voided": "Dibatalkan",
+      "load_more": "Muat lebih banyak"
+    }
   }
 }

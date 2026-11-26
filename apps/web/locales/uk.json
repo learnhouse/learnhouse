@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Функція тарифу Standard",
           "description": "Взаємне оцінювання доступне організаціям на тарифі Standard або вище. Перейдіть на вищий тариф, щоб учні перевіряли роботи одне одного за рубрикою."
+        },
+        "xapi": {
+          "title": "Функція тарифу Business",
+          "description": "xAPI доступний на тарифі Business і вище. Перейдіть на вищий тариф, щоб надсилати записи про навчання в будь-яку LRS, запускати пакети Tin Can і cmi5 та користуватися вбудованою LRS."
         }
       },
       "gate": {
@@ -1141,11 +1145,11 @@
       "lms_and_more": "і ще {{count}}"
     },
     "scorm": {
-      "upload_package": "Завантажте пакет SCORM",
+      "upload_package": "Завантажити пакет SCORM / xAPI",
       "package_file": "Файл пакета (.zip)",
       "click_to_upload": "Натисніть, щоб завантажити, або перетягніть",
-      "supported_versions": "Пакет SCORM 1.2 або SCORM 2004",
-      "import_info": "Завантажте свій пакет SCORM, щоб проаналізувати його вміст. Ви зможете налаштувати курс і призначити активності розділам.",
+      "supported_versions": "Пакет SCORM 1.2, SCORM 2004, xAPI (Tin Can) або cmi5",
+      "import_info": "Завантажте пакет SCORM, xAPI або cmi5, щоб проаналізувати його вміст. Потім ви зможете налаштувати курс і розподілити активності за розділами.",
       "analyze_package": "Проаналізувати пакет",
       "package_analyzed": "Пакет успішно проаналізовано",
       "assign_scos": "Призначити активності розділам",
@@ -1168,8 +1172,8 @@
       "import_success_few": "Успішно імпортовано {{count}} активності SCORM",
       "import_success_many": "Успішно імпортовано {{count}} активностей SCORM",
       "import_success_other": "Успішно імпортовано {{count}} активності SCORM",
-      "package_zip": "Пакет SCORM (.zip)",
-      "supported_versions_max": "Пакет SCORM 1.2 або SCORM 2004 (макс. 5 ГБ)",
+      "package_zip": "Пакет SCORM, xAPI або cmi5 (.zip)",
+      "supported_versions_max": "Пакет SCORM 1.2, SCORM 2004, xAPI (Tin Can) або cmi5 (макс. 5GB)",
       "uploading_package": "Завантаження пакета…",
       "analyzing_package": "Аналіз пакета…",
       "import_info_chapter": "Завантажте пакет SCORM, щоб проаналізувати його вміст. Його навчальні об'єкти буде додано до цього розділу.",
@@ -1369,6 +1373,13 @@
       "maintainer": "Супровідник",
       "contributor": "Учасник",
       "reporter": "Репортер"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "Не вдалося запустити цю активність. Спробуйте ще раз за мить.",
+        "own_window": "Ця активність відкривається в окремому вікні.",
+        "open": "Відкрити активність"
+      }
     }
   },
   "communities": {
@@ -9000,7 +9011,8 @@
             "audit_logs": "Журнали аудиту",
             "custom_domain": "Власний домен",
             "remove_watermark": "Без водяного знака LearnHouse",
-            "peer_review": "Взаємне рецензування"
+            "peer_review": "Взаємне рецензування",
+            "xapi": "xAPI та LRS"
           }
         },
         "next_invoice_label": "Наступний рахунок",
@@ -33922,5 +33934,148 @@
     "copy": "Копіювати",
     "copied": "Скопійовано",
     "copy_failed": "Не вдалося скопіювати"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI та LRS",
+      "page_subtitle": "Надсилайте записи про навчання в будь-яку LRS, запускайте контент Tin Can і cmi5 та дозвольте іншим системам використовувати вашу вбудовану LRS",
+      "section": {
+        "overview": "Огляд",
+        "connections": "Підключення LRS",
+        "lrs": "Вбудована LRS",
+        "statements": "Твердження"
+      },
+      "record_title": "Записи про навчання",
+      "record_subtitle": "LearnHouse перетворює дії здобувачів на твердження xAPI, зберігає їх у вбудованій LRS і пересилає у ваші підключення.",
+      "platform_events": "Записувати навчальні події як твердження xAPI",
+      "platform_events_hint": "Зарахування, уроки, тести, завдання, сертифікати та інше. Контент пакетів (Tin Can, cmi5) передає дані завжди.",
+      "actor_format": "Ідентифікувати здобувачів за",
+      "actor": {
+        "mbox": "Адреса електронної пошти",
+        "mbox_sha1sum": "Хешована пошта (приватно)",
+        "account": "Акаунт на вашому сайті"
+      },
+      "actor_hint": {
+        "mbox": "Твердження містять пошту здобувача, тож будь-яка LRS може зіставити їх із людьми.",
+        "mbox_sha1sum": "Твердження містять SHA-1 пошти: зіставити можна, але сама адреса ніколи не залишає LearnHouse.",
+        "account": "Твердження містять ID здобувача в LearnHouse на вашому сайті, без пошти."
+      },
+      "retention": "Зберігати твердження",
+      "retention_hint": "Як довго вбудована LRS зберігає твердження. Ваші підключення зберігають власну копію.",
+      "retention_forever": "Завжди",
+      "retention_days_one": "{{count}} день",
+      "retention_days_other": "{{count}} дн.",
+      "events_title_one": "{{count}} подію записано",
+      "events_title_other": "{{count}} подій записано",
+      "event": {
+        "course_enrolled": "Зарахувався на курс",
+        "course_left": "Залишив курс",
+        "course_completed": "Завершив курс",
+        "activity_view": "Відкрив урок",
+        "activity_completed": "Завершив урок",
+        "video_progress": "Прогрес відео",
+        "quiz_submitted": "Надіслав тест",
+        "assignment_submitted": "Надіслав завдання",
+        "assignment_graded": "Завдання оцінено",
+        "code_submitted": "Надіслав код",
+        "certificate_claimed": "Отримав сертифікат",
+        "path_enrolled": "Зарахувався на навчальний шлях",
+        "path_completed": "Завершив навчальний шлях",
+        "live_session_joined": "Приєднався до живого заняття",
+        "time_on_activity": "Час, проведений на уроці",
+        "course_view": "Переглянув сторінку курсу",
+        "podcast_episode_played": "Прослухав епізод подкасту",
+        "discussion_posted": "Опублікував обговорення",
+        "comment_posted": "Прокоментував обговорення",
+        "resource_downloaded": "Завантажив матеріал",
+        "user_logged_in": "Увійшов у систему",
+        "user_joined_org": "Приєднався до організації",
+        "ai_message_sent": "Запитав ШІ-асистента"
+      },
+      "stat": {
+        "total": "Збережено тверджень",
+        "platform": "Події LearnHouse (30 днів)",
+        "content": "З пакетів (30 днів)",
+        "external": "З інших систем (30 днів)"
+      },
+      "connections_title": "Підключення LRS",
+      "connections_subtitle": "Кожне твердження доставляється в кожне підключення, з повторами, доки не дійде.",
+      "connections_help": "Підключіть Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX або будь-яку LRS xAPI 1.0.3 / 2.0.",
+      "add_connection": "Додати підключення",
+      "connection_added": "Підключення додано",
+      "no_connections": "Немає підключених LRS",
+      "no_connections_hint": "Твердження залишаються у вбудованій LRS, доки ви не додасте підключення.",
+      "provider": "LRS",
+      "name": "Назва",
+      "endpoint": "Кінцева точка xAPI",
+      "endpoint_hint": "Зазвичай виглядає так: {{example}}",
+      "auth_type": "Автентифікація",
+      "auth_basic": "Ключ і секрет (Basic)",
+      "auth_bearer": "Токен (Bearer)",
+      "version": "Версія xAPI",
+      "key": "Ключ",
+      "secret": "Секрет",
+      "token": "Токен",
+      "sources": "Надсилати",
+      "source": {
+        "all": "Усе",
+        "platform": "Події LearnHouse",
+        "content": "Контент пакетів",
+        "external": "З інших систем"
+      },
+      "sources_hint": "Контент пакетів — це те, що передають активності Tin Can і cmi5; інші системи — це ті, що використовують облікові дані вашої LRS.",
+      "test": "Перевірити",
+      "send_test": "Надіслати тестове твердження",
+      "test_step": {
+        "about": "Кінцева точка відповідає за xAPI",
+        "auth": "Облікові дані прийнято",
+        "write": "Тестове твердження збережено"
+      },
+      "test_elapsed": "Перевірено за {{ms}} мс",
+      "manage": "Керувати",
+      "enabled": "Увімкнено",
+      "paused": "Призупинено",
+      "failed_count_one": "Збоїв: {{count}}",
+      "failed_count_other": "Збоїв: {{count}}",
+      "pending_count_one": "Очікує: {{count}}",
+      "pending_count_other": "Очікує: {{count}}",
+      "sent_one": "Надіслано тверджень: {{count}}",
+      "sent_other": "Надіслано тверджень: {{count}}",
+      "last_success": "Остання доставка: {{date}}",
+      "last_error": "Остання помилка: {{error}} ({{date}})",
+      "retry": "Повторити невдалі",
+      "retry_queued_one": "Знову в черзі тверджень: {{count}}",
+      "retry_queued_other": "Знову в черзі тверджень: {{count}}",
+      "delete": "Видалити",
+      "delete_connection": "Видалити підключення",
+      "delete_connection_confirm": "Припинити надсилати твердження до {{name}}? Ще не доставлені твердження буде відкинуто.",
+      "save": "Зберегти",
+      "saved": "Збережено",
+      "cancel": "Скасувати",
+      "lrs_title": "Вбудована LRS",
+      "lrs_subtitle": "Сумісна з xAPI 1.0.3 LRS для вашої організації. Дайте іншій LMS, інструменту створення курсів або BI-інструменту ключ для надсилання чи читання тверджень.",
+      "lrs_enabled": "Приймати облікові дані",
+      "lrs_endpoint": "Кінцева точка",
+      "credential_name_placeholder": "Хто використовує (напр. Moodle, Power BI)",
+      "credential_default_name": "Облікові дані LRS",
+      "create_credential": "Створити облікові дані",
+      "secret_once": "Скопіюйте секрет зараз: його показують лише один раз.",
+      "done": "Готово",
+      "no_credentials": "Облікових даних ще немає",
+      "no_credentials_hint": "Пакети, запущені в LearnHouse, використовують власні короткочасні ключі; облікові дані потрібні для інших систем.",
+      "last_used": "Останнє використання: {{date}}",
+      "revoke": "Відкликати облікові дані",
+      "revoke_confirm": "Відкликати {{name}}? Системи, які їх використовують, одразу втратять доступ.",
+      "copy": "Копіювати",
+      "copied": "Скопійовано",
+      "copy_failed": "Не вдалося скопіювати",
+      "refresh": "Оновити",
+      "loading": "Завантаження…",
+      "no_statements": "Тверджень ще немає",
+      "no_statements_hint": "Твердження з'являються тут, коли здобувачі навчаються, пакети передають дані, а інші системи їх надсилають.",
+      "voided": "Анульовано",
+      "load_more": "Завантажити ще"
+    }
   }
 }

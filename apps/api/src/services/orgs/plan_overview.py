@@ -47,7 +47,7 @@ FEATURE_AREAS: dict[str, tuple[str, ...]] = {
     "people": ("usergroups", "roles", "required_training", "company_seats", "payments"),
     "ai": ("ai",),
     "analytics": ("analytics",),
-    "integrations": ("api", "webhooks", "lti", "crm", "crm_salesforce"),
+    "integrations": ("api", "webhooks", "lti", "xapi", "crm", "crm_salesforce"),
     "security": ("sso", "scim", "audit_logs"),
     "branding": ("custom_domain", "remove_watermark"),
 }

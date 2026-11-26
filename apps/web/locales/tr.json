@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Standart Özellik",
           "description": "Akran değerlendirmesi, Standard plan ve üzeri organizasyonlar için kullanılabilir. Öğrencilerin birbirlerinin çalışmalarını bir rubrikle değerlendirmesi için yükseltin."
+        },
+        "xapi": {
+          "title": "Business özelliği",
+          "description": "xAPI, Business planında ve üzerinde kullanılabilir. Öğrenme kayıtlarını herhangi bir LRS'ye göndermek, Tin Can ve cmi5 paketlerini çalıştırmak ve yerleşik LRS kullanmak için yükseltin."
         }
       },
       "gate": {
@@ -1115,11 +1119,11 @@
       "lms_and_more": "ve {{count}} tane daha"
     },
     "scorm": {
-      "upload_package": "SCORM Paketi Yükle",
+      "upload_package": "SCORM / xAPI paketi yükle",
       "package_file": "Paket Dosyası (.zip)",
       "click_to_upload": "Yüklemek için tıklayın veya sürükleyip bırakın",
-      "supported_versions": "SCORM 1.2 veya SCORM 2004 paketi",
-      "import_info": "İçeriğini analiz etmek için SCORM paketinizi yükleyin. Kursu yapılandırabilir ve aktiviteleri bölümlere atayabilirsiniz.",
+      "supported_versions": "SCORM 1.2, SCORM 2004, xAPI (Tin Can) veya cmi5 paketi",
+      "import_info": "İçeriğini analiz etmek için SCORM, xAPI veya cmi5 paketinizi yükleyin. Ardından kursu yapılandırabilir ve etkinlikleri bölümlere atayabilirsiniz.",
       "analyze_package": "Paketi Analiz Et",
       "package_analyzed": "Paket Başarıyla Analiz Edildi",
       "assign_scos": "Aktiviteleri Bölümlere Ata",
@@ -1138,8 +1142,8 @@
       "failed_import": "SCORM paketi içe aktarılamadı",
       "import_success_one": "{{count}} SCORM etkinliği başarıyla içe aktarıldı",
       "import_success_other": "{{count}} SCORM aktivitesi başarıyla içe aktarıldı",
-      "package_zip": "SCORM Paketi (.zip)",
-      "supported_versions_max": "SCORM 1.2 veya SCORM 2004 paketi (en fazla 5GB)",
+      "package_zip": "SCORM, xAPI veya cmi5 paketi (.zip)",
+      "supported_versions_max": "SCORM 1.2, SCORM 2004, xAPI (Tin Can) veya cmi5 paketi (en fazla 5GB)",
       "uploading_package": "Paket yükleniyor…",
       "analyzing_package": "Paket analiz ediliyor…",
       "import_info_chapter": "İçeriğini analiz etmek için SCORM paketinizi yükleyin. Öğrenme nesneleri bu bölüme eklenecek.",
@@ -1331,6 +1335,13 @@
       "maintainer": "Sorumlu",
       "contributor": "Katkıda Bulunan",
       "reporter": "Raporlayıcı"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "Bu etkinlik başlatılamadı. Birazdan tekrar deneyin.",
+        "own_window": "Bu etkinlik kendi penceresinde açılır.",
+        "open": "Etkinliği aç"
+      }
     }
   },
   "communities": {
@@ -8742,7 +8753,8 @@
             "audit_logs": "Denetim kayıtları",
             "custom_domain": "Özel alan adı",
             "remove_watermark": "LearnHouse filigranı yok",
-            "peer_review": "Akran değerlendirmesi"
+            "peer_review": "Akran değerlendirmesi",
+            "xapi": "xAPI ve LRS"
           }
         },
         "next_invoice_label": "Sonraki fatura",
@@ -32494,5 +32506,148 @@
     "copy": "Kopyala",
     "copied": "Kopyalandı",
     "copy_failed": "Kopyalanamadı"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI ve LRS",
+      "page_subtitle": "Öğrenme kayıtlarını herhangi bir LRS'ye gönderin, Tin Can ve cmi5 içeriklerini çalıştırın ve diğer sistemlerin yerleşik LRS'nizi kullanmasına izin verin",
+      "section": {
+        "overview": "Genel bakış",
+        "connections": "LRS bağlantıları",
+        "lrs": "Yerleşik LRS",
+        "statements": "İfadeler"
+      },
+      "record_title": "Öğrenme kayıtları",
+      "record_subtitle": "LearnHouse, öğrencilerin yaptıklarını xAPI ifadelerine dönüştürür, yerleşik LRS'nizde saklar ve bağlantılarınıza iletir.",
+      "platform_events": "Öğrenme olaylarını xAPI ifadesi olarak kaydet",
+      "platform_events_hint": "Kayıtlar, dersler, testler, ödevler, sertifikalar ve daha fazlası. Paket içeriği (Tin Can, cmi5) her zaman raporlar.",
+      "actor_format": "Öğrencileri şuna göre tanımla",
+      "actor": {
+        "mbox": "E-posta adresi",
+        "mbox_sha1sum": "Karma e-posta (gizli)",
+        "account": "Sitenizdeki hesap"
+      },
+      "actor_hint": {
+        "mbox": "İfadeler öğrencinin e-postasını taşır, böylece her LRS bunları kişilerle eşleştirebilir.",
+        "mbox_sha1sum": "İfadeler e-postanın SHA-1 değerini taşır: eşleştirilebilir, ama adres LearnHouse'tan asla çıkmaz.",
+        "account": "İfadeler öğrencinin sitenizdeki LearnHouse ID'sini taşır, e-posta yoktur."
+      },
+      "retention": "İfadeleri sakla",
+      "retention_hint": "Yerleşik LRS'nin ifadeleri ne kadar süre sakladığı. Bağlantılarınız kendi kopyasını tutar.",
+      "retention_forever": "Süresiz",
+      "retention_days_one": "{{count}} gün",
+      "retention_days_other": "{{count}} gün",
+      "events_title_one": "{{count}} olay kaydedildi",
+      "events_title_other": "{{count}} olay kaydedildi",
+      "event": {
+        "course_enrolled": "Bir kursa kaydoldu",
+        "course_left": "Bir kurstan ayrıldı",
+        "course_completed": "Bir kursu tamamladı",
+        "activity_view": "Bir ders açtı",
+        "activity_completed": "Bir dersi tamamladı",
+        "video_progress": "Video ilerlemesi",
+        "quiz_submitted": "Bir test gönderdi",
+        "assignment_submitted": "Bir ödev gönderdi",
+        "assignment_graded": "Ödev notlandırıldı",
+        "code_submitted": "Kod gönderdi",
+        "certificate_claimed": "Sertifika kazandı",
+        "path_enrolled": "Bir öğrenme yoluna kaydoldu",
+        "path_completed": "Bir öğrenme yolunu tamamladı",
+        "live_session_joined": "Canlı oturuma katıldı",
+        "time_on_activity": "Derste geçirilen süre",
+        "course_view": "Bir kurs sayfasını görüntüledi",
+        "podcast_episode_played": "Bir podcast bölümünü oynattı",
+        "discussion_posted": "Bir tartışma yayınladı",
+        "comment_posted": "Bir tartışmaya yorum yaptı",
+        "resource_downloaded": "Bir kaynağı indirdi",
+        "user_logged_in": "Giriş yaptı",
+        "user_joined_org": "Kuruluşa katıldı",
+        "ai_message_sent": "Yapay zeka asistanına sordu"
+      },
+      "stat": {
+        "total": "Saklanan ifadeler",
+        "platform": "LearnHouse olayları (30 gün)",
+        "content": "Paketlerden (30 gün)",
+        "external": "Diğer sistemlerden (30 gün)"
+      },
+      "connections_title": "LRS bağlantıları",
+      "connections_subtitle": "Her ifade her bağlantıya iletilir ve ulaşana kadar yeniden denenir.",
+      "connections_help": "Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX veya herhangi bir xAPI 1.0.3 / 2.0 LRS'yi bağlayın.",
+      "add_connection": "Bağlantı ekle",
+      "connection_added": "Bağlantı eklendi",
+      "no_connections": "Bağlı LRS yok",
+      "no_connections_hint": "Bağlantı ekleyene kadar ifadeler yerleşik LRS'nizde kalır.",
+      "provider": "LRS",
+      "name": "Ad",
+      "endpoint": "xAPI uç noktası",
+      "endpoint_hint": "Genellikle şuna benzer: {{example}}",
+      "auth_type": "Kimlik doğrulama",
+      "auth_basic": "Anahtar ve gizli anahtar (Basic)",
+      "auth_bearer": "Belirteç (Bearer)",
+      "version": "xAPI sürümü",
+      "key": "Anahtar",
+      "secret": "Gizli anahtar",
+      "token": "Belirteç",
+      "sources": "Gönder",
+      "source": {
+        "all": "Tümü",
+        "platform": "LearnHouse olayları",
+        "content": "Paket içeriği",
+        "external": "Diğer sistemlerden"
+      },
+      "sources_hint": "Paket içeriği, Tin Can ve cmi5 etkinliklerinin raporladığı şeydir; diğer sistemler LRS kimlik bilgilerinizi kullananlardır.",
+      "test": "Test et",
+      "send_test": "Test ifadesi gönder",
+      "test_step": {
+        "about": "Uç nokta xAPI ile yanıt veriyor",
+        "auth": "Kimlik bilgileri kabul edildi",
+        "write": "Test ifadesi kaydedildi"
+      },
+      "test_elapsed": "{{ms}} ms içinde kontrol edildi",
+      "manage": "Yönet",
+      "enabled": "Etkin",
+      "paused": "Duraklatıldı",
+      "failed_count_one": "{{count}} başarısız",
+      "failed_count_other": "{{count}} başarısız",
+      "pending_count_one": "{{count}} bekliyor",
+      "pending_count_other": "{{count}} bekliyor",
+      "sent_one": "{{count}} ifade gönderildi",
+      "sent_other": "{{count}} ifade gönderildi",
+      "last_success": "Son teslimat: {{date}}",
+      "last_error": "Son hata: {{error}} ({{date}})",
+      "retry": "Başarısızları yeniden dene",
+      "retry_queued_one": "{{count}} ifade yeniden kuyruğa alındı",
+      "retry_queued_other": "{{count}} ifade yeniden kuyruğa alındı",
+      "delete": "Sil",
+      "delete_connection": "Bağlantıyı sil",
+      "delete_connection_confirm": "{{name}} için ifade göndermeyi durdurmak istiyor musunuz? Henüz teslim edilmeyen ifadeler silinir.",
+      "save": "Kaydet",
+      "saved": "Kaydedildi",
+      "cancel": "İptal",
+      "lrs_title": "Yerleşik LRS",
+      "lrs_subtitle": "Kuruluşunuz için uyumlu bir xAPI 1.0.3 LRS. Başka bir LMS'ye, bir yazım aracına veya bir BI aracına ifade göndermesi ya da okuması için anahtar verin.",
+      "lrs_enabled": "Kimlik bilgilerini kabul et",
+      "lrs_endpoint": "Uç nokta",
+      "credential_name_placeholder": "Kim kullanıyor (ör. Moodle, Power BI)",
+      "credential_default_name": "LRS kimlik bilgisi",
+      "create_credential": "Kimlik bilgisi oluştur",
+      "secret_once": "Gizli anahtarı şimdi kopyalayın: yalnızca bir kez gösterilir.",
+      "done": "Bitti",
+      "no_credentials": "Henüz kimlik bilgisi yok",
+      "no_credentials_hint": "LearnHouse'ta başlatılan paketler kendi kısa ömürlü anahtarlarını kullanır; kimlik bilgileri diğer sistemler içindir.",
+      "last_used": "Son kullanım: {{date}}",
+      "revoke": "Kimlik bilgisini iptal et",
+      "revoke_confirm": "{{name}} iptal edilsin mi? Onu kullanan sistemler erişimi hemen kaybeder.",
+      "copy": "Kopyala",
+      "copied": "Kopyalandı",
+      "copy_failed": "Kopyalanamadı",
+      "refresh": "Yenile",
+      "loading": "Yükleniyor…",
+      "no_statements": "Henüz ifade yok",
+      "no_statements_hint": "İfadeler, öğrenciler çalıştıkça, paketler raporladıkça ve diğer sistemler gönderdikçe burada görünür.",
+      "voided": "Geçersiz kılındı",
+      "load_more": "Daha fazla yükle"
+    }
   }
 }

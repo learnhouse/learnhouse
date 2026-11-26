@@ -183,6 +183,15 @@ const nextConfig = {
         ],
       },
       {
+        // The xAPI LRS proxy returns documents with client-chosen content
+        // types (the xAPI spec requires it): never let one render as a page.
+        source: '/api/xapi/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Content-Security-Policy', value: "sandbox; default-src 'none'; frame-ancestors 'none'" },
+        ],
+      },
+      {
         // Resource activities embed an existing Library resource (board, course,
         // podcast, community, playground) inside a same-origin iframe in the
         // activity player. The global frame-ancestors 'none' / X-Frame-Options:

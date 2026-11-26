@@ -65,6 +65,7 @@ export type FeatureKey =
   | 'audit_logs'
   | 'sso'
   | 'lti'
+  | 'xapi'
   | 'scorm'
   | 'seo'
   | 'drip'
@@ -238,6 +239,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMeta> = {
   lti: {
     titleKey: 'common.plans.feature_restricted.lti.title',
     descriptionKey: 'common.plans.feature_restricted.lti.description',
+    Icon: PlugsConnected,
+    upsellPlan: 'business',
+  },
+  xapi: {
+    titleKey: 'common.plans.feature_restricted.xapi.title',
+    descriptionKey: 'common.plans.feature_restricted.xapi.description',
     Icon: PlugsConnected,
     upsellPlan: 'business',
   },

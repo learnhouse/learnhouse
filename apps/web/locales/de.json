@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Standard-Funktion",
           "description": "Peer-Review ist für Organisationen mit unserem Standard-Plan oder höher verfügbar. Upgraden Sie, damit Lernende ihre Arbeiten gegenseitig anhand eines Bewertungsrasters beurteilen."
+        },
+        "xapi": {
+          "title": "Business-Funktion",
+          "description": "xAPI ist im Business-Tarif und höher verfügbar. Upgrade, um Lernaufzeichnungen an beliebige LRS zu senden, Tin Can- und cmi5-Pakete auszuführen und ein integriertes LRS zu nutzen."
         }
       },
       "gate": {
@@ -1115,11 +1119,11 @@
       "lms_and_more": "und {{count}} weitere"
     },
     "scorm": {
-      "upload_package": "SCORM-Paket hochladen",
+      "upload_package": "SCORM-/xAPI-Paket hochladen",
       "package_file": "Paketdatei (.zip)",
       "click_to_upload": "Klicken zum Hochladen oder per Drag & Drop",
-      "supported_versions": "SCORM 1.2 oder SCORM 2004 Paket",
-      "import_info": "Laden Sie Ihr SCORM-Paket hoch, um dessen Inhalt zu analysieren. Sie können den Kurs konfigurieren und Aktivitäten den Kapiteln zuweisen.",
+      "supported_versions": "SCORM 1.2-, SCORM 2004-, xAPI- (Tin Can) oder cmi5-Paket",
+      "import_info": "Lade dein SCORM-, xAPI- oder cmi5-Paket hoch, um den Inhalt zu analysieren. Danach kannst du den Kurs konfigurieren und Aktivitäten Kapiteln zuweisen.",
       "analyze_package": "Paket analysieren",
       "package_analyzed": "Paket erfolgreich analysiert",
       "assign_scos": "Aktivitäten den Kapiteln zuweisen",
@@ -1138,8 +1142,8 @@
       "failed_import": "SCORM-Paket konnte nicht importiert werden",
       "import_success_one": "{{count}} SCORM-Aktivität erfolgreich importiert",
       "import_success_other": "{{count}} SCORM-Aktivitäten erfolgreich importiert",
-      "package_zip": "SCORM-Paket (.zip)",
-      "supported_versions_max": "SCORM-1.2- oder SCORM-2004-Paket (max. 5 GB)",
+      "package_zip": "SCORM-, xAPI- oder cmi5-Paket (.zip)",
+      "supported_versions_max": "SCORM 1.2-, SCORM 2004-, xAPI- (Tin Can) oder cmi5-Paket (max. 5GB)",
       "uploading_package": "Paket wird hochgeladen…",
       "analyzing_package": "Paket wird analysiert…",
       "import_info_chapter": "Laden Sie Ihr SCORM-Paket hoch, um den Inhalt zu analysieren. Die Lernobjekte werden diesem Kapitel hinzugefügt.",
@@ -1331,6 +1335,13 @@
       "maintainer": "Verwalter",
       "contributor": "Mitwirkender",
       "reporter": "Berichterstatter"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "Diese Aktivität konnte nicht gestartet werden. Versuche es gleich noch einmal.",
+        "own_window": "Diese Aktivität öffnet sich in einem eigenen Fenster.",
+        "open": "Aktivität öffnen"
+      }
     }
   },
   "communities": {
@@ -8742,7 +8753,8 @@
             "audit_logs": "Audit-Logs",
             "custom_domain": "Eigene Domain",
             "remove_watermark": "Ohne LearnHouse-Wasserzeichen",
-            "peer_review": "Peer-Review"
+            "peer_review": "Peer-Review",
+            "xapi": "xAPI & LRS"
           }
         },
         "next_invoice_label": "Nächste Rechnung",
@@ -32494,5 +32506,148 @@
     "copy": "Kopieren",
     "copied": "Kopiert",
     "copy_failed": "Kopieren fehlgeschlagen"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI & LRS",
+      "page_subtitle": "Lernaufzeichnungen an beliebige LRS senden, Tin Can- und cmi5-Inhalte ausführen und anderen Systemen dein integriertes LRS zur Verfügung stellen",
+      "section": {
+        "overview": "Übersicht",
+        "connections": "LRS-Verbindungen",
+        "lrs": "Integriertes LRS",
+        "statements": "Statements"
+      },
+      "record_title": "Lernaufzeichnungen",
+      "record_subtitle": "LearnHouse wandelt das Handeln der Lernenden in xAPI-Statements um, speichert sie in deinem integrierten LRS und leitet sie an deine Verbindungen weiter.",
+      "platform_events": "Lernereignisse als xAPI-Statements aufzeichnen",
+      "platform_events_hint": "Einschreibungen, Lektionen, Quizze, Aufgaben, Zertifikate und mehr. Paketinhalte (Tin Can, cmi5) melden immer.",
+      "actor_format": "Lernende identifizieren über",
+      "actor": {
+        "mbox": "E-Mail-Adresse",
+        "mbox_sha1sum": "Gehashte E-Mail (privat)",
+        "account": "Konto auf deiner Website"
+      },
+      "actor_hint": {
+        "mbox": "Statements enthalten die E-Mail der Lernenden, sodass jedes LRS sie Personen zuordnen kann.",
+        "mbox_sha1sum": "Statements enthalten einen SHA-1 der E-Mail: zuordenbar, aber die Adresse verlässt LearnHouse nie.",
+        "account": "Statements enthalten die LearnHouse-ID der Lernenden auf deiner Website, ohne E-Mail."
+      },
+      "retention": "Statements aufbewahren",
+      "retention_hint": "Wie lange das integrierte LRS Statements aufbewahrt. Deine Verbindungen behalten ihre eigene Kopie.",
+      "retention_forever": "Für immer",
+      "retention_days_one": "{{count}} Tag",
+      "retention_days_other": "{{count}} Tage",
+      "events_title_one": "{{count}} Ereignis aufgezeichnet",
+      "events_title_other": "{{count}} Ereignisse aufgezeichnet",
+      "event": {
+        "course_enrolled": "In einen Kurs eingeschrieben",
+        "course_left": "Einen Kurs verlassen",
+        "course_completed": "Einen Kurs abgeschlossen",
+        "activity_view": "Eine Lektion geöffnet",
+        "activity_completed": "Eine Lektion abgeschlossen",
+        "video_progress": "Videofortschritt",
+        "quiz_submitted": "Ein Quiz abgegeben",
+        "assignment_submitted": "Eine Aufgabe abgegeben",
+        "assignment_graded": "Aufgabe bewertet",
+        "code_submitted": "Code abgegeben",
+        "certificate_claimed": "Ein Zertifikat erhalten",
+        "path_enrolled": "In einen Lernpfad eingeschrieben",
+        "path_completed": "Einen Lernpfad abgeschlossen",
+        "live_session_joined": "An einer Live-Sitzung teilgenommen",
+        "time_on_activity": "Zeit in einer Lektion",
+        "course_view": "Eine Kursseite angesehen",
+        "podcast_episode_played": "Eine Podcast-Folge abgespielt",
+        "discussion_posted": "Eine Diskussion gestartet",
+        "comment_posted": "Eine Diskussion kommentiert",
+        "resource_downloaded": "Eine Ressource heruntergeladen",
+        "user_logged_in": "Angemeldet",
+        "user_joined_org": "Der Organisation beigetreten",
+        "ai_message_sent": "Den KI-Assistenten gefragt"
+      },
+      "stat": {
+        "total": "Gespeicherte Statements",
+        "platform": "LearnHouse-Ereignisse (30 Tage)",
+        "content": "Aus Paketen (30 Tage)",
+        "external": "Aus anderen Systemen (30 Tage)"
+      },
+      "connections_title": "LRS-Verbindungen",
+      "connections_subtitle": "Jedes Statement wird an jede Verbindung geliefert und so lange wiederholt, bis es ankommt.",
+      "connections_help": "Verbinde Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX oder ein beliebiges xAPI 1.0.3 / 2.0 LRS.",
+      "add_connection": "Verbindung hinzufügen",
+      "connection_added": "Verbindung hinzugefügt",
+      "no_connections": "Kein LRS verbunden",
+      "no_connections_hint": "Statements bleiben in deinem integrierten LRS, bis du eine Verbindung hinzufügst.",
+      "provider": "LRS",
+      "name": "Name",
+      "endpoint": "xAPI-Endpunkt",
+      "endpoint_hint": "Sieht meist so aus: {{example}}",
+      "auth_type": "Authentifizierung",
+      "auth_basic": "Schlüssel und Secret (Basic)",
+      "auth_bearer": "Token (Bearer)",
+      "version": "xAPI-Version",
+      "key": "Schlüssel",
+      "secret": "Secret",
+      "token": "Token",
+      "sources": "Senden",
+      "source": {
+        "all": "Alle",
+        "platform": "LearnHouse-Ereignisse",
+        "content": "Paketinhalte",
+        "external": "Aus anderen Systemen"
+      },
+      "sources_hint": "Paketinhalte sind das, was Tin Can- und cmi5-Aktivitäten melden; andere Systeme sind die, die deine LRS-Zugangsdaten nutzen.",
+      "test": "Testen",
+      "send_test": "Test-Statement senden",
+      "test_step": {
+        "about": "Endpunkt antwortet mit xAPI",
+        "auth": "Zugangsdaten akzeptiert",
+        "write": "Test-Statement gespeichert"
+      },
+      "test_elapsed": "Geprüft in {{ms}} ms",
+      "manage": "Verwalten",
+      "enabled": "Aktiviert",
+      "paused": "Pausiert",
+      "failed_count_one": "{{count}} fehlgeschlagen",
+      "failed_count_other": "{{count}} fehlgeschlagen",
+      "pending_count_one": "{{count}} wartend",
+      "pending_count_other": "{{count}} wartend",
+      "sent_one": "{{count}} Statement gesendet",
+      "sent_other": "{{count}} Statements gesendet",
+      "last_success": "Letzte Zustellung: {{date}}",
+      "last_error": "Letzter Fehler: {{error}} ({{date}})",
+      "retry": "Fehlgeschlagene wiederholen",
+      "retry_queued_one": "{{count}} Statement erneut eingereiht",
+      "retry_queued_other": "{{count}} Statements erneut eingereiht",
+      "delete": "Löschen",
+      "delete_connection": "Verbindung löschen",
+      "delete_connection_confirm": "Keine Statements mehr an {{name}} senden? Noch nicht zugestellte Statements werden verworfen.",
+      "save": "Speichern",
+      "saved": "Gespeichert",
+      "cancel": "Abbrechen",
+      "lrs_title": "Integriertes LRS",
+      "lrs_subtitle": "Ein konformes xAPI 1.0.3 LRS für deine Organisation. Gib einem anderen LMS, einem Autorentool oder einem BI-Tool einen Schlüssel zum Senden oder Lesen von Statements.",
+      "lrs_enabled": "Zugangsdaten akzeptieren",
+      "lrs_endpoint": "Endpunkt",
+      "credential_name_placeholder": "Wer es nutzt (z. B. Moodle, Power BI)",
+      "credential_default_name": "LRS-Zugangsdaten",
+      "create_credential": "Zugangsdaten erstellen",
+      "secret_once": "Kopiere das Secret jetzt: Es wird nur einmal angezeigt.",
+      "done": "Fertig",
+      "no_credentials": "Noch keine Zugangsdaten",
+      "no_credentials_hint": "In LearnHouse gestartete Pakete nutzen eigene, kurzlebige Schlüssel; Zugangsdaten sind für andere Systeme.",
+      "last_used": "Zuletzt verwendet: {{date}}",
+      "revoke": "Zugangsdaten widerrufen",
+      "revoke_confirm": "{{name}} widerrufen? Systeme, die es nutzen, verlieren sofort den Zugriff.",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "copy_failed": "Kopieren fehlgeschlagen",
+      "refresh": "Aktualisieren",
+      "loading": "Wird geladen…",
+      "no_statements": "Noch keine Statements",
+      "no_statements_hint": "Statements erscheinen hier, sobald Lernende arbeiten, Pakete melden und andere Systeme sie senden.",
+      "voided": "Ungültig gemacht",
+      "load_more": "Mehr laden"
+    }
   }
 }

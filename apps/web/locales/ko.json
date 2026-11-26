@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Standard 기능",
           "description": "동료 평가는 Standard 플랜 이상의 조직에서 사용할 수 있습니다. 업그레이드하면 학습자들이 루브릭으로 서로의 과제를 평가할 수 있습니다."
+        },
+        "xapi": {
+          "title": "Business 기능",
+          "description": "xAPI는 Business 요금제 이상에서 사용할 수 있습니다. 업그레이드하면 학습 기록을 모든 LRS로 보내고, Tin Can과 cmi5 패키지를 실행하고, 내장 LRS를 사용할 수 있습니다."
         }
       },
       "gate": {
@@ -1105,11 +1109,11 @@
       "import_courses_one": "강의 {{count}}개 가져오기"
     },
     "scorm": {
-      "upload_package": "SCORM 패키지 업로드",
+      "upload_package": "SCORM / xAPI 패키지 업로드",
       "package_file": "패키지 파일 (.zip)",
       "click_to_upload": "클릭하여 업로드하거나 드래그 앤 드롭",
-      "supported_versions": "SCORM 1.2 또는 SCORM 2004 패키지",
-      "import_info": "SCORM 패키지를 업로드하여 내용을 분석하세요. 코스를 구성하고 활동을 챕터에 할당할 수 있습니다.",
+      "supported_versions": "SCORM 1.2, SCORM 2004, xAPI(Tin Can) 또는 cmi5 패키지",
+      "import_info": "SCORM, xAPI 또는 cmi5 패키지를 업로드해 내용을 분석하세요. 이후 강좌를 설정하고 활동을 챕터에 배정할 수 있습니다.",
       "analyze_package": "패키지 분석",
       "package_analyzed": "패키지 분석 성공",
       "assign_scos": "챕터에 활동 할당",
@@ -1126,8 +1130,8 @@
       "select_at_least_other": "가져올 SCO를 하나 이상 선택하세요",
       "failed_import": "SCORM 패키지를 가져오지 못했습니다",
       "import_success_other": "SCORM 활동 {{count}}개를 성공적으로 가져왔습니다",
-      "package_zip": "SCORM 패키지 (.zip)",
-      "supported_versions_max": "SCORM 1.2 또는 SCORM 2004 패키지 (최대 5GB)",
+      "package_zip": "SCORM, xAPI 또는 cmi5 패키지(.zip)",
+      "supported_versions_max": "SCORM 1.2, SCORM 2004, xAPI(Tin Can) 또는 cmi5 패키지(최대 5GB)",
       "uploading_package": "패키지를 업로드하는 중…",
       "analyzing_package": "패키지를 분석하는 중…",
       "import_info_chapter": "SCORM 패키지를 업로드하여 내용을 분석하세요. 학습 객체가 이 챕터에 추가됩니다.",
@@ -1330,6 +1334,13 @@
       "maintainer": "유지관리자",
       "contributor": "기여자",
       "reporter": "리포터"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "이 활동을 시작할 수 없습니다. 잠시 후 다시 시도하세요.",
+        "own_window": "이 활동은 별도 창에서 열립니다.",
+        "open": "활동 열기"
+      }
     }
   },
   "communities": {
@@ -8716,7 +8727,8 @@
             "audit_logs": "감사 로그",
             "custom_domain": "커스텀 도메인",
             "remove_watermark": "LearnHouse 워터마크 없음",
-            "peer_review": "동료 평가"
+            "peer_review": "동료 평가",
+            "xapi": "xAPI 및 LRS"
           }
         },
         "next_invoice_label": "다음 청구서",
@@ -32450,5 +32462,148 @@
     "copy": "복사",
     "copied": "복사됨",
     "copy_failed": "복사하지 못했습니다"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI 및 LRS",
+      "page_subtitle": "학습 기록을 모든 LRS로 보내고, Tin Can과 cmi5 콘텐츠를 실행하고, 다른 시스템이 내장 LRS를 사용하도록 하세요",
+      "section": {
+        "overview": "개요",
+        "connections": "LRS 연결",
+        "lrs": "내장 LRS",
+        "statements": "스테이트먼트"
+      },
+      "record_title": "학습 기록",
+      "record_subtitle": "LearnHouse는 학습자의 활동을 xAPI 스테이트먼트로 변환해 내장 LRS에 저장하고 연결된 곳으로 전달합니다.",
+      "platform_events": "학습 이벤트를 xAPI 스테이트먼트로 기록",
+      "platform_events_hint": "수강 등록, 레슨, 퀴즈, 과제, 수료증 등. 패키지 콘텐츠(Tin Can, cmi5)는 항상 보고합니다.",
+      "actor_format": "학습자 식별 방식",
+      "actor": {
+        "mbox": "이메일 주소",
+        "mbox_sha1sum": "해시된 이메일(비공개)",
+        "account": "사이트의 계정"
+      },
+      "actor_hint": {
+        "mbox": "스테이트먼트에 학습자의 이메일이 포함되므로 모든 LRS가 사람과 대조할 수 있습니다.",
+        "mbox_sha1sum": "스테이트먼트에 이메일의 SHA-1이 포함됩니다. 대조는 가능하지만 주소는 LearnHouse 밖으로 나가지 않습니다.",
+        "account": "스테이트먼트에 사이트의 학습자 LearnHouse ID가 포함되며 이메일은 포함되지 않습니다."
+      },
+      "retention": "스테이트먼트 보관",
+      "retention_hint": "내장 LRS가 스테이트먼트를 보관하는 기간입니다. 연결된 곳은 각자 사본을 보관합니다.",
+      "retention_forever": "영구",
+      "retention_days_one": "{{count}}일",
+      "retention_days_other": "{{count}}일",
+      "events_title_one": "이벤트 {{count}}건 기록됨",
+      "events_title_other": "이벤트 {{count}}건 기록됨",
+      "event": {
+        "course_enrolled": "강좌에 등록함",
+        "course_left": "강좌에서 나감",
+        "course_completed": "강좌를 완료함",
+        "activity_view": "레슨을 열람함",
+        "activity_completed": "레슨을 완료함",
+        "video_progress": "동영상 진행률",
+        "quiz_submitted": "퀴즈를 제출함",
+        "assignment_submitted": "과제를 제출함",
+        "assignment_graded": "과제 채점됨",
+        "code_submitted": "코드를 제출함",
+        "certificate_claimed": "수료증을 받음",
+        "path_enrolled": "학습 경로에 등록함",
+        "path_completed": "학습 경로를 완료함",
+        "live_session_joined": "라이브 세션에 참여함",
+        "time_on_activity": "레슨에서 보낸 시간",
+        "course_view": "강좌 페이지를 조회함",
+        "podcast_episode_played": "팟캐스트 에피소드를 재생함",
+        "discussion_posted": "토론을 게시함",
+        "comment_posted": "토론에 댓글을 남김",
+        "resource_downloaded": "자료를 다운로드함",
+        "user_logged_in": "로그인함",
+        "user_joined_org": "조직에 가입함",
+        "ai_message_sent": "AI 어시스턴트에게 질문함"
+      },
+      "stat": {
+        "total": "저장된 스테이트먼트",
+        "platform": "LearnHouse 이벤트(30일)",
+        "content": "패키지에서(30일)",
+        "external": "다른 시스템에서(30일)"
+      },
+      "connections_title": "LRS 연결",
+      "connections_subtitle": "모든 스테이트먼트는 각 연결로 전달되며 도착할 때까지 재시도합니다.",
+      "connections_help": "Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX 또는 xAPI 1.0.3 / 2.0 LRS를 연결하세요.",
+      "add_connection": "연결 추가",
+      "connection_added": "연결이 추가되었습니다",
+      "no_connections": "연결된 LRS 없음",
+      "no_connections_hint": "연결을 추가할 때까지 스테이트먼트는 내장 LRS에 남아 있습니다.",
+      "provider": "LRS",
+      "name": "이름",
+      "endpoint": "xAPI 엔드포인트",
+      "endpoint_hint": "보통 {{example}} 같은 형태입니다",
+      "auth_type": "인증",
+      "auth_basic": "키와 시크릿(Basic)",
+      "auth_bearer": "토큰(Bearer)",
+      "version": "xAPI 버전",
+      "key": "키",
+      "secret": "시크릿",
+      "token": "토큰",
+      "sources": "전송 대상",
+      "source": {
+        "all": "전체",
+        "platform": "LearnHouse 이벤트",
+        "content": "패키지 콘텐츠",
+        "external": "다른 시스템에서"
+      },
+      "sources_hint": "패키지 콘텐츠는 Tin Can과 cmi5 활동이 보고하는 것이고, 다른 시스템은 LRS 자격 증명을 사용하는 시스템입니다.",
+      "test": "테스트",
+      "send_test": "테스트 스테이트먼트 보내기",
+      "test_step": {
+        "about": "엔드포인트가 xAPI로 응답함",
+        "auth": "자격 증명 승인됨",
+        "write": "테스트 스테이트먼트 저장됨"
+      },
+      "test_elapsed": "{{ms}}ms 만에 확인됨",
+      "manage": "관리",
+      "enabled": "사용 중",
+      "paused": "일시 중지됨",
+      "failed_count_one": "{{count}}건 실패",
+      "failed_count_other": "{{count}}건 실패",
+      "pending_count_one": "{{count}}건 대기 중",
+      "pending_count_other": "{{count}}건 대기 중",
+      "sent_one": "스테이트먼트 {{count}}건 전송됨",
+      "sent_other": "스테이트먼트 {{count}}건 전송됨",
+      "last_success": "마지막 전달: {{date}}",
+      "last_error": "마지막 오류: {{error}} ({{date}})",
+      "retry": "실패 항목 재시도",
+      "retry_queued_one": "스테이트먼트 {{count}}건 다시 대기열에 추가됨",
+      "retry_queued_other": "스테이트먼트 {{count}}건 다시 대기열에 추가됨",
+      "delete": "삭제",
+      "delete_connection": "연결 삭제",
+      "delete_connection_confirm": "{{name}}(으)로 스테이트먼트 전송을 중단할까요? 아직 전달되지 않은 스테이트먼트는 삭제됩니다.",
+      "save": "저장",
+      "saved": "저장됨",
+      "cancel": "취소",
+      "lrs_title": "내장 LRS",
+      "lrs_subtitle": "조직을 위한 xAPI 1.0.3 호환 LRS입니다. 다른 LMS, 저작 도구, BI 도구에 키를 주어 스테이트먼트를 보내거나 읽게 할 수 있습니다.",
+      "lrs_enabled": "자격 증명 허용",
+      "lrs_endpoint": "엔드포인트",
+      "credential_name_placeholder": "사용하는 곳(예: Moodle, Power BI)",
+      "credential_default_name": "LRS 자격 증명",
+      "create_credential": "자격 증명 만들기",
+      "secret_once": "시크릿을 지금 복사하세요. 한 번만 표시됩니다.",
+      "done": "완료",
+      "no_credentials": "아직 자격 증명이 없습니다",
+      "no_credentials_hint": "LearnHouse에서 실행되는 패키지는 자체 단기 키를 사용합니다. 자격 증명은 다른 시스템용입니다.",
+      "last_used": "마지막 사용: {{date}}",
+      "revoke": "자격 증명 폐기",
+      "revoke_confirm": "{{name}}을(를) 폐기할까요? 이를 사용하는 시스템은 즉시 접근 권한을 잃습니다.",
+      "copy": "복사",
+      "copied": "복사됨",
+      "copy_failed": "복사하지 못했습니다",
+      "refresh": "새로고침",
+      "loading": "불러오는 중…",
+      "no_statements": "아직 스테이트먼트가 없습니다",
+      "no_statements_hint": "학습자가 학습하고, 패키지가 보고하고, 다른 시스템이 보내면 스테이트먼트가 여기에 표시됩니다.",
+      "voided": "무효화됨",
+      "load_more": "더 보기"
+    }
   }
 }

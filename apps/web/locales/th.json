@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "ฟีเจอร์ Standard",
           "description": "การประเมินโดยเพื่อนมีให้บริการเฉพาะองค์กรที่ใช้แผน Standard หรือสูงกว่า อัปเกรดเพื่อให้ผู้เรียนประเมินงานของกันและกันด้วยรูบริก"
+        },
+        "xapi": {
+          "title": "ฟีเจอร์ Business",
+          "description": "xAPI ใช้ได้ในแพ็กเกจ Business ขึ้นไป อัปเกรดเพื่อส่งบันทึกการเรียนรู้ไปยัง LRS ใดก็ได้ รันแพ็กเกจ Tin Can และ cmi5 และใช้ LRS ในตัว"
         }
       },
       "gate": {
@@ -1105,11 +1109,11 @@
       "import_courses_one": "นำเข้า {{count}} คอร์ส"
     },
     "scorm": {
-      "upload_package": "อัปโหลดแพ็คเกจ SCORM",
+      "upload_package": "อัปโหลดแพ็กเกจ SCORM / xAPI",
       "package_file": "ไฟล์แพ็คเกจ (.zip)",
       "click_to_upload": "คลิกเพื่ออัปโหลดหรือลากและวาง",
-      "supported_versions": "แพ็คเกจ SCORM 1.2 หรือ SCORM 2004",
-      "import_info": "อัปโหลดแพ็คเกจ SCORM ของคุณเพื่อวิเคราะห์เนื้อหา คุณจะสามารถกำหนดค่าคอร์สและกำหนดกิจกรรมให้กับบทได้",
+      "supported_versions": "แพ็กเกจ SCORM 1.2, SCORM 2004, xAPI (Tin Can) หรือ cmi5",
+      "import_info": "อัปโหลดแพ็กเกจ SCORM, xAPI หรือ cmi5 เพื่อวิเคราะห์เนื้อหา จากนั้นคุณจะตั้งค่าคอร์สและกำหนดกิจกรรมให้แต่ละบทได้",
       "analyze_package": "วิเคราะห์แพ็คเกจ",
       "package_analyzed": "วิเคราะห์แพ็คเกจสำเร็จ",
       "assign_scos": "กำหนดกิจกรรมให้กับบท",
@@ -1126,8 +1130,8 @@
       "select_at_least_other": "โปรดเลือก SCO ที่จะนำเข้าอย่างน้อยหนึ่งรายการ",
       "failed_import": "นำเข้าแพ็กเกจ SCORM ไม่สำเร็จ",
       "import_success_other": "นำเข้ากิจกรรม SCORM {{count}} รายการสำเร็จ",
-      "package_zip": "แพ็กเกจ SCORM (.zip)",
-      "supported_versions_max": "แพ็กเกจ SCORM 1.2 หรือ SCORM 2004 (สูงสุด 5GB)",
+      "package_zip": "แพ็กเกจ SCORM, xAPI หรือ cmi5 (.zip)",
+      "supported_versions_max": "แพ็กเกจ SCORM 1.2, SCORM 2004, xAPI (Tin Can) หรือ cmi5 (สูงสุด 5GB)",
       "uploading_package": "กำลังอัปโหลดแพ็กเกจ…",
       "analyzing_package": "กำลังวิเคราะห์แพ็กเกจ…",
       "import_info_chapter": "อัปโหลดแพ็กเกจ SCORM เพื่อวิเคราะห์เนื้อหา ออบเจ็กต์การเรียนรู้ของแพ็กเกจจะถูกเพิ่มลงในบทนี้",
@@ -1330,6 +1334,13 @@
       "maintainer": "ผู้ดูแล",
       "contributor": "ผู้ร่วมสร้าง",
       "reporter": "ผู้รายงาน"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "เริ่มกิจกรรมนี้ไม่ได้ ลองอีกครั้งในอีกสักครู่",
+        "own_window": "กิจกรรมนี้เปิดในหน้าต่างของตัวเอง",
+        "open": "เปิดกิจกรรม"
+      }
     }
   },
   "communities": {
@@ -8716,7 +8727,8 @@
             "audit_logs": "บันทึกการตรวจสอบ",
             "custom_domain": "โดเมนที่กำหนดเอง",
             "remove_watermark": "ไม่มีลายน้ำ LearnHouse",
-            "peer_review": "การประเมินโดยเพื่อน"
+            "peer_review": "การประเมินโดยเพื่อน",
+            "xapi": "xAPI และ LRS"
           }
         },
         "next_invoice_label": "ใบแจ้งหนี้ถัดไป",
@@ -32450,5 +32462,148 @@
     "copy": "คัดลอก",
     "copied": "คัดลอกแล้ว",
     "copy_failed": "คัดลอกไม่ได้"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI และ LRS",
+      "page_subtitle": "ส่งบันทึกการเรียนรู้ไปยัง LRS ใดก็ได้ รันเนื้อหา Tin Can และ cmi5 และให้ระบบอื่นใช้ LRS ในตัวของคุณ",
+      "section": {
+        "overview": "ภาพรวม",
+        "connections": "การเชื่อมต่อ LRS",
+        "lrs": "LRS ในตัว",
+        "statements": "สเตตเมนต์"
+      },
+      "record_title": "บันทึกการเรียนรู้",
+      "record_subtitle": "LearnHouse แปลงสิ่งที่ผู้เรียนทำเป็นสเตตเมนต์ xAPI เก็บไว้ใน LRS ในตัวของคุณ และส่งต่อไปยังการเชื่อมต่อของคุณ",
+      "platform_events": "บันทึกเหตุการณ์การเรียนรู้เป็นสเตตเมนต์ xAPI",
+      "platform_events_hint": "การลงทะเบียน บทเรียน แบบทดสอบ งานที่มอบหมาย ใบรับรอง และอื่นๆ เนื้อหาแพ็กเกจ (Tin Can, cmi5) จะรายงานเสมอ",
+      "actor_format": "ระบุตัวผู้เรียนด้วย",
+      "actor": {
+        "mbox": "ที่อยู่อีเมล",
+        "mbox_sha1sum": "อีเมลที่แฮช (ส่วนตัว)",
+        "account": "บัญชีบนเว็บไซต์ของคุณ"
+      },
+      "actor_hint": {
+        "mbox": "สเตตเมนต์มีอีเมลของผู้เรียน ดังนั้น LRS ใดก็จับคู่กับตัวบุคคลได้",
+        "mbox_sha1sum": "สเตตเมนต์มี SHA-1 ของอีเมล: จับคู่ได้ แต่ที่อยู่อีเมลไม่เคยออกจาก LearnHouse",
+        "account": "สเตตเมนต์มี LearnHouse ID ของผู้เรียนบนเว็บไซต์ของคุณ โดยไม่มีอีเมล"
+      },
+      "retention": "เก็บสเตตเมนต์",
+      "retention_hint": "LRS ในตัวเก็บสเตตเมนต์นานเท่าใด การเชื่อมต่อของคุณเก็บสำเนาของตัวเอง",
+      "retention_forever": "ตลอดไป",
+      "retention_days_one": "{{count}} วัน",
+      "retention_days_other": "{{count}} วัน",
+      "events_title_one": "บันทึกแล้ว {{count}} เหตุการณ์",
+      "events_title_other": "บันทึกแล้ว {{count}} เหตุการณ์",
+      "event": {
+        "course_enrolled": "ลงทะเบียนเรียนคอร์ส",
+        "course_left": "ออกจากคอร์ส",
+        "course_completed": "เรียนคอร์สจบ",
+        "activity_view": "เปิดบทเรียน",
+        "activity_completed": "เรียนบทเรียนจบ",
+        "video_progress": "ความคืบหน้าวิดีโอ",
+        "quiz_submitted": "ส่งแบบทดสอบ",
+        "assignment_submitted": "ส่งงานที่มอบหมาย",
+        "assignment_graded": "งานที่มอบหมายได้รับการให้คะแนนแล้ว",
+        "code_submitted": "ส่งโค้ด",
+        "certificate_claimed": "ได้รับใบรับรอง",
+        "path_enrolled": "ลงทะเบียนเส้นทางการเรียนรู้",
+        "path_completed": "เรียนเส้นทางการเรียนรู้จบ",
+        "live_session_joined": "เข้าร่วมเซสชันสด",
+        "time_on_activity": "เวลาที่ใช้ในบทเรียน",
+        "course_view": "ดูหน้าคอร์ส",
+        "podcast_episode_played": "เล่นตอนพอดแคสต์",
+        "discussion_posted": "โพสต์การสนทนา",
+        "comment_posted": "แสดงความคิดเห็นในการสนทนา",
+        "resource_downloaded": "ดาวน์โหลดทรัพยากร",
+        "user_logged_in": "ลงชื่อเข้าใช้",
+        "user_joined_org": "เข้าร่วมองค์กร",
+        "ai_message_sent": "ถามผู้ช่วย AI"
+      },
+      "stat": {
+        "total": "สเตตเมนต์ที่จัดเก็บ",
+        "platform": "เหตุการณ์ LearnHouse (30 วัน)",
+        "content": "จากแพ็กเกจ (30 วัน)",
+        "external": "จากระบบอื่น (30 วัน)"
+      },
+      "connections_title": "การเชื่อมต่อ LRS",
+      "connections_subtitle": "ทุกสเตตเมนต์จะถูกส่งไปยังทุกการเชื่อมต่อ และลองใหม่จนกว่าจะถึง",
+      "connections_help": "เชื่อมต่อ Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX หรือ LRS ใดก็ได้ที่รองรับ xAPI 1.0.3 / 2.0",
+      "add_connection": "เพิ่มการเชื่อมต่อ",
+      "connection_added": "เพิ่มการเชื่อมต่อแล้ว",
+      "no_connections": "ไม่มี LRS ที่เชื่อมต่อ",
+      "no_connections_hint": "สเตตเมนต์จะอยู่ใน LRS ในตัวของคุณจนกว่าจะเพิ่มการเชื่อมต่อ",
+      "provider": "LRS",
+      "name": "ชื่อ",
+      "endpoint": "เอนด์พอยต์ xAPI",
+      "endpoint_hint": "โดยปกติหน้าตาประมาณ {{example}}",
+      "auth_type": "การยืนยันตัวตน",
+      "auth_basic": "คีย์และซีเคร็ต (Basic)",
+      "auth_bearer": "โทเค็น (Bearer)",
+      "version": "เวอร์ชัน xAPI",
+      "key": "คีย์",
+      "secret": "ซีเคร็ต",
+      "token": "โทเค็น",
+      "sources": "ส่ง",
+      "source": {
+        "all": "ทั้งหมด",
+        "platform": "เหตุการณ์ LearnHouse",
+        "content": "เนื้อหาแพ็กเกจ",
+        "external": "จากระบบอื่น"
+      },
+      "sources_hint": "เนื้อหาแพ็กเกจคือสิ่งที่กิจกรรม Tin Can และ cmi5 รายงาน ส่วนระบบอื่นคือระบบที่ใช้ข้อมูลรับรอง LRS ของคุณ",
+      "test": "ทดสอบ",
+      "send_test": "ส่งสเตตเมนต์ทดสอบ",
+      "test_step": {
+        "about": "เอนด์พอยต์ตอบกลับเป็น xAPI",
+        "auth": "ยอมรับข้อมูลรับรองแล้ว",
+        "write": "จัดเก็บสเตตเมนต์ทดสอบแล้ว"
+      },
+      "test_elapsed": "ตรวจสอบใน {{ms}} มิลลิวินาที",
+      "manage": "จัดการ",
+      "enabled": "เปิดใช้งาน",
+      "paused": "หยุดชั่วคราว",
+      "failed_count_one": "ล้มเหลว {{count}} รายการ",
+      "failed_count_other": "ล้มเหลว {{count}} รายการ",
+      "pending_count_one": "รอ {{count}} รายการ",
+      "pending_count_other": "รอ {{count}} รายการ",
+      "sent_one": "ส่งสเตตเมนต์แล้ว {{count}} รายการ",
+      "sent_other": "ส่งสเตตเมนต์แล้ว {{count}} รายการ",
+      "last_success": "ส่งล่าสุด: {{date}}",
+      "last_error": "ข้อผิดพลาดล่าสุด: {{error}} ({{date}})",
+      "retry": "ลองรายการที่ล้มเหลวใหม่",
+      "retry_queued_one": "จัดคิวสเตตเมนต์ใหม่ {{count}} รายการ",
+      "retry_queued_other": "จัดคิวสเตตเมนต์ใหม่ {{count}} รายการ",
+      "delete": "ลบ",
+      "delete_connection": "ลบการเชื่อมต่อ",
+      "delete_connection_confirm": "หยุดส่งสเตตเมนต์ไปยัง {{name}} หรือไม่ สเตตเมนต์ที่ยังไม่ถูกส่งจะถูกทิ้ง",
+      "save": "บันทึก",
+      "saved": "บันทึกแล้ว",
+      "cancel": "ยกเลิก",
+      "lrs_title": "LRS ในตัว",
+      "lrs_subtitle": "LRS ที่เป็นไปตามมาตรฐาน xAPI 1.0.3 สำหรับองค์กรของคุณ ให้คีย์แก่ LMS อื่น เครื่องมือสร้างเนื้อหา หรือเครื่องมือ BI เพื่อส่งหรืออ่านสเตตเมนต์",
+      "lrs_enabled": "ยอมรับข้อมูลรับรอง",
+      "lrs_endpoint": "เอนด์พอยต์",
+      "credential_name_placeholder": "ใครใช้งาน (เช่น Moodle, Power BI)",
+      "credential_default_name": "ข้อมูลรับรอง LRS",
+      "create_credential": "สร้างข้อมูลรับรอง",
+      "secret_once": "คัดลอกซีเคร็ตตอนนี้: จะแสดงเพียงครั้งเดียว",
+      "done": "เสร็จสิ้น",
+      "no_credentials": "ยังไม่มีข้อมูลรับรอง",
+      "no_credentials_hint": "แพ็กเกจที่เปิดใน LearnHouse ใช้คีย์อายุสั้นของตัวเอง ข้อมูลรับรองมีไว้สำหรับระบบอื่น",
+      "last_used": "ใช้ล่าสุด: {{date}}",
+      "revoke": "เพิกถอนข้อมูลรับรอง",
+      "revoke_confirm": "เพิกถอน {{name}} หรือไม่ ระบบที่ใช้งานอยู่จะสูญเสียสิทธิ์เข้าถึงทันที",
+      "copy": "คัดลอก",
+      "copied": "คัดลอกแล้ว",
+      "copy_failed": "คัดลอกไม่ได้",
+      "refresh": "รีเฟรช",
+      "loading": "กำลังโหลด…",
+      "no_statements": "ยังไม่มีสเตตเมนต์",
+      "no_statements_hint": "สเตตเมนต์จะแสดงที่นี่เมื่อผู้เรียนเรียน แพ็กเกจรายงาน และระบบอื่นส่งมา",
+      "voided": "ยกเลิกแล้ว",
+      "load_more": "โหลดเพิ่ม"
+    }
   }
 }

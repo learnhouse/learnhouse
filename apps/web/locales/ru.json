@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Функция Standard",
           "description": "Взаимное оценивание доступно организациям на тарифе Standard или выше. Обновите тариф, чтобы учащиеся проверяли работы друг друга по рубрике."
+        },
+        "xapi": {
+          "title": "Функция тарифа Business",
+          "description": "xAPI доступен на тарифе Business и выше. Перейдите на более высокий тариф, чтобы отправлять записи об обучении в любую LRS, запускать пакеты Tin Can и cmi5 и пользоваться встроенной LRS."
         }
       },
       "gate": {
@@ -1141,11 +1145,11 @@
       "lms_and_more": "и ещё {{count}}"
     },
     "scorm": {
-      "upload_package": "Загрузить пакет SCORM",
+      "upload_package": "Загрузить пакет SCORM / xAPI",
       "package_file": "Файл пакета (.zip)",
       "click_to_upload": "Нажмите для загрузки или перетащите",
-      "supported_versions": "Пакет SCORM 1.2 или SCORM 2004",
-      "import_info": "Загрузите свой пакет SCORM для анализа его содержимого. Вы сможете настроить курс и назначить активности главам.",
+      "supported_versions": "Пакет SCORM 1.2, SCORM 2004, xAPI (Tin Can) или cmi5",
+      "import_info": "Загрузите пакет SCORM, xAPI или cmi5, чтобы проанализировать его содержимое. Затем вы сможете настроить курс и распределить активности по главам.",
       "analyze_package": "Анализировать пакет",
       "package_analyzed": "Пакет успешно проанализирован",
       "assign_scos": "Назначить активности главам",
@@ -1168,8 +1172,8 @@
       "import_success_few": "Успешно импортировано {{count}} активности SCORM",
       "import_success_many": "Успешно импортировано {{count}} активностей SCORM",
       "import_success_other": "Успешно импортировано {{count}} активности SCORM",
-      "package_zip": "Пакет SCORM (.zip)",
-      "supported_versions_max": "Пакет SCORM 1.2 или SCORM 2004 (до 5 ГБ)",
+      "package_zip": "Пакет SCORM, xAPI или cmi5 (.zip)",
+      "supported_versions_max": "Пакет SCORM 1.2, SCORM 2004, xAPI (Tin Can) или cmi5 (макс. 5GB)",
       "uploading_package": "Загрузка пакета…",
       "analyzing_package": "Анализ пакета…",
       "import_info_chapter": "Загрузите пакет SCORM, чтобы проанализировать его содержимое. Его учебные объекты будут добавлены в эту главу.",
@@ -1369,6 +1373,13 @@
       "maintainer": "Сопровождающий",
       "contributor": "Участник",
       "reporter": "Репортёр"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "Не удалось запустить эту активность. Повторите попытку через минуту.",
+        "own_window": "Эта активность открывается в отдельном окне.",
+        "open": "Открыть активность"
+      }
     }
   },
   "communities": {
@@ -9000,7 +9011,8 @@
             "audit_logs": "Журналы аудита",
             "custom_domain": "Собственный домен",
             "remove_watermark": "Без водяного знака LearnHouse",
-            "peer_review": "Взаимное рецензирование"
+            "peer_review": "Взаимное рецензирование",
+            "xapi": "xAPI и LRS"
           }
         },
         "next_invoice_label": "Следующий счёт",
@@ -33922,5 +33934,148 @@
     "copy": "Копировать",
     "copied": "Скопировано",
     "copy_failed": "Не удалось скопировать"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI и LRS",
+      "page_subtitle": "Отправляйте записи об обучении в любую LRS, запускайте контент Tin Can и cmi5 и разрешите другим системам использовать вашу встроенную LRS",
+      "section": {
+        "overview": "Обзор",
+        "connections": "Подключения LRS",
+        "lrs": "Встроенная LRS",
+        "statements": "Утверждения"
+      },
+      "record_title": "Записи об обучении",
+      "record_subtitle": "LearnHouse превращает действия учащихся в утверждения xAPI, сохраняет их во встроенной LRS и пересылает в ваши подключения.",
+      "platform_events": "Записывать учебные события как утверждения xAPI",
+      "platform_events_hint": "Зачисления, уроки, тесты, задания, сертификаты и другое. Контент пакетов (Tin Can, cmi5) передаёт данные всегда.",
+      "actor_format": "Идентифицировать учащихся по",
+      "actor": {
+        "mbox": "Адрес электронной почты",
+        "mbox_sha1sum": "Хешированная почта (приватно)",
+        "account": "Аккаунт на вашем сайте"
+      },
+      "actor_hint": {
+        "mbox": "Утверждения содержат почту учащегося, поэтому любая LRS может сопоставить их с людьми.",
+        "mbox_sha1sum": "Утверждения содержат SHA-1 от почты: сопоставить можно, но сам адрес не покидает LearnHouse.",
+        "account": "Утверждения содержат ID учащегося в LearnHouse на вашем сайте, без почты."
+      },
+      "retention": "Хранить утверждения",
+      "retention_hint": "Как долго встроенная LRS хранит утверждения. У ваших подключений остаётся своя копия.",
+      "retention_forever": "Всегда",
+      "retention_days_one": "{{count}} день",
+      "retention_days_other": "{{count}} дн.",
+      "events_title_one": "{{count}} событие записано",
+      "events_title_other": "{{count}} событий записано",
+      "event": {
+        "course_enrolled": "Записался на курс",
+        "course_left": "Покинул курс",
+        "course_completed": "Завершил курс",
+        "activity_view": "Открыл урок",
+        "activity_completed": "Завершил урок",
+        "video_progress": "Прогресс видео",
+        "quiz_submitted": "Отправил тест",
+        "assignment_submitted": "Отправил задание",
+        "assignment_graded": "Задание оценено",
+        "code_submitted": "Отправил код",
+        "certificate_claimed": "Получил сертификат",
+        "path_enrolled": "Записался на учебный путь",
+        "path_completed": "Завершил учебный путь",
+        "live_session_joined": "Присоединился к живому занятию",
+        "time_on_activity": "Время, проведённое на уроке",
+        "course_view": "Просмотрел страницу курса",
+        "podcast_episode_played": "Прослушал эпизод подкаста",
+        "discussion_posted": "Опубликовал обсуждение",
+        "comment_posted": "Прокомментировал обсуждение",
+        "resource_downloaded": "Скачал материал",
+        "user_logged_in": "Вошёл в систему",
+        "user_joined_org": "Присоединился к организации",
+        "ai_message_sent": "Задал вопрос ИИ-ассистенту"
+      },
+      "stat": {
+        "total": "Сохранено утверждений",
+        "platform": "События LearnHouse (30 дней)",
+        "content": "Из пакетов (30 дней)",
+        "external": "Из других систем (30 дней)"
+      },
+      "connections_title": "Подключения LRS",
+      "connections_subtitle": "Каждое утверждение доставляется в каждое подключение, с повторами до успешной доставки.",
+      "connections_help": "Подключите Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX или любую LRS xAPI 1.0.3 / 2.0.",
+      "add_connection": "Добавить подключение",
+      "connection_added": "Подключение добавлено",
+      "no_connections": "Нет подключённых LRS",
+      "no_connections_hint": "Утверждения остаются во встроенной LRS, пока вы не добавите подключение.",
+      "provider": "LRS",
+      "name": "Название",
+      "endpoint": "Конечная точка xAPI",
+      "endpoint_hint": "Обычно выглядит так: {{example}}",
+      "auth_type": "Аутентификация",
+      "auth_basic": "Ключ и секрет (Basic)",
+      "auth_bearer": "Токен (Bearer)",
+      "version": "Версия xAPI",
+      "key": "Ключ",
+      "secret": "Секрет",
+      "token": "Токен",
+      "sources": "Отправлять",
+      "source": {
+        "all": "Всё",
+        "platform": "События LearnHouse",
+        "content": "Контент пакетов",
+        "external": "Из других систем"
+      },
+      "sources_hint": "Контент пакетов — это то, что передают активности Tin Can и cmi5; другие системы — те, что используют учётные данные вашей LRS.",
+      "test": "Проверить",
+      "send_test": "Отправить тестовое утверждение",
+      "test_step": {
+        "about": "Конечная точка отвечает по xAPI",
+        "auth": "Учётные данные приняты",
+        "write": "Тестовое утверждение сохранено"
+      },
+      "test_elapsed": "Проверено за {{ms}} мс",
+      "manage": "Управление",
+      "enabled": "Включено",
+      "paused": "Приостановлено",
+      "failed_count_one": "Сбоев: {{count}}",
+      "failed_count_other": "Сбоев: {{count}}",
+      "pending_count_one": "Ожидает: {{count}}",
+      "pending_count_other": "Ожидает: {{count}}",
+      "sent_one": "Отправлено утверждение: {{count}}",
+      "sent_other": "Отправлено утверждений: {{count}}",
+      "last_success": "Последняя доставка: {{date}}",
+      "last_error": "Последняя ошибка: {{error}} ({{date}})",
+      "retry": "Повторить неудачные",
+      "retry_queued_one": "Снова в очереди утверждений: {{count}}",
+      "retry_queued_other": "Снова в очереди утверждений: {{count}}",
+      "delete": "Удалить",
+      "delete_connection": "Удалить подключение",
+      "delete_connection_confirm": "Перестать отправлять утверждения в {{name}}? Ещё не доставленные утверждения будут отброшены.",
+      "save": "Сохранить",
+      "saved": "Сохранено",
+      "cancel": "Отмена",
+      "lrs_title": "Встроенная LRS",
+      "lrs_subtitle": "Совместимая с xAPI 1.0.3 LRS для вашей организации. Дайте другой LMS, инструменту создания курсов или BI-инструменту ключ для отправки или чтения утверждений.",
+      "lrs_enabled": "Принимать учётные данные",
+      "lrs_endpoint": "Конечная точка",
+      "credential_name_placeholder": "Кто использует (напр. Moodle, Power BI)",
+      "credential_default_name": "Учётные данные LRS",
+      "create_credential": "Создать учётные данные",
+      "secret_once": "Скопируйте секрет сейчас: он показывается только один раз.",
+      "done": "Готово",
+      "no_credentials": "Пока нет учётных данных",
+      "no_credentials_hint": "Пакеты, запущенные в LearnHouse, используют собственные недолговечные ключи; учётные данные нужны для других систем.",
+      "last_used": "Последнее использование: {{date}}",
+      "revoke": "Отозвать учётные данные",
+      "revoke_confirm": "Отозвать {{name}}? Системы, которые их используют, сразу потеряют доступ.",
+      "copy": "Копировать",
+      "copied": "Скопировано",
+      "copy_failed": "Не удалось скопировать",
+      "refresh": "Обновить",
+      "loading": "Загрузка…",
+      "no_statements": "Пока нет утверждений",
+      "no_statements_hint": "Утверждения появляются здесь, когда учащиеся занимаются, пакеты передают данные и другие системы их отправляют.",
+      "voided": "Аннулировано",
+      "load_more": "Загрузить ещё"
+    }
   }
 }

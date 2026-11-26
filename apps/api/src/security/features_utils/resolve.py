@@ -39,7 +39,7 @@ ALL_FEATURES = [
     "folders", "communities", "courses", "live_sessions",
     "lti", "members", "messaging", "paths", "payments", "playgrounds", "podcasts", "roles", "scorm",
     "sso", "usergroups", "versioning", "scim", "required_training", "company_seats", "newsletter",
-    "crm", "crm_salesforce", "peer_review",
+    "crm", "crm_salesforce", "peer_review", "xapi",
 ]
 
 
