@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Recurso Standard",
           "description": "A avaliação por pares está disponível para organizações com plano Standard ou superior. Atualize para que os alunos avaliem os trabalhos uns dos outros com uma rubrica."
+        },
+        "xapi": {
+          "title": "Recurso Business",
+          "description": "O xAPI está disponível no plano Business e superiores. Faça upgrade para enviar registros de aprendizagem a qualquer LRS, executar pacotes Tin Can e cmi5 e usar um LRS integrado."
         }
       },
       "gate": {
@@ -1127,11 +1131,11 @@
       "lms_and_more": "e mais {{count}}"
     },
     "scorm": {
-      "upload_package": "Enviar Pacote SCORM",
+      "upload_package": "Enviar pacote SCORM / xAPI",
       "package_file": "Arquivo do Pacote (.zip)",
       "click_to_upload": "Clique para enviar ou arraste e solte",
-      "supported_versions": "Pacote SCORM 1.2 ou SCORM 2004",
-      "import_info": "Envie seu pacote SCORM para analisar seu conteúdo. Você poderá configurar o curso e atribuir atividades aos capítulos.",
+      "supported_versions": "Pacote SCORM 1.2, SCORM 2004, xAPI (Tin Can) ou cmi5",
+      "import_info": "Envie seu pacote SCORM, xAPI ou cmi5 para analisar o conteúdo. Depois você poderá configurar o curso e atribuir atividades aos capítulos.",
       "analyze_package": "Analisar Pacote",
       "package_analyzed": "Pacote Analisado com Sucesso",
       "assign_scos": "Atribuir Atividades aos Capítulos",
@@ -1152,8 +1156,8 @@
       "import_success_one": "{{count}} atividade SCORM importada com sucesso",
       "import_success_many": "{{count}} de atividades SCORM importadas com sucesso",
       "import_success_other": "{{count}} atividades SCORM importadas com sucesso",
-      "package_zip": "Pacote SCORM (.zip)",
-      "supported_versions_max": "Pacote SCORM 1.2 ou SCORM 2004 (máx. 5 GB)",
+      "package_zip": "Pacote SCORM, xAPI ou cmi5 (.zip)",
+      "supported_versions_max": "Pacote SCORM 1.2, SCORM 2004, xAPI (Tin Can) ou cmi5 (máx. 5GB)",
       "uploading_package": "Enviando pacote…",
       "analyzing_package": "Analisando pacote…",
       "import_info_chapter": "Envie seu pacote SCORM para analisar o conteúdo. Os objetos de aprendizagem serão adicionados a este capítulo.",
@@ -1349,6 +1353,13 @@
       "maintainer": "Mantenedor",
       "contributor": "Colaborador",
       "reporter": "Relator"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "Não foi possível iniciar esta atividade. Tente de novo em instantes.",
+        "own_window": "Esta atividade abre em uma janela própria.",
+        "open": "Abrir atividade"
+      }
     }
   },
   "communities": {
@@ -8859,7 +8870,8 @@
             "audit_logs": "Logs de auditoria",
             "custom_domain": "Domínio personalizado",
             "remove_watermark": "Sem marca d'água LearnHouse",
-            "peer_review": "Revisão por pares"
+            "peer_review": "Revisão por pares",
+            "xapi": "xAPI e LRS"
           }
         },
         "next_invoice_label": "Próxima fatura",
@@ -33145,5 +33157,148 @@
     "copy": "Copiar",
     "copied": "Copiado",
     "copy_failed": "Não foi possível copiar"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI e LRS",
+      "page_subtitle": "Envie registros de aprendizagem para qualquer LRS, execute conteúdo Tin Can e cmi5 e deixe outros sistemas usarem seu LRS integrado",
+      "section": {
+        "overview": "Visão geral",
+        "connections": "Conexões LRS",
+        "lrs": "LRS integrado",
+        "statements": "Declarações"
+      },
+      "record_title": "Registros de aprendizagem",
+      "record_subtitle": "O LearnHouse transforma o que os alunos fazem em declarações xAPI, guarda no seu LRS integrado e encaminha para suas conexões.",
+      "platform_events": "Registrar eventos de aprendizagem como declarações xAPI",
+      "platform_events_hint": "Matrículas, aulas, questionários, tarefas, certificados e mais. O conteúdo de pacotes (Tin Can, cmi5) sempre é reportado.",
+      "actor_format": "Identificar alunos por",
+      "actor": {
+        "mbox": "Endereço de e-mail",
+        "mbox_sha1sum": "E-mail com hash (privado)",
+        "account": "Conta no seu site"
+      },
+      "actor_hint": {
+        "mbox": "As declarações carregam o e-mail do aluno, então qualquer LRS pode associá-las a pessoas.",
+        "mbox_sha1sum": "As declarações carregam um SHA-1 do e-mail: associável, mas o endereço nunca sai do LearnHouse.",
+        "account": "As declarações carregam o ID do aluno no LearnHouse no seu site, sem e-mail."
+      },
+      "retention": "Manter declarações",
+      "retention_hint": "Por quanto tempo o LRS integrado mantém as declarações. Suas conexões guardam a própria cópia.",
+      "retention_forever": "Para sempre",
+      "retention_days_one": "{{count}} dia",
+      "retention_days_other": "{{count}} dias",
+      "events_title_one": "{{count}} evento registrado",
+      "events_title_other": "{{count}} eventos registrados",
+      "event": {
+        "course_enrolled": "Matriculou-se em um curso",
+        "course_left": "Saiu de um curso",
+        "course_completed": "Concluiu um curso",
+        "activity_view": "Abriu uma aula",
+        "activity_completed": "Concluiu uma aula",
+        "video_progress": "Progresso do vídeo",
+        "quiz_submitted": "Enviou um questionário",
+        "assignment_submitted": "Enviou uma tarefa",
+        "assignment_graded": "Tarefa avaliada",
+        "code_submitted": "Enviou código",
+        "certificate_claimed": "Ganhou um certificado",
+        "path_enrolled": "Matriculou-se em uma trilha de aprendizagem",
+        "path_completed": "Concluiu uma trilha de aprendizagem",
+        "live_session_joined": "Entrou em uma sessão ao vivo",
+        "time_on_activity": "Tempo gasto em uma aula",
+        "course_view": "Viu a página de um curso",
+        "podcast_episode_played": "Ouviu um episódio de podcast",
+        "discussion_posted": "Publicou uma discussão",
+        "comment_posted": "Comentou em uma discussão",
+        "resource_downloaded": "Baixou um recurso",
+        "user_logged_in": "Entrou na conta",
+        "user_joined_org": "Entrou na organização",
+        "ai_message_sent": "Perguntou ao assistente de IA"
+      },
+      "stat": {
+        "total": "Declarações armazenadas",
+        "platform": "Eventos do LearnHouse (30 dias)",
+        "content": "De pacotes (30 dias)",
+        "external": "De outros sistemas (30 dias)"
+      },
+      "connections_title": "Conexões LRS",
+      "connections_subtitle": "Cada declaração é entregue a cada conexão, com novas tentativas até chegar.",
+      "connections_help": "Conecte Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX ou qualquer LRS xAPI 1.0.3 / 2.0.",
+      "add_connection": "Adicionar conexão",
+      "connection_added": "Conexão adicionada",
+      "no_connections": "Nenhum LRS conectado",
+      "no_connections_hint": "As declarações ficam no seu LRS integrado até você adicionar uma conexão.",
+      "provider": "LRS",
+      "name": "Nome",
+      "endpoint": "Endpoint xAPI",
+      "endpoint_hint": "Normalmente tem este formato: {{example}}",
+      "auth_type": "Autenticação",
+      "auth_basic": "Chave e segredo (Basic)",
+      "auth_bearer": "Token (Bearer)",
+      "version": "Versão do xAPI",
+      "key": "Chave",
+      "secret": "Segredo",
+      "token": "Token",
+      "sources": "Enviar",
+      "source": {
+        "all": "Tudo",
+        "platform": "Eventos do LearnHouse",
+        "content": "Conteúdo de pacotes",
+        "external": "De outros sistemas"
+      },
+      "sources_hint": "Conteúdo de pacotes é o que as atividades Tin Can e cmi5 reportam; outros sistemas são os que usam suas credenciais do LRS.",
+      "test": "Testar",
+      "send_test": "Enviar uma declaração de teste",
+      "test_step": {
+        "about": "O endpoint responde xAPI",
+        "auth": "Credenciais aceitas",
+        "write": "Declaração de teste armazenada"
+      },
+      "test_elapsed": "Verificado em {{ms}} ms",
+      "manage": "Gerenciar",
+      "enabled": "Ativada",
+      "paused": "Pausada",
+      "failed_count_one": "{{count}} com falha",
+      "failed_count_other": "{{count}} com falha",
+      "pending_count_one": "{{count}} aguardando",
+      "pending_count_other": "{{count}} aguardando",
+      "sent_one": "{{count}} declaração enviada",
+      "sent_other": "{{count}} declarações enviadas",
+      "last_success": "Última entrega: {{date}}",
+      "last_error": "Último erro: {{error}} ({{date}})",
+      "retry": "Tentar as falhas de novo",
+      "retry_queued_one": "{{count}} declaração na fila novamente",
+      "retry_queued_other": "{{count}} declarações na fila novamente",
+      "delete": "Excluir",
+      "delete_connection": "Excluir conexão",
+      "delete_connection_confirm": "Parar de enviar declarações para {{name}}? As declarações ainda não entregues serão descartadas.",
+      "save": "Salvar",
+      "saved": "Salvo",
+      "cancel": "Cancelar",
+      "lrs_title": "LRS integrado",
+      "lrs_subtitle": "Um LRS xAPI 1.0.3 em conformidade para sua organização. Dê uma chave a outro LMS, a uma ferramenta de autoria ou a uma ferramenta de BI para enviar ou ler declarações.",
+      "lrs_enabled": "Aceitar credenciais",
+      "lrs_endpoint": "Endpoint",
+      "credential_name_placeholder": "Quem usa (ex.: Moodle, Power BI)",
+      "credential_default_name": "Credencial do LRS",
+      "create_credential": "Criar credencial",
+      "secret_once": "Copie o segredo agora: ele é mostrado só uma vez.",
+      "done": "Concluído",
+      "no_credentials": "Nenhuma credencial ainda",
+      "no_credentials_hint": "Pacotes iniciados no LearnHouse usam chaves próprias de curta duração; as credenciais são para outros sistemas.",
+      "last_used": "Último uso: {{date}}",
+      "revoke": "Revogar credencial",
+      "revoke_confirm": "Revogar {{name}}? Os sistemas que a usam perdem o acesso imediatamente.",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "copy_failed": "Não foi possível copiar",
+      "refresh": "Atualizar",
+      "loading": "Carregando…",
+      "no_statements": "Nenhuma declaração ainda",
+      "no_statements_hint": "As declarações aparecem aqui conforme os alunos estudam, os pacotes reportam e outros sistemas enviam.",
+      "voided": "Anulada",
+      "load_more": "Carregar mais"
+    }
   }
 }

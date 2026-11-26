@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Štandardná funkcia",
           "description": "Vzájomné hodnotenie je dostupné pre organizácie na pláne Standard alebo vyššom. Navýšte si plán, aby si študenti mohli navzájom hodnotiť práce podľa rubriky."
+        },
+        "xapi": {
+          "title": "Funkcia plánu Business",
+          "description": "xAPI je dostupné v pláne Business a vyššie. Prejdite na vyšší plán, aby ste mohli posielať záznamy o učení do ľubovoľného LRS, spúšťať balíky Tin Can a cmi5 a používať vstavaný LRS."
         }
       },
       "gate": {
@@ -1141,11 +1145,11 @@
       "lms_and_more": "a ďalších {{count}}"
     },
     "scorm": {
-      "upload_package": "Nahrať SCORM balík",
+      "upload_package": "Nahrať balík SCORM / xAPI",
       "package_file": "Súbor balíka (.zip)",
       "click_to_upload": "Kliknite pre nahranie alebo presuňte súbor",
-      "supported_versions": "SCORM 1.2 alebo SCORM 2004 balík",
-      "import_info": "Nahrajte SCORM balík pre analýzu jeho obsahu. Budete môcť nakonfigurovať kurz a priradiť aktivity ku kapitolám.",
+      "supported_versions": "Balík SCORM 1.2, SCORM 2004, xAPI (Tin Can) alebo cmi5",
+      "import_info": "Nahrajte svoj balík SCORM, xAPI alebo cmi5 a analyzujte jeho obsah. Potom môžete nastaviť kurz a priradiť aktivity ku kapitolám.",
       "analyze_package": "Analyzovať balík",
       "package_analyzed": "Balík úspešne analyzovaný",
       "assign_scos": "Priradiť aktivity ku kapitolám",
@@ -1168,8 +1172,8 @@
       "import_success_few": "Úspešne importované {{count}} SCORM aktivity",
       "import_success_many": "Úspešne importovaných {{count}} SCORM aktivity",
       "import_success_other": "Úspešne importovaných {{count}} SCORM aktivít",
-      "package_zip": "Balík SCORM (.zip)",
-      "supported_versions_max": "Balík SCORM 1.2 alebo SCORM 2004 (max. 5 GB)",
+      "package_zip": "Balík SCORM, xAPI alebo cmi5 (.zip)",
+      "supported_versions_max": "Balík SCORM 1.2, SCORM 2004, xAPI (Tin Can) alebo cmi5 (max. 5GB)",
       "uploading_package": "Nahráva sa balík…",
       "analyzing_package": "Analyzuje sa balík…",
       "import_info_chapter": "Nahrajte svoj balík SCORM, aby sme mohli analyzovať jeho obsah. Jeho vzdelávacie objekty sa pridajú do tejto kapitoly.",
@@ -1369,6 +1373,13 @@
       "maintainer": "Správca",
       "contributor": "Prispievateľ",
       "reporter": "Reportér"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "Túto aktivitu sa nepodarilo spustiť. Skúste to o chvíľu znova.",
+        "own_window": "Táto aktivita sa otvorí vo vlastnom okne.",
+        "open": "Otvoriť aktivitu"
+      }
     }
   },
   "communities": {
@@ -9000,7 +9011,8 @@
             "audit_logs": "Auditné záznamy",
             "custom_domain": "Vlastná doména",
             "remove_watermark": "Bez vodoznaku LearnHouse",
-            "peer_review": "Vzájomné hodnotenie"
+            "peer_review": "Vzájomné hodnotenie",
+            "xapi": "xAPI a LRS"
           }
         },
         "next_invoice_label": "Ďalšia faktúra",
@@ -33922,5 +33934,148 @@
     "copy": "Kopírovať",
     "copied": "Skopírované",
     "copy_failed": "Kopírovanie zlyhalo"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI a LRS",
+      "page_subtitle": "Posielajte záznamy o učení do ľubovoľného LRS, spúšťajte obsah Tin Can a cmi5 a nechajte iné systémy používať váš vstavaný LRS",
+      "section": {
+        "overview": "Prehľad",
+        "connections": "Pripojenia LRS",
+        "lrs": "Vstavaný LRS",
+        "statements": "Výroky"
+      },
+      "record_title": "Záznamy o učení",
+      "record_subtitle": "LearnHouse premieňa činnosť študentov na výroky xAPI, ukladá ich do vášho vstavaného LRS a posiela ich vašim pripojeniam.",
+      "platform_events": "Zaznamenávať vzdelávacie udalosti ako výroky xAPI",
+      "platform_events_hint": "Zápisy, lekcie, kvízy, zadania, certifikáty a ďalšie. Obsah balíkov (Tin Can, cmi5) hlási vždy.",
+      "actor_format": "Identifikovať študentov podľa",
+      "actor": {
+        "mbox": "E-mailová adresa",
+        "mbox_sha1sum": "Hašovaný e-mail (súkromne)",
+        "account": "Účet na vašom webe"
+      },
+      "actor_hint": {
+        "mbox": "Výroky obsahujú e-mail študenta, takže ich ľubovoľný LRS vie priradiť k ľuďom.",
+        "mbox_sha1sum": "Výroky obsahujú SHA-1 e-mailu: dajú sa priradiť, ale adresa LearnHouse nikdy neopustí.",
+        "account": "Výroky obsahujú ID študenta v LearnHouse na vašom webe, bez e-mailu."
+      },
+      "retention": "Uchovávať výroky",
+      "retention_hint": "Ako dlho vstavaný LRS uchováva výroky. Vaše pripojenia si ponechajú vlastnú kópiu.",
+      "retention_forever": "Navždy",
+      "retention_days_one": "{{count}} deň",
+      "retention_days_other": "{{count}} dní",
+      "events_title_one": "{{count}} udalosť zaznamenaná",
+      "events_title_other": "{{count}} udalostí zaznamenaných",
+      "event": {
+        "course_enrolled": "Zapísal sa do kurzu",
+        "course_left": "Opustil kurz",
+        "course_completed": "Dokončil kurz",
+        "activity_view": "Otvoril lekciu",
+        "activity_completed": "Dokončil lekciu",
+        "video_progress": "Postup videa",
+        "quiz_submitted": "Odovzdal kvíz",
+        "assignment_submitted": "Odovzdal zadanie",
+        "assignment_graded": "Zadanie ohodnotené",
+        "code_submitted": "Odovzdal kód",
+        "certificate_claimed": "Získal certifikát",
+        "path_enrolled": "Zapísal sa na vzdelávaciu cestu",
+        "path_completed": "Dokončil vzdelávaciu cestu",
+        "live_session_joined": "Pripojil sa k živej relácii",
+        "time_on_activity": "Čas strávený na lekcii",
+        "course_view": "Zobrazil stránku kurzu",
+        "podcast_episode_played": "Prehral epizódu podcastu",
+        "discussion_posted": "Pridal diskusiu",
+        "comment_posted": "Okomentoval diskusiu",
+        "resource_downloaded": "Stiahol zdroj",
+        "user_logged_in": "Prihlásil sa",
+        "user_joined_org": "Pripojil sa k organizácii",
+        "ai_message_sent": "Opýtal sa AI asistenta"
+      },
+      "stat": {
+        "total": "Uložené výroky",
+        "platform": "Udalosti LearnHouse (30 dní)",
+        "content": "Z balíkov (30 dní)",
+        "external": "Z iných systémov (30 dní)"
+      },
+      "connections_title": "Pripojenia LRS",
+      "connections_subtitle": "Každý výrok sa doručí každému pripojeniu a opakuje sa, kým nedorazí.",
+      "connections_help": "Pripojte Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX alebo ľubovoľný LRS xAPI 1.0.3 / 2.0.",
+      "add_connection": "Pridať pripojenie",
+      "connection_added": "Pripojenie pridané",
+      "no_connections": "Žiadny pripojený LRS",
+      "no_connections_hint": "Výroky zostanú vo vašom vstavanom LRS, kým nepridáte pripojenie.",
+      "provider": "LRS",
+      "name": "Názov",
+      "endpoint": "Koncový bod xAPI",
+      "endpoint_hint": "Zvyčajne vyzerá takto: {{example}}",
+      "auth_type": "Overenie",
+      "auth_basic": "Kľúč a tajomstvo (Basic)",
+      "auth_bearer": "Token (Bearer)",
+      "version": "Verzia xAPI",
+      "key": "Kľúč",
+      "secret": "Tajomstvo",
+      "token": "Token",
+      "sources": "Posielať",
+      "source": {
+        "all": "Všetko",
+        "platform": "Udalosti LearnHouse",
+        "content": "Obsah balíkov",
+        "external": "Z iných systémov"
+      },
+      "sources_hint": "Obsah balíkov je to, čo hlásia aktivity Tin Can a cmi5; iné systémy sú tie, ktoré používajú vaše prístupové údaje LRS.",
+      "test": "Test",
+      "send_test": "Poslať testovací výrok",
+      "test_step": {
+        "about": "Koncový bod odpovedá cez xAPI",
+        "auth": "Prístupové údaje prijaté",
+        "write": "Testovací výrok uložený"
+      },
+      "test_elapsed": "Skontrolované za {{ms}} ms",
+      "manage": "Spravovať",
+      "enabled": "Zapnuté",
+      "paused": "Pozastavené",
+      "failed_count_one": "{{count}} zlyhal",
+      "failed_count_other": "{{count}} zlyhaných",
+      "pending_count_one": "{{count}} čaká",
+      "pending_count_other": "{{count}} čaká",
+      "sent_one": "{{count}} výrok odoslaný",
+      "sent_other": "{{count}} výrokov odoslaných",
+      "last_success": "Posledné doručenie: {{date}}",
+      "last_error": "Posledná chyba: {{error}} ({{date}})",
+      "retry": "Skúsiť zlyhané znova",
+      "retry_queued_one": "{{count}} výrok znova vo fronte",
+      "retry_queued_other": "{{count}} výrokov znova vo fronte",
+      "delete": "Odstrániť",
+      "delete_connection": "Odstrániť pripojenie",
+      "delete_connection_confirm": "Prestať posielať výroky do {{name}}? Zatiaľ nedoručené výroky sa zahodia.",
+      "save": "Uložiť",
+      "saved": "Uložené",
+      "cancel": "Zrušiť",
+      "lrs_title": "Vstavaný LRS",
+      "lrs_subtitle": "Vyhovujúci LRS xAPI 1.0.3 pre vašu organizáciu. Dajte inému LMS, nástroju na tvorbu obsahu alebo BI nástroju kľúč na posielanie alebo čítanie výrokov.",
+      "lrs_enabled": "Prijímať prístupové údaje",
+      "lrs_endpoint": "Koncový bod",
+      "credential_name_placeholder": "Kto to používa (napr. Moodle, Power BI)",
+      "credential_default_name": "Prístupové údaje LRS",
+      "create_credential": "Vytvoriť prístupové údaje",
+      "secret_once": "Skopírujte si tajomstvo teraz: zobrazí sa iba raz.",
+      "done": "Hotovo",
+      "no_credentials": "Zatiaľ žiadne prístupové údaje",
+      "no_credentials_hint": "Balíky spustené v LearnHouse používajú vlastné krátkodobé kľúče; prístupové údaje sú pre iné systémy.",
+      "last_used": "Naposledy použité: {{date}}",
+      "revoke": "Zrušiť platnosť údajov",
+      "revoke_confirm": "Zrušiť platnosť {{name}}? Systémy, ktoré ich používajú, okamžite stratia prístup.",
+      "copy": "Kopírovať",
+      "copied": "Skopírované",
+      "copy_failed": "Kopírovanie zlyhalo",
+      "refresh": "Obnoviť",
+      "loading": "Načítava sa…",
+      "no_statements": "Zatiaľ žiadne výroky",
+      "no_statements_hint": "Výroky sa tu zobrazia, keď študenti pracujú, balíky hlásia a iné systémy ich posielajú.",
+      "voided": "Zneplatnené",
+      "load_more": "Načítať viac"
+    }
   }
 }

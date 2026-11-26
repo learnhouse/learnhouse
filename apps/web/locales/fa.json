@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "ویژگی استاندارد",
           "description": "بازبینی همتا فقط برای سازمان‌های دارای طرح استاندارد یا بالاتر در دسترس است. ارتقا دهید تا یادگیرندگان کار یکدیگر را با بارم‌بندی بازبینی کنند."
+        },
+        "xapi": {
+          "title": "ویژگی Business",
+          "description": "xAPI در طرح Business و بالاتر در دسترس است. ارتقا دهید تا رکوردهای یادگیری را به هر LRS ارسال کنید، بسته‌های Tin Can و cmi5 را اجرا کنید و از LRS داخلی استفاده کنید."
         }
       },
       "gate": {
@@ -1115,11 +1119,11 @@
       "lms_and_more": "و {{count}} مورد دیگر"
     },
     "scorm": {
-      "upload_package": "آپلود بسته SCORM",
+      "upload_package": "بارگذاری بسته SCORM / xAPI",
       "package_file": "فایل بسته (.zip)",
       "click_to_upload": "برای آپلود کلیک کنید یا بکشید و رها کنید",
-      "supported_versions": "بسته SCORM 1.2 یا SCORM 2004",
-      "import_info": "بسته SCORM خود را برای تحلیل محتوا آپلود کنید. می‌توانید دوره را پیکربندی کرده و فعالیت‌ها را به فصل‌ها اختصاص دهید.",
+      "supported_versions": "بسته SCORM 1.2، SCORM 2004، xAPI (Tin Can) یا cmi5",
+      "import_info": "بسته SCORM، xAPI یا cmi5 خود را بارگذاری کنید تا محتوایش تحلیل شود. سپس می‌توانید دوره را پیکربندی کنید و فعالیت‌ها را به فصل‌ها اختصاص دهید.",
       "analyze_package": "تحلیل بسته",
       "package_analyzed": "بسته با موفقیت تحلیل شد",
       "assign_scos": "اختصاص فعالیت‌ها به فصل‌ها",
@@ -1138,8 +1142,8 @@
       "failed_import": "وارد کردن بستهٔ SCORM ناموفق بود",
       "import_success_one": "{{count}} فعالیت SCORM با موفقیت درون‌ریزی شد",
       "import_success_other": "{{count}} فعالیت SCORM با موفقیت وارد شد",
-      "package_zip": "بستهٔ SCORM (.zip)",
-      "supported_versions_max": "بستهٔ SCORM 1.2 یا SCORM 2004 (حداکثر ۵ گیگابایت)",
+      "package_zip": "بسته SCORM، xAPI یا cmi5 (.zip)",
+      "supported_versions_max": "بسته SCORM 1.2، SCORM 2004، xAPI (Tin Can) یا cmi5 (حداکثر 5GB)",
       "uploading_package": "در حال آپلود بسته…",
       "analyzing_package": "در حال تحلیل بسته…",
       "import_info_chapter": "بستهٔ SCORM خود را برای تحلیل محتوا آپلود کنید. اشیای یادگیری آن به این فصل اضافه می‌شوند.",
@@ -1331,6 +1335,13 @@
       "maintainer": "نگهدارنده",
       "contributor": "مشارکت‌کننده",
       "reporter": "گزارش‌دهنده"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "این فعالیت شروع نشد. چند لحظه دیگر دوباره تلاش کنید.",
+        "own_window": "این فعالیت در پنجره خودش باز می‌شود.",
+        "open": "باز کردن فعالیت"
+      }
     }
   },
   "communities": {
@@ -8742,7 +8753,8 @@
             "audit_logs": "گزارش‌های حسابرسی",
             "custom_domain": "دامنه سفارشی",
             "remove_watermark": "بدون واترمارک LearnHouse",
-            "peer_review": "بازبینی همتایان"
+            "peer_review": "بازبینی همتایان",
+            "xapi": "xAPI و LRS"
           }
         },
         "next_invoice_label": "فاکتور بعدی",
@@ -32494,5 +32506,148 @@
     "copy": "کپی",
     "copied": "کپی شد",
     "copy_failed": "کپی ممکن نشد"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI و LRS",
+      "page_subtitle": "رکوردهای یادگیری را به هر LRS ارسال کنید، محتوای Tin Can و cmi5 را اجرا کنید و اجازه دهید سیستم‌های دیگر از LRS داخلی شما استفاده کنند",
+      "section": {
+        "overview": "نمای کلی",
+        "connections": "اتصال‌های LRS",
+        "lrs": "LRS داخلی",
+        "statements": "بیانیه‌ها"
+      },
+      "record_title": "رکوردهای یادگیری",
+      "record_subtitle": "LearnHouse کارهای زبان‌آموزان را به بیانیه‌های xAPI تبدیل می‌کند، آن‌ها را در LRS داخلی شما ذخیره می‌کند و به اتصال‌هایتان ارسال می‌کند.",
+      "platform_events": "ثبت رویدادهای یادگیری به‌صورت بیانیه xAPI",
+      "platform_events_hint": "ثبت‌نام‌ها، درس‌ها، آزمون‌ها، تکالیف، گواهی‌ها و موارد دیگر. محتوای بسته‌ها (Tin Can، cmi5) همیشه گزارش می‌دهد.",
+      "actor_format": "شناسایی زبان‌آموزان با",
+      "actor": {
+        "mbox": "نشانی ایمیل",
+        "mbox_sha1sum": "ایمیل هش‌شده (خصوصی)",
+        "account": "حساب در سایت شما"
+      },
+      "actor_hint": {
+        "mbox": "بیانیه‌ها ایمیل زبان‌آموز را دارند، پس هر LRS می‌تواند آن‌ها را با افراد تطبیق دهد.",
+        "mbox_sha1sum": "بیانیه‌ها SHA-1 ایمیل را دارند: قابل تطبیق است، اما نشانی هرگز از LearnHouse خارج نمی‌شود.",
+        "account": "بیانیه‌ها شناسه LearnHouse زبان‌آموز را در سایت شما دارند، بدون ایمیل."
+      },
+      "retention": "نگه‌داشتن بیانیه‌ها",
+      "retention_hint": "مدت نگه‌داری بیانیه‌ها در LRS داخلی. اتصال‌های شما نسخه خودشان را نگه می‌دارند.",
+      "retention_forever": "برای همیشه",
+      "retention_days_one": "{{count}} روز",
+      "retention_days_other": "{{count}} روز",
+      "events_title_one": "{{count}} رویداد ثبت شد",
+      "events_title_other": "{{count}} رویداد ثبت شد",
+      "event": {
+        "course_enrolled": "در یک دوره ثبت‌نام کرد",
+        "course_left": "از یک دوره خارج شد",
+        "course_completed": "یک دوره را تکمیل کرد",
+        "activity_view": "یک درس را باز کرد",
+        "activity_completed": "یک درس را تکمیل کرد",
+        "video_progress": "پیشرفت ویدیو",
+        "quiz_submitted": "یک آزمون ارسال کرد",
+        "assignment_submitted": "یک تکلیف ارسال کرد",
+        "assignment_graded": "تکلیف نمره‌دهی شد",
+        "code_submitted": "کد ارسال کرد",
+        "certificate_claimed": "گواهی گرفت",
+        "path_enrolled": "در یک مسیر یادگیری ثبت‌نام کرد",
+        "path_completed": "یک مسیر یادگیری را تکمیل کرد",
+        "live_session_joined": "به یک جلسه زنده پیوست",
+        "time_on_activity": "زمان صرف‌شده روی یک درس",
+        "course_view": "صفحه یک دوره را دید",
+        "podcast_episode_played": "یک قسمت پادکست را پخش کرد",
+        "discussion_posted": "یک بحث منتشر کرد",
+        "comment_posted": "زیر یک بحث نظر داد",
+        "resource_downloaded": "یک منبع را دانلود کرد",
+        "user_logged_in": "وارد شد",
+        "user_joined_org": "به سازمان پیوست",
+        "ai_message_sent": "از دستیار هوش مصنوعی پرسید"
+      },
+      "stat": {
+        "total": "بیانیه‌های ذخیره‌شده",
+        "platform": "رویدادهای LearnHouse (۳۰ روز)",
+        "content": "از بسته‌ها (۳۰ روز)",
+        "external": "از سیستم‌های دیگر (۳۰ روز)"
+      },
+      "connections_title": "اتصال‌های LRS",
+      "connections_subtitle": "هر بیانیه به هر اتصال تحویل داده می‌شود و تا رسیدن دوباره تلاش می‌شود.",
+      "connections_help": "Learning Locker، SCORM Cloud، Watershed، Veracity، SQL LRS، Ralph، TRAX یا هر LRS با xAPI 1.0.3 / 2.0 را وصل کنید.",
+      "add_connection": "افزودن اتصال",
+      "connection_added": "اتصال اضافه شد",
+      "no_connections": "هیچ LRS وصل نیست",
+      "no_connections_hint": "تا وقتی اتصالی اضافه نکنید، بیانیه‌ها در LRS داخلی شما می‌مانند.",
+      "provider": "LRS",
+      "name": "نام",
+      "endpoint": "نقطه پایانی xAPI",
+      "endpoint_hint": "معمولاً شبیه {{example}} است",
+      "auth_type": "احراز هویت",
+      "auth_basic": "کلید و رمز (Basic)",
+      "auth_bearer": "توکن (Bearer)",
+      "version": "نسخه xAPI",
+      "key": "کلید",
+      "secret": "رمز",
+      "token": "توکن",
+      "sources": "ارسال",
+      "source": {
+        "all": "همه",
+        "platform": "رویدادهای LearnHouse",
+        "content": "محتوای بسته‌ها",
+        "external": "از سیستم‌های دیگر"
+      },
+      "sources_hint": "محتوای بسته‌ها چیزی است که فعالیت‌های Tin Can و cmi5 گزارش می‌دهند؛ سیستم‌های دیگر آن‌هایی هستند که از اعتبارنامه‌های LRS شما استفاده می‌کنند.",
+      "test": "آزمایش",
+      "send_test": "ارسال بیانیه آزمایشی",
+      "test_step": {
+        "about": "نقطه پایانی با xAPI پاسخ می‌دهد",
+        "auth": "اعتبارنامه پذیرفته شد",
+        "write": "بیانیه آزمایشی ذخیره شد"
+      },
+      "test_elapsed": "در {{ms}} میلی‌ثانیه بررسی شد",
+      "manage": "مدیریت",
+      "enabled": "فعال",
+      "paused": "متوقف",
+      "failed_count_one": "{{count}} ناموفق",
+      "failed_count_other": "{{count}} ناموفق",
+      "pending_count_one": "{{count}} در انتظار",
+      "pending_count_other": "{{count}} در انتظار",
+      "sent_one": "{{count}} بیانیه ارسال شد",
+      "sent_other": "{{count}} بیانیه ارسال شد",
+      "last_success": "آخرین تحویل: {{date}}",
+      "last_error": "آخرین خطا: {{error}} ({{date}})",
+      "retry": "تلاش دوباره برای ناموفق‌ها",
+      "retry_queued_one": "{{count}} بیانیه دوباره در صف قرار گرفت",
+      "retry_queued_other": "{{count}} بیانیه دوباره در صف قرار گرفت",
+      "delete": "حذف",
+      "delete_connection": "حذف اتصال",
+      "delete_connection_confirm": "ارسال بیانیه به {{name}} متوقف شود؟ بیانیه‌های تحویل‌نشده کنار گذاشته می‌شوند.",
+      "save": "ذخیره",
+      "saved": "ذخیره شد",
+      "cancel": "لغو",
+      "lrs_title": "LRS داخلی",
+      "lrs_subtitle": "یک LRS سازگار با xAPI 1.0.3 برای سازمان شما. به یک LMS دیگر، یک ابزار تولید محتوا یا یک ابزار BI کلیدی بدهید تا بیانیه‌ها را ارسال یا بخواند.",
+      "lrs_enabled": "پذیرش اعتبارنامه",
+      "lrs_endpoint": "نقطه پایانی",
+      "credential_name_placeholder": "چه کسی از آن استفاده می‌کند (مثلاً Moodle، Power BI)",
+      "credential_default_name": "اعتبارنامه LRS",
+      "create_credential": "ایجاد اعتبارنامه",
+      "secret_once": "رمز را همین حالا کپی کنید: فقط یک بار نمایش داده می‌شود.",
+      "done": "تمام",
+      "no_credentials": "هنوز اعتبارنامه‌ای نیست",
+      "no_credentials_hint": "بسته‌هایی که در LearnHouse اجرا می‌شوند از کلیدهای کوتاه‌مدت خودشان استفاده می‌کنند؛ اعتبارنامه‌ها برای سیستم‌های دیگر هستند.",
+      "last_used": "آخرین استفاده: {{date}}",
+      "revoke": "لغو اعتبارنامه",
+      "revoke_confirm": "{{name}} لغو شود؟ سیستم‌هایی که از آن استفاده می‌کنند فوراً دسترسی را از دست می‌دهند.",
+      "copy": "کپی",
+      "copied": "کپی شد",
+      "copy_failed": "کپی نشد",
+      "refresh": "تازه‌سازی",
+      "loading": "در حال بارگذاری…",
+      "no_statements": "هنوز بیانیه‌ای نیست",
+      "no_statements_hint": "بیانیه‌ها وقتی زبان‌آموزان کار می‌کنند، بسته‌ها گزارش می‌دهند و سیستم‌های دیگر ارسال می‌کنند اینجا ظاهر می‌شوند.",
+      "voided": "باطل‌شده",
+      "load_more": "بارگذاری بیشتر"
+    }
   }
 }

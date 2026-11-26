@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Funkcja Standard",
           "description": "Ocena koleżeńska jest dostępna dla organizacji z planem Standard lub wyższym. Uaktualnij, aby uczestnicy oceniali nawzajem swoje prace według rubryki."
+        },
+        "xapi": {
+          "title": "Funkcja Business",
+          "description": "xAPI jest dostępne w planie Business i wyższych. Przejdź na wyższy plan, aby wysyłać rekordy nauki do dowolnego LRS, uruchamiać pakiety Tin Can i cmi5 oraz korzystać z wbudowanego LRS."
         }
       },
       "gate": {
@@ -1141,11 +1145,11 @@
       "lms_and_more": "i {{count}} więcej"
     },
     "scorm": {
-      "upload_package": "Prześlij Pakiet SCORM",
+      "upload_package": "Prześlij pakiet SCORM / xAPI",
       "package_file": "Plik Pakietu (.zip)",
       "click_to_upload": "Kliknij, aby przesłać lub przeciągnij i upuść",
-      "supported_versions": "Pakiet SCORM 1.2 lub SCORM 2004",
-      "import_info": "Prześlij swój pakiet SCORM, aby przeanalizować jego zawartość. Będziesz mógł skonfigurować kurs i przypisać aktywności do rozdziałów.",
+      "supported_versions": "Pakiet SCORM 1.2, SCORM 2004, xAPI (Tin Can) lub cmi5",
+      "import_info": "Prześlij pakiet SCORM, xAPI lub cmi5, aby przeanalizować jego zawartość. Potem skonfigurujesz kurs i przypiszesz aktywności do rozdziałów.",
       "analyze_package": "Analizuj Pakiet",
       "package_analyzed": "Pakiet Przeanalizowany Pomyślnie",
       "assign_scos": "Przypisz Aktywności do Rozdziałów",
@@ -1168,8 +1172,8 @@
       "import_success_few": "Pomyślnie zaimportowano {{count}} aktywności SCORM",
       "import_success_many": "Pomyślnie zaimportowano {{count}} aktywności SCORM",
       "import_success_other": "Pomyślnie zaimportowano {{count}} aktywności SCORM",
-      "package_zip": "Pakiet SCORM (.zip)",
-      "supported_versions_max": "Pakiet SCORM 1.2 lub SCORM 2004 (maks. 5 GB)",
+      "package_zip": "Pakiet SCORM, xAPI lub cmi5 (.zip)",
+      "supported_versions_max": "Pakiet SCORM 1.2, SCORM 2004, xAPI (Tin Can) lub cmi5 (maks. 5GB)",
       "uploading_package": "Przesyłanie pakietu…",
       "analyzing_package": "Analizowanie pakietu…",
       "import_info_chapter": "Prześlij swój pakiet SCORM, aby przeanalizować jego zawartość. Jego obiekty edukacyjne zostaną dodane do tego rozdziału.",
@@ -1369,6 +1373,13 @@
       "maintainer": "Opiekun",
       "contributor": "Współtwórca",
       "reporter": "Zgłaszający"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "Nie udało się uruchomić tej aktywności. Spróbuj ponownie za chwilę.",
+        "own_window": "Ta aktywność otwiera się w osobnym oknie.",
+        "open": "Otwórz aktywność"
+      }
     }
   },
   "communities": {
@@ -9000,7 +9011,8 @@
             "audit_logs": "Dzienniki audytu",
             "custom_domain": "Własna domena",
             "remove_watermark": "Bez znaku wodnego LearnHouse",
-            "peer_review": "Ocena koleżeńska"
+            "peer_review": "Ocena koleżeńska",
+            "xapi": "xAPI i LRS"
           }
         },
         "next_invoice_label": "Następna faktura",
@@ -33922,5 +33934,148 @@
     "copy": "Kopiuj",
     "copied": "Skopiowano",
     "copy_failed": "Nie udało się skopiować"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI i LRS",
+      "page_subtitle": "Wysyłaj rekordy nauki do dowolnego LRS, uruchamiaj treści Tin Can i cmi5 i pozwól innym systemom korzystać z wbudowanego LRS",
+      "section": {
+        "overview": "Przegląd",
+        "connections": "Połączenia LRS",
+        "lrs": "Wbudowany LRS",
+        "statements": "Rekordy xAPI"
+      },
+      "record_title": "Rekordy nauki",
+      "record_subtitle": "LearnHouse zamienia działania uczących się w rekordy xAPI, zapisuje je we wbudowanym LRS i przekazuje do Twoich połączeń.",
+      "platform_events": "Zapisuj zdarzenia nauki jako rekordy xAPI",
+      "platform_events_hint": "Zapisy na kursy, lekcje, quizy, zadania, certyfikaty i więcej. Treści pakietów (Tin Can, cmi5) zawsze raportują.",
+      "actor_format": "Identyfikuj uczących się przez",
+      "actor": {
+        "mbox": "Adres e-mail",
+        "mbox_sha1sum": "Zahaszowany e-mail (prywatnie)",
+        "account": "Konto w Twojej witrynie"
+      },
+      "actor_hint": {
+        "mbox": "Rekordy zawierają e-mail ucznia, więc każdy LRS może przypisać je do osób.",
+        "mbox_sha1sum": "Rekordy zawierają SHA-1 adresu e-mail: można je dopasować, ale adres nigdy nie opuszcza LearnHouse.",
+        "account": "Rekordy zawierają identyfikator ucznia w LearnHouse w Twojej witrynie, bez e-maila."
+      },
+      "retention": "Przechowuj rekordy",
+      "retention_hint": "Jak długo wbudowany LRS przechowuje rekordy. Twoje połączenia zachowują własną kopię.",
+      "retention_forever": "Bezterminowo",
+      "retention_days_one": "{{count}} dzień",
+      "retention_days_other": "{{count}} dni",
+      "events_title_one": "{{count}} zdarzenie zapisane",
+      "events_title_other": "{{count}} zdarzeń zapisanych",
+      "event": {
+        "course_enrolled": "Zapis na kurs",
+        "course_left": "Opuszczenie kursu",
+        "course_completed": "Ukończenie kursu",
+        "activity_view": "Otwarcie lekcji",
+        "activity_completed": "Ukończenie lekcji",
+        "video_progress": "Postęp wideo",
+        "quiz_submitted": "Przesłanie quizu",
+        "assignment_submitted": "Przesłanie zadania",
+        "assignment_graded": "Ocena zadania",
+        "code_submitted": "Przesłanie kodu",
+        "certificate_claimed": "Zdobycie certyfikatu",
+        "path_enrolled": "Zapis na ścieżkę nauki",
+        "path_completed": "Ukończenie ścieżki nauki",
+        "live_session_joined": "Dołączenie do sesji na żywo",
+        "time_on_activity": "Czas spędzony na lekcji",
+        "course_view": "Wyświetlenie strony kursu",
+        "podcast_episode_played": "Odtworzenie odcinka podcastu",
+        "discussion_posted": "Dodanie dyskusji",
+        "comment_posted": "Komentarz w dyskusji",
+        "resource_downloaded": "Pobranie zasobu",
+        "user_logged_in": "Logowanie",
+        "user_joined_org": "Dołączenie do organizacji",
+        "ai_message_sent": "Pytanie do asystenta AI"
+      },
+      "stat": {
+        "total": "Zapisane rekordy",
+        "platform": "Zdarzenia LearnHouse (30 dni)",
+        "content": "Z pakietów (30 dni)",
+        "external": "Z innych systemów (30 dni)"
+      },
+      "connections_title": "Połączenia LRS",
+      "connections_subtitle": "Każdy rekord trafia do każdego połączenia i jest ponawiany, aż dotrze.",
+      "connections_help": "Połącz Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX lub dowolny LRS xAPI 1.0.3 / 2.0.",
+      "add_connection": "Dodaj połączenie",
+      "connection_added": "Dodano połączenie",
+      "no_connections": "Brak połączonego LRS",
+      "no_connections_hint": "Rekordy zostają we wbudowanym LRS, dopóki nie dodasz połączenia.",
+      "provider": "LRS",
+      "name": "Nazwa",
+      "endpoint": "Punkt końcowy xAPI",
+      "endpoint_hint": "Zwykle wygląda tak: {{example}}",
+      "auth_type": "Uwierzytelnianie",
+      "auth_basic": "Klucz i sekret (Basic)",
+      "auth_bearer": "Token (Bearer)",
+      "version": "Wersja xAPI",
+      "key": "Klucz",
+      "secret": "Sekret",
+      "token": "Token",
+      "sources": "Wysyłaj",
+      "source": {
+        "all": "Wszystko",
+        "platform": "Zdarzenia LearnHouse",
+        "content": "Treści pakietów",
+        "external": "Z innych systemów"
+      },
+      "sources_hint": "Treści pakietów to to, co raportują aktywności Tin Can i cmi5; inne systemy to te, które używają Twoich danych dostępowych LRS.",
+      "test": "Testuj",
+      "send_test": "Wyślij testowy rekord",
+      "test_step": {
+        "about": "Punkt końcowy odpowiada xAPI",
+        "auth": "Dane dostępowe przyjęte",
+        "write": "Testowy rekord zapisany"
+      },
+      "test_elapsed": "Sprawdzono w {{ms}} ms",
+      "manage": "Zarządzaj",
+      "enabled": "Włączone",
+      "paused": "Wstrzymane",
+      "failed_count_one": "{{count}} nieudany",
+      "failed_count_other": "{{count}} nieudanych",
+      "pending_count_one": "{{count}} oczekuje",
+      "pending_count_other": "{{count}} oczekuje",
+      "sent_one": "{{count}} rekord wysłany",
+      "sent_other": "{{count}} rekordów wysłanych",
+      "last_success": "Ostatnia dostawa: {{date}}",
+      "last_error": "Ostatni błąd: {{error}} ({{date}})",
+      "retry": "Ponów nieudane",
+      "retry_queued_one": "{{count}} rekord ponownie w kolejce",
+      "retry_queued_other": "{{count}} rekordów ponownie w kolejce",
+      "delete": "Usuń",
+      "delete_connection": "Usuń połączenie",
+      "delete_connection_confirm": "Przestać wysyłać rekordy do {{name}}? Rekordy jeszcze niedostarczone zostaną odrzucone.",
+      "save": "Zapisz",
+      "saved": "Zapisano",
+      "cancel": "Anuluj",
+      "lrs_title": "Wbudowany LRS",
+      "lrs_subtitle": "Zgodny z xAPI 1.0.3 LRS dla Twojej organizacji. Daj inny LMS, narzędzie autorskie lub narzędzie BI klucz do wysyłania lub odczytu rekordów.",
+      "lrs_enabled": "Przyjmuj dane dostępowe",
+      "lrs_endpoint": "Punkt końcowy",
+      "credential_name_placeholder": "Kto z tego korzysta (np. Moodle, Power BI)",
+      "credential_default_name": "Dane dostępowe LRS",
+      "create_credential": "Utwórz dane dostępowe",
+      "secret_once": "Skopiuj sekret teraz: jest pokazywany tylko raz.",
+      "done": "Gotowe",
+      "no_credentials": "Brak danych dostępowych",
+      "no_credentials_hint": "Pakiety uruchamiane w LearnHouse używają własnych, krótkotrwałych kluczy; dane dostępowe są dla innych systemów.",
+      "last_used": "Ostatnio użyto: {{date}}",
+      "revoke": "Unieważnij dane dostępowe",
+      "revoke_confirm": "Unieważnić {{name}}? Systemy, które z nich korzystają, natychmiast tracą dostęp.",
+      "copy": "Kopiuj",
+      "copied": "Skopiowano",
+      "copy_failed": "Nie udało się skopiować",
+      "refresh": "Odśwież",
+      "loading": "Ładowanie…",
+      "no_statements": "Brak rekordów",
+      "no_statements_hint": "Rekordy pojawiają się tutaj, gdy uczący się pracują, pakiety raportują, a inne systemy je wysyłają.",
+      "voided": "Unieważniony",
+      "load_more": "Wczytaj więcej"
+    }
   }
 }

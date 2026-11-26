@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Standardプラン機能",
           "description": "ピアレビューはStandardプラン以上の組織で利用できます。アップグレードすると、学習者がルーブリックを使ってお互いの課題をレビューできるようになります。"
+        },
+        "xapi": {
+          "title": "Business 機能",
+          "description": "xAPI は Business プラン以上で利用できます。アップグレードすると、学習記録を任意の LRS に送信し、Tin Can と cmi5 パッケージを実行し、内蔵 LRS を使えます。"
         }
       },
       "gate": {
@@ -1105,11 +1109,11 @@
       "import_courses_one": "コース {{count}} 件をインポート"
     },
     "scorm": {
-      "upload_package": "SCORMパッケージをアップロード",
+      "upload_package": "SCORM / xAPI パッケージをアップロード",
       "package_file": "パッケージファイル (.zip)",
       "click_to_upload": "クリックしてアップロードまたはドラッグ＆ドロップ",
-      "supported_versions": "SCORM 1.2 または SCORM 2004 パッケージ",
-      "import_info": "SCORMパッケージをアップロードして内容を分析します。コースを設定し、アクティビティをチャプターに割り当てることができます。",
+      "supported_versions": "SCORM 1.2、SCORM 2004、xAPI（Tin Can）、または cmi5 パッケージ",
+      "import_info": "SCORM、xAPI、または cmi5 パッケージをアップロードして内容を解析します。その後、コースを設定し、アクティビティをチャプターに割り当てられます。",
       "analyze_package": "パッケージを分析",
       "package_analyzed": "パッケージの分析に成功しました",
       "assign_scos": "アクティビティをチャプターに割り当て",
@@ -1126,8 +1130,8 @@
       "select_at_least_other": "インポートするSCOを1つ以上選択してください",
       "failed_import": "SCORMパッケージをインポートできませんでした",
       "import_success_other": "{{count}}件のSCORMアクティビティをインポートしました",
-      "package_zip": "SCORMパッケージ（.zip）",
-      "supported_versions_max": "SCORM 1.2またはSCORM 2004のパッケージ（最大5GB）",
+      "package_zip": "SCORM、xAPI、または cmi5 パッケージ（.zip）",
+      "supported_versions_max": "SCORM 1.2、SCORM 2004、xAPI（Tin Can）、または cmi5 パッケージ（最大 5GB）",
       "uploading_package": "パッケージをアップロード中…",
       "analyzing_package": "パッケージを解析中…",
       "import_info_chapter": "SCORMパッケージをアップロードして内容を解析します。含まれる学習オブジェクトはこのチャプターに追加されます。",
@@ -1330,6 +1334,13 @@
       "maintainer": "メンテナー",
       "contributor": "投稿者",
       "reporter": "レポーター"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "このアクティビティを開始できませんでした。しばらくしてからもう一度お試しください。",
+        "own_window": "このアクティビティは別ウィンドウで開きます。",
+        "open": "アクティビティを開く"
+      }
     }
   },
   "communities": {
@@ -8718,7 +8729,8 @@
             "audit_logs": "監査ログ",
             "custom_domain": "カスタムドメイン",
             "remove_watermark": "LearnHouse の透かしなし",
-            "peer_review": "ピアレビュー"
+            "peer_review": "ピアレビュー",
+            "xapi": "xAPI と LRS"
           }
         },
         "next_invoice_label": "次回の請求書",
@@ -32452,5 +32464,148 @@
     "copy": "コピー",
     "copied": "コピーしました",
     "copy_failed": "コピーできませんでした"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI と LRS",
+      "page_subtitle": "学習記録を任意の LRS に送信し、Tin Can や cmi5 のコンテンツを実行し、ほかのシステムに内蔵 LRS を使わせることができます",
+      "section": {
+        "overview": "概要",
+        "connections": "LRS 連携",
+        "lrs": "内蔵 LRS",
+        "statements": "ステートメント"
+      },
+      "record_title": "学習記録",
+      "record_subtitle": "LearnHouse は学習者の行動を xAPI ステートメントに変換し、内蔵 LRS に保存して、連携先に転送します。",
+      "platform_events": "学習イベントを xAPI ステートメントとして記録",
+      "platform_events_hint": "受講登録、レッスン、クイズ、課題、修了証など。パッケージコンテンツ（Tin Can、cmi5）は常に報告されます。",
+      "actor_format": "学習者の識別方法",
+      "actor": {
+        "mbox": "メールアドレス",
+        "mbox_sha1sum": "ハッシュ化したメール（非公開）",
+        "account": "サイト上のアカウント"
+      },
+      "actor_hint": {
+        "mbox": "ステートメントに学習者のメールが含まれるため、どの LRS でも本人と照合できます。",
+        "mbox_sha1sum": "ステートメントにはメールの SHA-1 が含まれます。照合はできますが、アドレス自体は LearnHouse の外に出ません。",
+        "account": "ステートメントには、サイト上の学習者の LearnHouse ID が含まれ、メールは含まれません。"
+      },
+      "retention": "ステートメントの保存期間",
+      "retention_hint": "内蔵 LRS がステートメントを保持する期間です。連携先は各自でコピーを保持します。",
+      "retention_forever": "無期限",
+      "retention_days_one": "{{count}} 日",
+      "retention_days_other": "{{count}} 日",
+      "events_title_one": "{{count}} 件のイベントを記録",
+      "events_title_other": "{{count}} 件のイベントを記録",
+      "event": {
+        "course_enrolled": "コースに登録した",
+        "course_left": "コースを退会した",
+        "course_completed": "コースを修了した",
+        "activity_view": "レッスンを開いた",
+        "activity_completed": "レッスンを完了した",
+        "video_progress": "動画の進捗",
+        "quiz_submitted": "クイズを提出した",
+        "assignment_submitted": "課題を提出した",
+        "assignment_graded": "課題が採点された",
+        "code_submitted": "コードを提出した",
+        "certificate_claimed": "修了証を取得した",
+        "path_enrolled": "学習パスに登録した",
+        "path_completed": "学習パスを修了した",
+        "live_session_joined": "ライブセッションに参加した",
+        "time_on_activity": "レッスンでの学習時間",
+        "course_view": "コースページを閲覧した",
+        "podcast_episode_played": "ポッドキャストのエピソードを再生した",
+        "discussion_posted": "ディスカッションを投稿した",
+        "comment_posted": "ディスカッションにコメントした",
+        "resource_downloaded": "リソースをダウンロードした",
+        "user_logged_in": "サインインした",
+        "user_joined_org": "組織に参加した",
+        "ai_message_sent": "AI アシスタントに質問した"
+      },
+      "stat": {
+        "total": "保存済みステートメント",
+        "platform": "LearnHouse イベント（30 日間）",
+        "content": "パッケージから（30 日間）",
+        "external": "ほかのシステムから（30 日間）"
+      },
+      "connections_title": "LRS 連携",
+      "connections_subtitle": "すべてのステートメントは各連携先に配信され、届くまで再試行されます。",
+      "connections_help": "Learning Locker、SCORM Cloud、Watershed、Veracity、SQL LRS、Ralph、TRAX、または xAPI 1.0.3 / 2.0 対応の LRS に接続できます。",
+      "add_connection": "連携を追加",
+      "connection_added": "連携を追加しました",
+      "no_connections": "接続された LRS がありません",
+      "no_connections_hint": "連携を追加するまで、ステートメントは内蔵 LRS に保存されます。",
+      "provider": "LRS",
+      "name": "名前",
+      "endpoint": "xAPI エンドポイント",
+      "endpoint_hint": "通常は {{example}} のような形式です",
+      "auth_type": "認証",
+      "auth_basic": "キーとシークレット（Basic）",
+      "auth_bearer": "トークン（Bearer）",
+      "version": "xAPI バージョン",
+      "key": "キー",
+      "secret": "シークレット",
+      "token": "トークン",
+      "sources": "送信対象",
+      "source": {
+        "all": "すべて",
+        "platform": "LearnHouse イベント",
+        "content": "パッケージコンテンツ",
+        "external": "ほかのシステムから"
+      },
+      "sources_hint": "パッケージコンテンツは Tin Can と cmi5 のアクティビティが報告するもの、ほかのシステムは LRS 認証情報を使うものです。",
+      "test": "テスト",
+      "send_test": "テストステートメントを送信",
+      "test_step": {
+        "about": "エンドポイントが xAPI で応答",
+        "auth": "認証情報が承認されました",
+        "write": "テストステートメントを保存しました"
+      },
+      "test_elapsed": "{{ms}} ms で確認しました",
+      "manage": "管理",
+      "enabled": "有効",
+      "paused": "一時停止中",
+      "failed_count_one": "{{count}} 件失敗",
+      "failed_count_other": "{{count}} 件失敗",
+      "pending_count_one": "{{count}} 件待機中",
+      "pending_count_other": "{{count}} 件待機中",
+      "sent_one": "{{count}} 件のステートメントを送信",
+      "sent_other": "{{count}} 件のステートメントを送信",
+      "last_success": "最終配信：{{date}}",
+      "last_error": "最後のエラー：{{error}}（{{date}}）",
+      "retry": "失敗分を再試行",
+      "retry_queued_one": "{{count}} 件のステートメントを再度キューに追加",
+      "retry_queued_other": "{{count}} 件のステートメントを再度キューに追加",
+      "delete": "削除",
+      "delete_connection": "連携を削除",
+      "delete_connection_confirm": "{{name}} へのステートメント送信を停止しますか？まだ配信されていないステートメントは破棄されます。",
+      "save": "保存",
+      "saved": "保存しました",
+      "cancel": "キャンセル",
+      "lrs_title": "内蔵 LRS",
+      "lrs_subtitle": "組織向けの xAPI 1.0.3 準拠 LRS です。別の LMS、オーサリングツール、BI ツールにキーを渡して、ステートメントを送信・読み取りできます。",
+      "lrs_enabled": "認証情報を受け付ける",
+      "lrs_endpoint": "エンドポイント",
+      "credential_name_placeholder": "利用者（例：Moodle、Power BI）",
+      "credential_default_name": "LRS 認証情報",
+      "create_credential": "認証情報を作成",
+      "secret_once": "シークレットは今すぐコピーしてください。表示されるのは一度だけです。",
+      "done": "完了",
+      "no_credentials": "認証情報はまだありません",
+      "no_credentials_hint": "LearnHouse で起動したパッケージは短期間有効の専用キーを使います。認証情報はほかのシステム用です。",
+      "last_used": "最終利用：{{date}}",
+      "revoke": "認証情報を失効",
+      "revoke_confirm": "{{name}} を失効しますか？使用しているシステムは直ちにアクセスできなくなります。",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "copy_failed": "コピーできませんでした",
+      "refresh": "更新",
+      "loading": "読み込み中…",
+      "no_statements": "ステートメントはまだありません",
+      "no_statements_hint": "学習者が学習し、パッケージが報告し、ほかのシステムが送信すると、ここに表示されます。",
+      "voided": "無効化済み",
+      "load_more": "さらに読み込む"
+    }
   }
 }

@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Standard-functie",
           "description": "Peer review is beschikbaar voor organisaties met een Standard-plan of hoger. Upgrade zodat cursisten elkaars werk beoordelen met een rubric."
+        },
+        "xapi": {
+          "title": "Business-functie",
+          "description": "xAPI is beschikbaar vanaf het Business-abonnement. Upgrade om leerrecords naar elke LRS te sturen, Tin Can- en cmi5-pakketten uit te voeren en een ingebouwde LRS te gebruiken."
         }
       },
       "gate": {
@@ -1115,11 +1119,11 @@
       "lms_and_more": "en nog {{count}}"
     },
     "scorm": {
-      "upload_package": "SCORM Pakket Uploaden",
+      "upload_package": "SCORM- / xAPI-pakket uploaden",
       "package_file": "Pakketbestand (.zip)",
       "click_to_upload": "Klik om te uploaden of sleep en zet neer",
-      "supported_versions": "SCORM 1.2 of SCORM 2004 pakket",
-      "import_info": "Upload je SCORM pakket om de inhoud te analyseren. Je kunt de cursus configureren en activiteiten aan hoofdstukken toewijzen.",
+      "supported_versions": "SCORM 1.2-, SCORM 2004-, xAPI- (Tin Can) of cmi5-pakket",
+      "import_info": "Upload je SCORM-, xAPI- of cmi5-pakket om de inhoud te analyseren. Daarna kun je de cursus instellen en activiteiten aan hoofdstukken toewijzen.",
       "analyze_package": "Pakket Analyseren",
       "package_analyzed": "Pakket Succesvol Geanalyseerd",
       "assign_scos": "Activiteiten aan Hoofdstukken Toewijzen",
@@ -1138,8 +1142,8 @@
       "failed_import": "Importeren van SCORM-pakket is mislukt",
       "import_success_one": "{{count}} SCORM-activiteit geïmporteerd",
       "import_success_other": "{{count}} SCORM-activiteiten geïmporteerd",
-      "package_zip": "SCORM-pakket (.zip)",
-      "supported_versions_max": "SCORM 1.2- of SCORM 2004-pakket (max. 5 GB)",
+      "package_zip": "SCORM-, xAPI- of cmi5-pakket (.zip)",
+      "supported_versions_max": "SCORM 1.2-, SCORM 2004-, xAPI- (Tin Can) of cmi5-pakket (max. 5GB)",
       "uploading_package": "Pakket uploaden…",
       "analyzing_package": "Pakket analyseren…",
       "import_info_chapter": "Upload je SCORM-pakket om de inhoud te analyseren. De leerobjecten worden aan dit hoofdstuk toegevoegd.",
@@ -1331,6 +1335,13 @@
       "maintainer": "Beheerder",
       "contributor": "Bijdrager",
       "reporter": "Reporter"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "Deze activiteit kon niet worden gestart. Probeer het zo opnieuw.",
+        "own_window": "Deze activiteit opent in een eigen venster.",
+        "open": "Activiteit openen"
+      }
     }
   },
   "communities": {
@@ -8742,7 +8753,8 @@
             "audit_logs": "Auditlogs",
             "custom_domain": "Eigen domein",
             "remove_watermark": "Geen LearnHouse-watermerk",
-            "peer_review": "Peerreview"
+            "peer_review": "Peerreview",
+            "xapi": "xAPI en LRS"
           }
         },
         "next_invoice_label": "Volgende factuur",
@@ -32494,5 +32506,148 @@
     "copy": "Kopiëren",
     "copied": "Gekopieerd",
     "copy_failed": "Kopiëren mislukt"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI en LRS",
+      "page_subtitle": "Stuur leerrecords naar elke LRS, voer Tin Can- en cmi5-content uit en laat andere systemen je ingebouwde LRS gebruiken",
+      "section": {
+        "overview": "Overzicht",
+        "connections": "LRS-koppelingen",
+        "lrs": "Ingebouwde LRS",
+        "statements": "Statements"
+      },
+      "record_title": "Leerrecords",
+      "record_subtitle": "LearnHouse zet wat cursisten doen om in xAPI-statements, slaat ze op in je ingebouwde LRS en stuurt ze door naar je koppelingen.",
+      "platform_events": "Leergebeurtenissen vastleggen als xAPI-statements",
+      "platform_events_hint": "Inschrijvingen, lessen, quizzen, opdrachten, certificaten en meer. Pakketcontent (Tin Can, cmi5) meldt altijd.",
+      "actor_format": "Cursisten identificeren via",
+      "actor": {
+        "mbox": "E-mailadres",
+        "mbox_sha1sum": "Gehasht e-mailadres (privé)",
+        "account": "Account op je site"
+      },
+      "actor_hint": {
+        "mbox": "Statements bevatten het e-mailadres van de cursist, zodat elke LRS ze aan personen kan koppelen.",
+        "mbox_sha1sum": "Statements bevatten een SHA-1 van het e-mailadres: koppelbaar, maar het adres verlaat LearnHouse nooit.",
+        "account": "Statements bevatten de LearnHouse-ID van de cursist op je site, zonder e-mailadres."
+      },
+      "retention": "Statements bewaren",
+      "retention_hint": "Hoe lang de ingebouwde LRS statements bewaart. Je koppelingen houden hun eigen kopie.",
+      "retention_forever": "Voor altijd",
+      "retention_days_one": "{{count}} dag",
+      "retention_days_other": "{{count}} dagen",
+      "events_title_one": "{{count}} gebeurtenis vastgelegd",
+      "events_title_other": "{{count}} gebeurtenissen vastgelegd",
+      "event": {
+        "course_enrolled": "Ingeschreven voor een cursus",
+        "course_left": "Een cursus verlaten",
+        "course_completed": "Een cursus voltooid",
+        "activity_view": "Een les geopend",
+        "activity_completed": "Een les voltooid",
+        "video_progress": "Voortgang van video",
+        "quiz_submitted": "Een quiz ingediend",
+        "assignment_submitted": "Een opdracht ingediend",
+        "assignment_graded": "Opdracht beoordeeld",
+        "code_submitted": "Code ingediend",
+        "certificate_claimed": "Een certificaat behaald",
+        "path_enrolled": "Ingeschreven voor een leerpad",
+        "path_completed": "Een leerpad voltooid",
+        "live_session_joined": "Deelgenomen aan een live sessie",
+        "time_on_activity": "Tijd besteed aan een les",
+        "course_view": "Een cursuspagina bekeken",
+        "podcast_episode_played": "Een podcastaflevering afgespeeld",
+        "discussion_posted": "Een discussie geplaatst",
+        "comment_posted": "Op een discussie gereageerd",
+        "resource_downloaded": "Een bron gedownload",
+        "user_logged_in": "Ingelogd",
+        "user_joined_org": "Lid geworden van de organisatie",
+        "ai_message_sent": "De AI-assistent iets gevraagd"
+      },
+      "stat": {
+        "total": "Opgeslagen statements",
+        "platform": "LearnHouse-gebeurtenissen (30 dagen)",
+        "content": "Uit pakketten (30 dagen)",
+        "external": "Uit andere systemen (30 dagen)"
+      },
+      "connections_title": "LRS-koppelingen",
+      "connections_subtitle": "Elke statement wordt aan elke koppeling geleverd en opnieuw geprobeerd tot hij aankomt.",
+      "connections_help": "Koppel Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX of een andere xAPI 1.0.3 / 2.0 LRS.",
+      "add_connection": "Koppeling toevoegen",
+      "connection_added": "Koppeling toegevoegd",
+      "no_connections": "Geen LRS gekoppeld",
+      "no_connections_hint": "Statements blijven in je ingebouwde LRS tot je een koppeling toevoegt.",
+      "provider": "LRS",
+      "name": "Naam",
+      "endpoint": "xAPI-endpoint",
+      "endpoint_hint": "Ziet er meestal zo uit: {{example}}",
+      "auth_type": "Authenticatie",
+      "auth_basic": "Sleutel en secret (Basic)",
+      "auth_bearer": "Token (Bearer)",
+      "version": "xAPI-versie",
+      "key": "Sleutel",
+      "secret": "Secret",
+      "token": "Token",
+      "sources": "Verzenden",
+      "source": {
+        "all": "Alles",
+        "platform": "LearnHouse-gebeurtenissen",
+        "content": "Pakketcontent",
+        "external": "Uit andere systemen"
+      },
+      "sources_hint": "Pakketcontent is wat Tin Can- en cmi5-activiteiten melden; andere systemen zijn systemen die je LRS-inloggegevens gebruiken.",
+      "test": "Testen",
+      "send_test": "Een teststatement verzenden",
+      "test_step": {
+        "about": "Endpoint antwoordt met xAPI",
+        "auth": "Inloggegevens geaccepteerd",
+        "write": "Teststatement opgeslagen"
+      },
+      "test_elapsed": "Gecontroleerd in {{ms}} ms",
+      "manage": "Beheren",
+      "enabled": "Ingeschakeld",
+      "paused": "Gepauzeerd",
+      "failed_count_one": "{{count}} mislukt",
+      "failed_count_other": "{{count}} mislukt",
+      "pending_count_one": "{{count}} wachtend",
+      "pending_count_other": "{{count}} wachtend",
+      "sent_one": "{{count}} statement verzonden",
+      "sent_other": "{{count}} statements verzonden",
+      "last_success": "Laatste levering: {{date}}",
+      "last_error": "Laatste fout: {{error}} ({{date}})",
+      "retry": "Mislukte opnieuw proberen",
+      "retry_queued_one": "{{count}} statement opnieuw in de wachtrij",
+      "retry_queued_other": "{{count}} statements opnieuw in de wachtrij",
+      "delete": "Verwijderen",
+      "delete_connection": "Koppeling verwijderen",
+      "delete_connection_confirm": "Stoppen met statements sturen naar {{name}}? Statements die nog niet zijn geleverd, worden verwijderd.",
+      "save": "Opslaan",
+      "saved": "Opgeslagen",
+      "cancel": "Annuleren",
+      "lrs_title": "Ingebouwde LRS",
+      "lrs_subtitle": "Een conforme xAPI 1.0.3 LRS voor je organisatie. Geef een ander LMS, een authoringtool of een BI-tool een sleutel om statements te verzenden of te lezen.",
+      "lrs_enabled": "Inloggegevens accepteren",
+      "lrs_endpoint": "Endpoint",
+      "credential_name_placeholder": "Wie het gebruikt (bijv. Moodle, Power BI)",
+      "credential_default_name": "LRS-inloggegevens",
+      "create_credential": "Inloggegevens aanmaken",
+      "secret_once": "Kopieer het secret nu: het wordt maar één keer getoond.",
+      "done": "Klaar",
+      "no_credentials": "Nog geen inloggegevens",
+      "no_credentials_hint": "Pakketten die in LearnHouse starten gebruiken hun eigen kortlevende sleutels; inloggegevens zijn voor andere systemen.",
+      "last_used": "Laatst gebruikt: {{date}}",
+      "revoke": "Inloggegevens intrekken",
+      "revoke_confirm": "{{name}} intrekken? Systemen die het gebruiken verliezen meteen toegang.",
+      "copy": "Kopiëren",
+      "copied": "Gekopieerd",
+      "copy_failed": "Kopiëren mislukt",
+      "refresh": "Vernieuwen",
+      "loading": "Laden…",
+      "no_statements": "Nog geen statements",
+      "no_statements_hint": "Statements verschijnen hier terwijl cursisten werken, pakketten melden en andere systemen ze sturen.",
+      "voided": "Ongeldig gemaakt",
+      "load_more": "Meer laden"
+    }
   }
 }

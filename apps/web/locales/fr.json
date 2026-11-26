@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Fonctionnalité Standard",
           "description": "L’évaluation par les pairs est disponible pour les organisations avec un plan Standard ou supérieur. Passez à un plan supérieur pour que les apprenants évaluent mutuellement leurs travaux avec une grille."
+        },
+        "xapi": {
+          "title": "Fonctionnalité Business",
+          "description": "xAPI est disponible avec l'offre Business et supérieures. Passez à l'offre supérieure pour envoyer des enregistrements d'apprentissage vers n'importe quel LRS, exécuter des packages Tin Can et cmi5 et utiliser un LRS intégré."
         }
       },
       "gate": {
@@ -1127,11 +1131,11 @@
       "lms_and_more": "et {{count}} de plus"
     },
     "scorm": {
-      "upload_package": "Téléverser le package SCORM",
+      "upload_package": "Importer un package SCORM / xAPI",
       "package_file": "Fichier de package (.zip)",
       "click_to_upload": "Cliquez pour téléverser ou glissez-déposez",
-      "supported_versions": "Package SCORM 1.2 ou SCORM 2004",
-      "import_info": "Téléversez votre package SCORM pour analyser son contenu. Vous pourrez configurer le cours et assigner les activités aux chapitres.",
+      "supported_versions": "Package SCORM 1.2, SCORM 2004, xAPI (Tin Can) ou cmi5",
+      "import_info": "Importez votre package SCORM, xAPI ou cmi5 pour analyser son contenu. Vous pourrez ensuite configurer le cours et affecter des activités aux chapitres.",
       "analyze_package": "Analyser le package",
       "package_analyzed": "Package analysé avec succès",
       "assign_scos": "Assigner les activités aux chapitres",
@@ -1152,8 +1156,8 @@
       "import_success_one": "{{count}} activité SCORM importée avec succès",
       "import_success_many": "{{count}} d'activités SCORM importées avec succès",
       "import_success_other": "{{count}} activités SCORM importées avec succès",
-      "package_zip": "Paquet SCORM (.zip)",
-      "supported_versions_max": "Paquet SCORM 1.2 ou SCORM 2004 (5 Go max)",
+      "package_zip": "Package SCORM, xAPI ou cmi5 (.zip)",
+      "supported_versions_max": "Package SCORM 1.2, SCORM 2004, xAPI (Tin Can) ou cmi5 (max 5GB)",
       "uploading_package": "Téléversement du paquet…",
       "analyzing_package": "Analyse du paquet…",
       "import_info_chapter": "Téléversez votre paquet SCORM pour analyser son contenu. Ses objets d'apprentissage seront ajoutés à ce chapitre.",
@@ -1349,6 +1353,13 @@
       "maintainer": "Mainteneur",
       "contributor": "Contributeur",
       "reporter": "Rapporteur"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "Impossible de démarrer cette activité. Réessayez dans un instant.",
+        "own_window": "Cette activité s'ouvre dans sa propre fenêtre.",
+        "open": "Ouvrir l'activité"
+      }
     }
   },
   "communities": {
@@ -8859,7 +8870,8 @@
             "audit_logs": "Journaux d'audit",
             "custom_domain": "Domaine personnalisé",
             "remove_watermark": "Sans filigrane LearnHouse",
-            "peer_review": "Évaluation par les pairs"
+            "peer_review": "Évaluation par les pairs",
+            "xapi": "xAPI et LRS"
           }
         },
         "next_invoice_label": "Prochaine facture",
@@ -33145,5 +33157,148 @@
     "copy": "Copier",
     "copied": "Copié",
     "copy_failed": "Copie impossible"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI et LRS",
+      "page_subtitle": "Envoyez des enregistrements d'apprentissage vers n'importe quel LRS, exécutez du contenu Tin Can et cmi5, et laissez d'autres systèmes utiliser votre LRS intégré",
+      "section": {
+        "overview": "Aperçu",
+        "connections": "Connexions LRS",
+        "lrs": "LRS intégré",
+        "statements": "Déclarations"
+      },
+      "record_title": "Enregistrements d'apprentissage",
+      "record_subtitle": "LearnHouse transforme les actions des apprenants en déclarations xAPI, les stocke dans votre LRS intégré et les transmet à vos connexions.",
+      "platform_events": "Enregistrer les événements d'apprentissage sous forme de déclarations xAPI",
+      "platform_events_hint": "Inscriptions, leçons, quiz, devoirs, certificats et plus. Le contenu des packages (Tin Can, cmi5) est toujours signalé.",
+      "actor_format": "Identifier les apprenants par",
+      "actor": {
+        "mbox": "Adresse e-mail",
+        "mbox_sha1sum": "E-mail haché (privé)",
+        "account": "Compte sur votre site"
+      },
+      "actor_hint": {
+        "mbox": "Les déclarations contiennent l'e-mail de l'apprenant, donc n'importe quel LRS peut les associer à des personnes.",
+        "mbox_sha1sum": "Les déclarations contiennent un SHA-1 de l'e-mail : associable, mais l'adresse ne quitte jamais LearnHouse.",
+        "account": "Les déclarations contiennent l'ID LearnHouse de l'apprenant sur votre site, sans e-mail."
+      },
+      "retention": "Conserver les déclarations",
+      "retention_hint": "Durée de conservation des déclarations par le LRS intégré. Vos connexions gardent leur propre copie.",
+      "retention_forever": "Indéfiniment",
+      "retention_days_one": "{{count}} jour",
+      "retention_days_other": "{{count}} jours",
+      "events_title_one": "{{count}} événement enregistré",
+      "events_title_other": "{{count}} événements enregistrés",
+      "event": {
+        "course_enrolled": "Inscrit à un cours",
+        "course_left": "A quitté un cours",
+        "course_completed": "A terminé un cours",
+        "activity_view": "A ouvert une leçon",
+        "activity_completed": "A terminé une leçon",
+        "video_progress": "Progression de la vidéo",
+        "quiz_submitted": "A soumis un quiz",
+        "assignment_submitted": "A rendu un devoir",
+        "assignment_graded": "Devoir noté",
+        "code_submitted": "A soumis du code",
+        "certificate_claimed": "A obtenu un certificat",
+        "path_enrolled": "Inscrit à un parcours",
+        "path_completed": "A terminé un parcours",
+        "live_session_joined": "A rejoint une session en direct",
+        "time_on_activity": "Temps passé sur une leçon",
+        "course_view": "A consulté une page de cours",
+        "podcast_episode_played": "A écouté un épisode de podcast",
+        "discussion_posted": "A publié une discussion",
+        "comment_posted": "A commenté une discussion",
+        "resource_downloaded": "A téléchargé une ressource",
+        "user_logged_in": "Connecté",
+        "user_joined_org": "A rejoint l'organisation",
+        "ai_message_sent": "A interrogé l'assistant IA"
+      },
+      "stat": {
+        "total": "Déclarations stockées",
+        "platform": "Événements LearnHouse (30 jours)",
+        "content": "Issues de packages (30 jours)",
+        "external": "D'autres systèmes (30 jours)"
+      },
+      "connections_title": "Connexions LRS",
+      "connections_subtitle": "Chaque déclaration est livrée à chaque connexion, avec de nouvelles tentatives jusqu'à réception.",
+      "connections_help": "Connectez Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX ou tout LRS xAPI 1.0.3 / 2.0.",
+      "add_connection": "Ajouter une connexion",
+      "connection_added": "Connexion ajoutée",
+      "no_connections": "Aucun LRS connecté",
+      "no_connections_hint": "Les déclarations restent dans votre LRS intégré jusqu'à l'ajout d'une connexion.",
+      "provider": "LRS",
+      "name": "Nom",
+      "endpoint": "Point de terminaison xAPI",
+      "endpoint_hint": "Ressemble généralement à {{example}}",
+      "auth_type": "Authentification",
+      "auth_basic": "Clé et secret (Basic)",
+      "auth_bearer": "Jeton (Bearer)",
+      "version": "Version xAPI",
+      "key": "Clé",
+      "secret": "Secret",
+      "token": "Jeton",
+      "sources": "Envoyer",
+      "source": {
+        "all": "Tout",
+        "platform": "Événements LearnHouse",
+        "content": "Contenu des packages",
+        "external": "D'autres systèmes"
+      },
+      "sources_hint": "Le contenu des packages est ce que signalent les activités Tin Can et cmi5 ; les autres systèmes sont ceux qui utilisent vos identifiants LRS.",
+      "test": "Tester",
+      "send_test": "Envoyer une déclaration de test",
+      "test_step": {
+        "about": "Le point de terminaison répond en xAPI",
+        "auth": "Identifiants acceptés",
+        "write": "Déclaration de test stockée"
+      },
+      "test_elapsed": "Vérifié en {{ms}} ms",
+      "manage": "Gérer",
+      "enabled": "Activée",
+      "paused": "En pause",
+      "failed_count_one": "{{count}} échec",
+      "failed_count_other": "{{count}} échecs",
+      "pending_count_one": "{{count}} en attente",
+      "pending_count_other": "{{count}} en attente",
+      "sent_one": "{{count}} déclaration envoyée",
+      "sent_other": "{{count}} déclarations envoyées",
+      "last_success": "Dernière livraison : {{date}}",
+      "last_error": "Dernière erreur : {{error}} ({{date}})",
+      "retry": "Réessayer les échecs",
+      "retry_queued_one": "{{count}} déclaration remise en file",
+      "retry_queued_other": "{{count}} déclarations remises en file",
+      "delete": "Supprimer",
+      "delete_connection": "Supprimer la connexion",
+      "delete_connection_confirm": "Arrêter d'envoyer des déclarations à {{name}} ? Les déclarations non encore livrées sont abandonnées.",
+      "save": "Enregistrer",
+      "saved": "Enregistré",
+      "cancel": "Annuler",
+      "lrs_title": "LRS intégré",
+      "lrs_subtitle": "Un LRS xAPI 1.0.3 conforme pour votre organisation. Donnez une clé à un autre LMS, un outil auteur ou un outil de BI pour envoyer ou lire des déclarations.",
+      "lrs_enabled": "Accepter les identifiants",
+      "lrs_endpoint": "Point de terminaison",
+      "credential_name_placeholder": "Qui l'utilise (ex. Moodle, Power BI)",
+      "credential_default_name": "Identifiant LRS",
+      "create_credential": "Créer un identifiant",
+      "secret_once": "Copiez le secret maintenant : il n'est affiché qu'une seule fois.",
+      "done": "Terminé",
+      "no_credentials": "Aucun identifiant pour l'instant",
+      "no_credentials_hint": "Les packages lancés dans LearnHouse utilisent leurs propres clés de courte durée ; les identifiants servent aux autres systèmes.",
+      "last_used": "Dernière utilisation : {{date}}",
+      "revoke": "Révoquer l'identifiant",
+      "revoke_confirm": "Révoquer {{name}} ? Les systèmes qui l'utilisent perdent l'accès immédiatement.",
+      "copy": "Copier",
+      "copied": "Copié",
+      "copy_failed": "Copie impossible",
+      "refresh": "Actualiser",
+      "loading": "Chargement…",
+      "no_statements": "Aucune déclaration pour l'instant",
+      "no_statements_hint": "Les déclarations apparaissent ici au fil du travail des apprenants, des rapports des packages et des envois d'autres systèmes.",
+      "voided": "Annulée",
+      "load_more": "Charger plus"
+    }
   }
 }

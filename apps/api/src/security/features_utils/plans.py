@@ -48,6 +48,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "scorm": "business",
     "sso": "business",
     "lti": "business",
+    "xapi": "business",
     "scim": "business",
     "required_training": "business",
     "company_seats": "business",
@@ -109,6 +110,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
             "lti": {"enabled": False},
+            "xapi": {"enabled": False},
             "scim": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
@@ -148,6 +150,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
             "lti": {"enabled": False},
+            "xapi": {"enabled": False},
             "scim": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
@@ -187,6 +190,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
             "lti": {"enabled": False},
+            "xapi": {"enabled": False},
             "scim": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
@@ -226,6 +230,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
             "lti": {"enabled": False},
+            "xapi": {"enabled": False},
             "scim": {"enabled": False},
             "versioning": {"enabled": False},
             "webhooks": {"enabled": False, "limit": 0},
@@ -265,6 +270,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": False},
             "sso": {"enabled": False},
             "lti": {"enabled": False},
+            "xapi": {"enabled": False},
             "scim": {"enabled": False},
             "versioning": {"enabled": True},
             "webhooks": {"enabled": True, "limit": 0},
@@ -304,6 +310,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": True},
             "sso": {"enabled": True},
             "lti": {"enabled": True},
+            "xapi": {"enabled": True},
             "scim": {"enabled": True},
             "versioning": {"enabled": True},
             "webhooks": {"enabled": True, "limit": 0},
@@ -343,6 +350,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "scorm": {"enabled": True},
             "sso": {"enabled": True},
             "lti": {"enabled": True},
+            "xapi": {"enabled": True},
             "scim": {"enabled": True},
             "versioning": {"enabled": True},
             "webhooks": {"enabled": True, "limit": 0},
@@ -451,7 +459,7 @@ def is_feature_enabled_for_plan(plan: str, feature: str) -> bool:
         return feature not in EE_ONLY_FEATURES or is_ee_feature_licensed(feature)
     if mode == 'oss':
         # OSS enables all non-EE features
-        return feature not in ('analytics', 'api', 'sso', 'audit_logs', 'scorm', 'lti', 'scim', 'required_training', 'company_seats', 'newsletter', 'crm', 'crm_salesforce')
+        return feature not in ('analytics', 'api', 'sso', 'audit_logs', 'scorm', 'lti', 'xapi', 'scim', 'required_training', 'company_seats', 'newsletter', 'crm', 'crm_salesforce')
     return get_plan_feature_config(plan, feature).get("enabled", False)
 
 

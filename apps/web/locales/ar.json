@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "ميزة الباقة القياسية",
           "description": "مراجعة الأقران متاحة للمؤسسات على الباقة القياسية أو أعلى. قم بالترقية ليراجع المتعلمون أعمال بعضهم باستخدام معايير تقييم."
+        },
+        "xapi": {
+          "title": "ميزة Business",
+          "description": "xAPI متاح في خطة Business وما فوقها. قم بالترقية لإرسال سجلات التعلّم إلى أي LRS وتشغيل حزم Tin Can وcmi5 واستخدام LRS مدمج."
         }
       },
       "gate": {
@@ -1167,11 +1171,11 @@
       "lms_and_more": "و{{count}} أخرى"
     },
     "scorm": {
-      "upload_package": "رفع حزمة SCORM",
+      "upload_package": "رفع حزمة SCORM / xAPI",
       "package_file": "ملف الحزمة (.zip)",
       "click_to_upload": "انقر للرفع أو اسحب وأفلت",
-      "supported_versions": "حزمة SCORM 1.2 أو SCORM 2004",
-      "import_info": "ارفع حزمة SCORM لتحليل محتوياتها. ستتمكن من تكوين الدورة وتعيين الأنشطة للفصول.",
+      "supported_versions": "حزمة SCORM 1.2 أو SCORM 2004 أو xAPI (Tin Can) أو cmi5",
+      "import_info": "ارفع حزمة SCORM أو xAPI أو cmi5 لتحليل محتواها. بعدها يمكنك إعداد الدورة وإسناد الأنشطة إلى الفصول.",
       "analyze_package": "تحليل الحزمة",
       "package_analyzed": "تم تحليل الحزمة بنجاح",
       "assign_scos": "تعيين الأنشطة للفصول",
@@ -1198,8 +1202,8 @@
       "import_success_few": "تم استيراد {{count}} أنشطة SCORM بنجاح",
       "import_success_many": "تم استيراد {{count}} نشاطًا SCORM بنجاح",
       "import_success_other": "تم استيراد {{count}} نشاط SCORM بنجاح",
-      "package_zip": "حزمة SCORM (.zip)",
-      "supported_versions_max": "حزمة SCORM 1.2 أو SCORM 2004 (بحد أقصى 5 غيغابايت)",
+      "package_zip": "حزمة SCORM أو xAPI أو cmi5 (.zip)",
+      "supported_versions_max": "حزمة SCORM 1.2 أو SCORM 2004 أو xAPI (Tin Can) أو cmi5 (بحد أقصى 5GB)",
       "uploading_package": "جارٍ رفع الحزمة…",
       "analyzing_package": "جارٍ تحليل الحزمة…",
       "import_info_chapter": "ارفع حزمة SCORM لتحليل محتواها. ستُضاف كائنات التعلم فيها إلى هذا الفصل.",
@@ -1407,6 +1411,13 @@
       "maintainer": "مسؤول صيانة",
       "contributor": "مساهم",
       "reporter": "مبلغ"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "تعذّر بدء هذا النشاط. حاول مرة أخرى بعد قليل.",
+        "own_window": "يُفتح هذا النشاط في نافذته الخاصة.",
+        "open": "فتح النشاط"
+      }
     }
   },
   "communities": {
@@ -9258,7 +9269,8 @@
             "audit_logs": "سجلات التدقيق",
             "custom_domain": "نطاق مخصص",
             "remove_watermark": "بدون علامة LearnHouse المائية",
-            "peer_review": "مراجعة الأقران"
+            "peer_review": "مراجعة الأقران",
+            "xapi": "xAPI وLRS"
           }
         },
         "next_invoice_label": "الفاتورة القادمة",
@@ -35110,5 +35122,148 @@
     "copy": "نسخ",
     "copied": "تم النسخ",
     "copy_failed": "تعذّر النسخ"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI وLRS",
+      "page_subtitle": "أرسل سجلات التعلّم إلى أي LRS، وشغّل محتوى Tin Can وcmi5، واسمح للأنظمة الأخرى باستخدام LRS المدمج لديك",
+      "section": {
+        "overview": "نظرة عامة",
+        "connections": "اتصالات LRS",
+        "lrs": "LRS المدمج",
+        "statements": "العبارات"
+      },
+      "record_title": "سجلات التعلّم",
+      "record_subtitle": "يحوّل LearnHouse ما يفعله المتعلمون إلى عبارات xAPI، ويخزّنها في LRS المدمج لديك ويحوّلها إلى اتصالاتك.",
+      "platform_events": "تسجيل أحداث التعلّم كعبارات xAPI",
+      "platform_events_hint": "التسجيلات في الدورات والدروس والاختبارات والواجبات والشهادات وغيرها. محتوى الحزم (Tin Can، cmi5) يُبلّغ دائمًا.",
+      "actor_format": "تحديد هوية المتعلمين عبر",
+      "actor": {
+        "mbox": "عنوان البريد الإلكتروني",
+        "mbox_sha1sum": "بريد إلكتروني مشفّر (خاص)",
+        "account": "حساب على موقعك"
+      },
+      "actor_hint": {
+        "mbox": "تحمل العبارات البريد الإلكتروني للمتعلم، لذا يستطيع أي LRS مطابقتها مع الأشخاص.",
+        "mbox_sha1sum": "تحمل العبارات SHA-1 للبريد الإلكتروني: يمكن مطابقتها، لكن العنوان لا يغادر LearnHouse أبدًا.",
+        "account": "تحمل العبارات معرّف LearnHouse للمتعلم على موقعك، دون بريد إلكتروني."
+      },
+      "retention": "الاحتفاظ بالعبارات",
+      "retention_hint": "المدة التي يحتفظ فيها LRS المدمج بالعبارات. تحتفظ اتصالاتك بنسختها الخاصة.",
+      "retention_forever": "للأبد",
+      "retention_days_one": "{{count}} يوم",
+      "retention_days_other": "{{count}} يوم",
+      "events_title_one": "تم تسجيل {{count}} حدث",
+      "events_title_other": "تم تسجيل {{count}} حدث",
+      "event": {
+        "course_enrolled": "سجّل في دورة",
+        "course_left": "غادر دورة",
+        "course_completed": "أكمل دورة",
+        "activity_view": "فتح درسًا",
+        "activity_completed": "أكمل درسًا",
+        "video_progress": "تقدّم الفيديو",
+        "quiz_submitted": "أرسل اختبارًا",
+        "assignment_submitted": "أرسل واجبًا",
+        "assignment_graded": "تم تقييم الواجب",
+        "code_submitted": "أرسل كودًا",
+        "certificate_claimed": "حصل على شهادة",
+        "path_enrolled": "سجّل في مسار تعلّم",
+        "path_completed": "أكمل مسار تعلّم",
+        "live_session_joined": "انضم إلى جلسة مباشرة",
+        "time_on_activity": "الوقت المستغرق في درس",
+        "course_view": "شاهد صفحة دورة",
+        "podcast_episode_played": "شغّل حلقة بودكاست",
+        "discussion_posted": "نشر نقاشًا",
+        "comment_posted": "علّق على نقاش",
+        "resource_downloaded": "نزّل مورّدًا",
+        "user_logged_in": "سجّل الدخول",
+        "user_joined_org": "انضم إلى المؤسسة",
+        "ai_message_sent": "سأل مساعد الذكاء الاصطناعي"
+      },
+      "stat": {
+        "total": "العبارات المخزّنة",
+        "platform": "أحداث LearnHouse (30 يومًا)",
+        "content": "من الحزم (30 يومًا)",
+        "external": "من أنظمة أخرى (30 يومًا)"
+      },
+      "connections_title": "اتصالات LRS",
+      "connections_subtitle": "تُسلَّم كل عبارة إلى كل اتصال، وتُعاد المحاولة حتى تصل.",
+      "connections_help": "اربط Learning Locker أو SCORM Cloud أو Watershed أو Veracity أو SQL LRS أو Ralph أو TRAX أو أي LRS يدعم xAPI 1.0.3 / 2.0.",
+      "add_connection": "إضافة اتصال",
+      "connection_added": "تمت إضافة الاتصال",
+      "no_connections": "لا يوجد LRS متصل",
+      "no_connections_hint": "تبقى العبارات في LRS المدمج لديك حتى تضيف اتصالًا.",
+      "provider": "LRS",
+      "name": "الاسم",
+      "endpoint": "نقطة نهاية xAPI",
+      "endpoint_hint": "تبدو عادةً هكذا: {{example}}",
+      "auth_type": "المصادقة",
+      "auth_basic": "مفتاح وسر (Basic)",
+      "auth_bearer": "رمز (Bearer)",
+      "version": "إصدار xAPI",
+      "key": "المفتاح",
+      "secret": "السر",
+      "token": "الرمز",
+      "sources": "إرسال",
+      "source": {
+        "all": "الكل",
+        "platform": "أحداث LearnHouse",
+        "content": "محتوى الحزم",
+        "external": "من أنظمة أخرى"
+      },
+      "sources_hint": "محتوى الحزم هو ما تُبلّغ عنه أنشطة Tin Can وcmi5؛ والأنظمة الأخرى هي التي تستخدم بيانات اعتماد LRS لديك.",
+      "test": "اختبار",
+      "send_test": "إرسال عبارة اختبار",
+      "test_step": {
+        "about": "نقطة النهاية تستجيب بـ xAPI",
+        "auth": "تم قبول بيانات الاعتماد",
+        "write": "تم تخزين عبارة الاختبار"
+      },
+      "test_elapsed": "تم الفحص خلال {{ms}} مللي ثانية",
+      "manage": "إدارة",
+      "enabled": "مفعّل",
+      "paused": "متوقف مؤقتًا",
+      "failed_count_one": "فشل {{count}}",
+      "failed_count_other": "فشل {{count}}",
+      "pending_count_one": "{{count}} في الانتظار",
+      "pending_count_other": "{{count}} في الانتظار",
+      "sent_one": "تم إرسال {{count}} عبارة",
+      "sent_other": "تم إرسال {{count}} عبارة",
+      "last_success": "آخر تسليم: {{date}}",
+      "last_error": "آخر خطأ: {{error}} ({{date}})",
+      "retry": "إعادة محاولة الفاشلة",
+      "retry_queued_one": "أُعيدت {{count}} عبارة إلى قائمة الانتظار",
+      "retry_queued_other": "أُعيدت {{count}} عبارة إلى قائمة الانتظار",
+      "delete": "حذف",
+      "delete_connection": "حذف الاتصال",
+      "delete_connection_confirm": "إيقاف إرسال العبارات إلى {{name}}؟ العبارات التي لم تُسلَّم بعد ستُحذف.",
+      "save": "حفظ",
+      "saved": "تم الحفظ",
+      "cancel": "إلغاء",
+      "lrs_title": "LRS المدمج",
+      "lrs_subtitle": "LRS متوافق مع xAPI 1.0.3 لمؤسستك. امنح نظام LMS آخر أو أداة تأليف أو أداة BI مفتاحًا لإرسال العبارات أو قراءتها.",
+      "lrs_enabled": "قبول بيانات الاعتماد",
+      "lrs_endpoint": "نقطة النهاية",
+      "credential_name_placeholder": "من يستخدمه (مثل Moodle، Power BI)",
+      "credential_default_name": "بيانات اعتماد LRS",
+      "create_credential": "إنشاء بيانات اعتماد",
+      "secret_once": "انسخ السر الآن: يظهر مرة واحدة فقط.",
+      "done": "تم",
+      "no_credentials": "لا توجد بيانات اعتماد بعد",
+      "no_credentials_hint": "الحزم التي تُشغَّل في LearnHouse تستخدم مفاتيحها القصيرة العمر؛ وبيانات الاعتماد مخصصة للأنظمة الأخرى.",
+      "last_used": "آخر استخدام: {{date}}",
+      "revoke": "إلغاء بيانات الاعتماد",
+      "revoke_confirm": "إلغاء {{name}}؟ ستفقد الأنظمة التي تستخدمه الوصول فورًا.",
+      "copy": "نسخ",
+      "copied": "تم النسخ",
+      "copy_failed": "تعذّر النسخ",
+      "refresh": "تحديث",
+      "loading": "جارٍ التحميل…",
+      "no_statements": "لا توجد عبارات بعد",
+      "no_statements_hint": "تظهر العبارات هنا أثناء عمل المتعلمين وإبلاغ الحزم وإرسال الأنظمة الأخرى لها.",
+      "voided": "ملغاة",
+      "load_more": "تحميل المزيد"
+    }
   }
 }

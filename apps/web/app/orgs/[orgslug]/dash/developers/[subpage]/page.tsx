@@ -7,6 +7,7 @@ import OrgEditSEO from '@components/Dashboard/Pages/Org/OrgEditSEO/OrgEditSEO'
 import OrgEditSSO from '@components/Dashboard/Pages/Org/OrgEditSSO/OrgEditSSO'
 import OrgEditMCP from '@components/Dashboard/Pages/Org/OrgEditMCP/OrgEditMCP'
 import OrgEditLTI from '@ee/components/LTI/OrgEditLTI'
+import OrgEditXAPI from '@ee/components/XAPI/OrgEditXAPI'
 
 export type DevParams = {
   subpage: string
@@ -31,6 +32,8 @@ function DevelopersPage(props: { params: Promise<DevParams> }) {
       return <OrgEditSSO />
     case 'lti':
       return <OrgEditLTI />
+    case 'xapi':
+      return <OrgEditXAPI />
     default:
       return null
   }

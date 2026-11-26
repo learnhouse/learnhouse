@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "标准功能",
           "description": "同伴互评仅适用于标准方案及以上的组织。升级后，学员可以按照评分量表互相评审作业。"
+        },
+        "xapi": {
+          "title": "Business 功能",
+          "description": "xAPI 在 Business 套餐及以上可用。升级后可将学习记录发送到任意 LRS、运行 Tin Can 和 cmi5 课件包，并使用内置 LRS。"
         }
       },
       "gate": {
@@ -1105,11 +1109,11 @@
       "import_courses_one": "导入 {{count}} 门课程"
     },
     "scorm": {
-      "upload_package": "上传 SCORM 包",
+      "upload_package": "上传 SCORM / xAPI 课件包",
       "package_file": "包文件 (.zip)",
       "click_to_upload": "点击上传或拖放",
-      "supported_versions": "SCORM 1.2 或 SCORM 2004 包",
-      "import_info": "上传您的 SCORM 包以分析其内容。您可以配置课程并将活动分配到章节。",
+      "supported_versions": "SCORM 1.2、SCORM 2004、xAPI（Tin Can）或 cmi5 课件包",
+      "import_info": "上传你的 SCORM、xAPI 或 cmi5 课件包以分析其内容。之后你可以配置课程并将活动分配到各章节。",
       "analyze_package": "分析包",
       "package_analyzed": "包分析成功",
       "assign_scos": "将活动分配到章节",
@@ -1126,8 +1130,8 @@
       "select_at_least_other": "请至少选择一个要导入的 SCO",
       "failed_import": "导入 SCORM 包失败",
       "import_success_other": "已成功导入 {{count}} 个 SCORM 活动",
-      "package_zip": "SCORM 包（.zip）",
-      "supported_versions_max": "SCORM 1.2 或 SCORM 2004 包（最大 5GB）",
+      "package_zip": "SCORM、xAPI 或 cmi5 课件包（.zip）",
+      "supported_versions_max": "SCORM 1.2、SCORM 2004、xAPI（Tin Can）或 cmi5 课件包（最大 5GB）",
       "uploading_package": "正在上传包…",
       "analyzing_package": "正在分析包…",
       "import_info_chapter": "上传您的 SCORM 包以分析其内容。其中的学习对象将被添加到此章节。",
@@ -1330,6 +1334,13 @@
       "maintainer": "维护者",
       "contributor": "贡献者",
       "reporter": "报告者"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "无法启动此活动。请稍后重试。",
+        "own_window": "此活动会在单独的窗口中打开。",
+        "open": "打开活动"
+      }
     }
   },
   "communities": {
@@ -8718,7 +8729,8 @@
             "audit_logs": "审计日志",
             "custom_domain": "自定义域名",
             "remove_watermark": "无 LearnHouse 水印",
-            "peer_review": "同伴互评"
+            "peer_review": "同伴互评",
+            "xapi": "xAPI 与 LRS"
           }
         },
         "next_invoice_label": "下一张账单",
@@ -32452,5 +32464,148 @@
     "copy": "复制",
     "copied": "已复制",
     "copy_failed": "无法复制"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI 与 LRS",
+      "page_subtitle": "将学习记录发送到任意 LRS，运行 Tin Can 和 cmi5 内容，并让其他系统使用你的内置 LRS",
+      "section": {
+        "overview": "概览",
+        "connections": "LRS 连接",
+        "lrs": "内置 LRS",
+        "statements": "语句"
+      },
+      "record_title": "学习记录",
+      "record_subtitle": "LearnHouse 会把学习者的行为转换为 xAPI 语句，存储在你的内置 LRS 中，并转发到你的连接。",
+      "platform_events": "将学习事件记录为 xAPI 语句",
+      "platform_events_hint": "报名、课时、测验、作业、证书等。课件包内容（Tin Can、cmi5）始终会上报。",
+      "actor_format": "识别学习者的方式",
+      "actor": {
+        "mbox": "电子邮件地址",
+        "mbox_sha1sum": "哈希邮箱（私密）",
+        "account": "你网站上的账号"
+      },
+      "actor_hint": {
+        "mbox": "语句包含学习者的邮箱，因此任何 LRS 都能将其与人对应。",
+        "mbox_sha1sum": "语句包含邮箱的 SHA-1：可以匹配，但地址不会离开 LearnHouse。",
+        "account": "语句包含学习者在你网站上的 LearnHouse ID，不含邮箱。"
+      },
+      "retention": "语句保留时长",
+      "retention_hint": "内置 LRS 保留语句的时间。你的连接会保留各自的副本。",
+      "retention_forever": "永久",
+      "retention_days_one": "{{count}} 天",
+      "retention_days_other": "{{count}} 天",
+      "events_title_one": "已记录 {{count}} 个事件",
+      "events_title_other": "已记录 {{count}} 个事件",
+      "event": {
+        "course_enrolled": "报名了课程",
+        "course_left": "退出了课程",
+        "course_completed": "完成了课程",
+        "activity_view": "打开了课时",
+        "activity_completed": "完成了课时",
+        "video_progress": "视频进度",
+        "quiz_submitted": "提交了测验",
+        "assignment_submitted": "提交了作业",
+        "assignment_graded": "作业已评分",
+        "code_submitted": "提交了代码",
+        "certificate_claimed": "获得了证书",
+        "path_enrolled": "报名了学习路径",
+        "path_completed": "完成了学习路径",
+        "live_session_joined": "加入了直播课",
+        "time_on_activity": "课时学习时长",
+        "course_view": "查看了课程页面",
+        "podcast_episode_played": "播放了播客单集",
+        "discussion_posted": "发布了讨论",
+        "comment_posted": "评论了讨论",
+        "resource_downloaded": "下载了资源",
+        "user_logged_in": "已登录",
+        "user_joined_org": "加入了组织",
+        "ai_message_sent": "向 AI 助手提问"
+      },
+      "stat": {
+        "total": "已存储语句",
+        "platform": "LearnHouse 事件（30 天）",
+        "content": "来自课件包（30 天）",
+        "external": "来自其他系统（30 天）"
+      },
+      "connections_title": "LRS 连接",
+      "connections_subtitle": "每条语句都会送达每个连接，并不断重试直到成功。",
+      "connections_help": "连接 Learning Locker、SCORM Cloud、Watershed、Veracity、SQL LRS、Ralph、TRAX 或任意 xAPI 1.0.3 / 2.0 LRS。",
+      "add_connection": "添加连接",
+      "connection_added": "连接已添加",
+      "no_connections": "未连接任何 LRS",
+      "no_connections_hint": "添加连接之前，语句会保留在你的内置 LRS 中。",
+      "provider": "LRS",
+      "name": "名称",
+      "endpoint": "xAPI 端点",
+      "endpoint_hint": "通常形如 {{example}}",
+      "auth_type": "认证方式",
+      "auth_basic": "密钥与密文（Basic）",
+      "auth_bearer": "令牌（Bearer）",
+      "version": "xAPI 版本",
+      "key": "密钥",
+      "secret": "密文",
+      "token": "令牌",
+      "sources": "发送内容",
+      "source": {
+        "all": "全部",
+        "platform": "LearnHouse 事件",
+        "content": "课件包内容",
+        "external": "来自其他系统"
+      },
+      "sources_hint": "课件包内容是 Tin Can 和 cmi5 活动上报的数据；其他系统是使用你的 LRS 凭据的系统。",
+      "test": "测试",
+      "send_test": "发送测试语句",
+      "test_step": {
+        "about": "端点以 xAPI 响应",
+        "auth": "凭据已接受",
+        "write": "测试语句已存储"
+      },
+      "test_elapsed": "已在 {{ms}} 毫秒内检查完毕",
+      "manage": "管理",
+      "enabled": "已启用",
+      "paused": "已暂停",
+      "failed_count_one": "{{count}} 条失败",
+      "failed_count_other": "{{count}} 条失败",
+      "pending_count_one": "{{count}} 条等待中",
+      "pending_count_other": "{{count}} 条等待中",
+      "sent_one": "已发送 {{count}} 条语句",
+      "sent_other": "已发送 {{count}} 条语句",
+      "last_success": "上次送达：{{date}}",
+      "last_error": "上次错误：{{error}}（{{date}}）",
+      "retry": "重试失败项",
+      "retry_queued_one": "{{count}} 条语句已重新排队",
+      "retry_queued_other": "{{count}} 条语句已重新排队",
+      "delete": "删除",
+      "delete_connection": "删除连接",
+      "delete_connection_confirm": "停止向 {{name}} 发送语句吗？尚未送达的语句将被丢弃。",
+      "save": "保存",
+      "saved": "已保存",
+      "cancel": "取消",
+      "lrs_title": "内置 LRS",
+      "lrs_subtitle": "为你的组织提供符合 xAPI 1.0.3 的 LRS。给其他 LMS、课件制作工具或 BI 工具一个密钥，即可发送或读取语句。",
+      "lrs_enabled": "接受凭据",
+      "lrs_endpoint": "端点",
+      "credential_name_placeholder": "使用方（例如 Moodle、Power BI）",
+      "credential_default_name": "LRS 凭据",
+      "create_credential": "创建凭据",
+      "secret_once": "请立即复制密文：它只显示一次。",
+      "done": "完成",
+      "no_credentials": "暂无凭据",
+      "no_credentials_hint": "在 LearnHouse 中启动的课件包使用各自的短期密钥；凭据供其他系统使用。",
+      "last_used": "上次使用：{{date}}",
+      "revoke": "吊销凭据",
+      "revoke_confirm": "吊销 {{name}}？使用它的系统会立即失去访问权限。",
+      "copy": "复制",
+      "copied": "已复制",
+      "copy_failed": "无法复制",
+      "refresh": "刷新",
+      "loading": "加载中…",
+      "no_statements": "暂无语句",
+      "no_statements_hint": "学习者学习、课件包上报、其他系统发送时，语句会显示在这里。",
+      "voided": "已作废",
+      "load_more": "加载更多"
+    }
   }
 }

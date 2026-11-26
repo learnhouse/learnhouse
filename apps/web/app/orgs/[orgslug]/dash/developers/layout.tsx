@@ -11,6 +11,7 @@ import {
   Globe,
   MagnifyingGlass,
   Plug,
+  Pulse,
   ShieldCheck,
   Terminal,
 } from '@phosphor-icons/react'
@@ -104,6 +105,14 @@ const getDevTabs = (t: any): TabConfig[] => [
     requiredPlan: 'business',
     title: t('lti.admin.page_title'),
     subtitle: t('lti.admin.page_subtitle'),
+  },
+  {
+    id: 'xapi',
+    label: t('xapi.admin.tab'),
+    icon: <Pulse size={16} />,
+    requiredPlan: 'business',
+    title: t('xapi.admin.page_title'),
+    subtitle: t('xapi.admin.page_subtitle'),
   },
 ]
 

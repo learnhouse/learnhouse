@@ -180,6 +180,10 @@
         "peer_review": {
           "title": "Standard सुविधा",
           "description": "पीयर रिव्यू केवल हमारे Standard प्लान या उससे ऊपर के संगठनों के लिए उपलब्ध है। अपग्रेड करें ताकि शिक्षार्थी रूब्रिक के साथ एक-दूसरे के काम की समीक्षा कर सकें।"
+        },
+        "xapi": {
+          "title": "Business फ़ीचर",
+          "description": "xAPI Business प्लान और उससे ऊपर उपलब्ध है। सीखने के रिकॉर्ड किसी भी LRS को भेजने, Tin Can और cmi5 पैकेज चलाने और बिल्ट-इन LRS इस्तेमाल करने के लिए अपग्रेड करें।"
         }
       },
       "gate": {
@@ -1115,11 +1119,11 @@
       "lms_and_more": "और {{count}} अन्य"
     },
     "scorm": {
-      "upload_package": "SCORM पैकेज अपलोड करें",
+      "upload_package": "SCORM / xAPI पैकेज अपलोड करें",
       "package_file": "पैकेज फ़ाइल (.zip)",
       "click_to_upload": "अपलोड करने के लिए क्लिक करें या ड्रैग और ड्रॉप करें",
-      "supported_versions": "SCORM 1.2 या SCORM 2004 पैकेज",
-      "import_info": "अपने SCORM पैकेज को अपलोड करके उसकी सामग्री का विश्लेषण करें। आप कोर्स को कॉन्फ़िगर कर सकते हैं और गतिविधियों को अध्यायों में असाइन कर सकते हैं।",
+      "supported_versions": "SCORM 1.2, SCORM 2004, xAPI (Tin Can) या cmi5 पैकेज",
+      "import_info": "कंटेंट जाँचने के लिए अपना SCORM, xAPI या cmi5 पैकेज अपलोड करें। फिर आप कोर्स कॉन्फ़िगर कर सकेंगे और गतिविधियाँ अध्यायों में बाँट सकेंगे।",
       "analyze_package": "पैकेज का विश्लेषण करें",
       "package_analyzed": "पैकेज का सफलतापूर्वक विश्लेषण किया गया",
       "assign_scos": "गतिविधियां अध्यायों को असाइन करें",
@@ -1138,8 +1142,8 @@
       "failed_import": "SCORM पैकेज इम्पोर्ट नहीं हो सका",
       "import_success_one": "{{count}} SCORM गतिविधि सफलतापूर्वक इंपोर्ट हुई",
       "import_success_other": "{{count}} SCORM गतिविधियां सफलतापूर्वक इम्पोर्ट की गईं",
-      "package_zip": "SCORM पैकेज (.zip)",
-      "supported_versions_max": "SCORM 1.2 या SCORM 2004 पैकेज (अधिकतम 5GB)",
+      "package_zip": "SCORM, xAPI या cmi5 पैकेज (.zip)",
+      "supported_versions_max": "SCORM 1.2, SCORM 2004, xAPI (Tin Can) या cmi5 पैकेज (अधिकतम 5GB)",
       "uploading_package": "पैकेज अपलोड हो रहा है…",
       "analyzing_package": "पैकेज का विश्लेषण हो रहा है…",
       "import_info_chapter": "अपना SCORM पैकेज अपलोड करें ताकि उसकी सामग्री का विश्लेषण हो सके। उसके लर्निंग ऑब्जेक्ट इस अध्याय में जोड़े जाएंगे।",
@@ -1331,6 +1335,13 @@
       "maintainer": "मेंटेनर",
       "contributor": "योगदानकर्ता",
       "reporter": "रिपोर्टर"
+    },
+    "xapi": {
+      "player": {
+        "launch_failed": "यह गतिविधि शुरू नहीं हो सकी। थोड़ी देर में फिर कोशिश करें।",
+        "own_window": "यह गतिविधि अपनी अलग विंडो में खुलती है।",
+        "open": "गतिविधि खोलें"
+      }
     }
   },
   "communities": {
@@ -8742,7 +8753,8 @@
             "audit_logs": "ऑडिट लॉग",
             "custom_domain": "कस्टम डोमेन",
             "remove_watermark": "LearnHouse वॉटरमार्क नहीं",
-            "peer_review": "सहपाठी समीक्षा"
+            "peer_review": "सहपाठी समीक्षा",
+            "xapi": "xAPI और LRS"
           }
         },
         "next_invoice_label": "अगला इनवॉइस",
@@ -32494,5 +32506,148 @@
     "copy": "कॉपी करें",
     "copied": "कॉपी हो गया",
     "copy_failed": "कॉपी नहीं हो सका"
+  },
+  "xapi": {
+    "admin": {
+      "tab": "xAPI",
+      "page_title": "xAPI और LRS",
+      "page_subtitle": "सीखने के रिकॉर्ड किसी भी LRS को भेजें, Tin Can और cmi5 कंटेंट चलाएँ, और दूसरे सिस्टम को अपना बिल्ट-इन LRS इस्तेमाल करने दें",
+      "section": {
+        "overview": "अवलोकन",
+        "connections": "LRS कनेक्शन",
+        "lrs": "बिल्ट-इन LRS",
+        "statements": "स्टेटमेंट"
+      },
+      "record_title": "सीखने के रिकॉर्ड",
+      "record_subtitle": "LearnHouse शिक्षार्थियों की गतिविधि को xAPI स्टेटमेंट में बदलता है, उन्हें आपके बिल्ट-इन LRS में सहेजता है और आपके कनेक्शन तक भेजता है।",
+      "platform_events": "सीखने की घटनाओं को xAPI स्टेटमेंट के रूप में रिकॉर्ड करें",
+      "platform_events_hint": "नामांकन, पाठ, क्विज़, असाइनमेंट, प्रमाणपत्र और बहुत कुछ। पैकेज कंटेंट (Tin Can, cmi5) हमेशा रिपोर्ट करता है।",
+      "actor_format": "शिक्षार्थियों की पहचान करें",
+      "actor": {
+        "mbox": "ईमेल पता",
+        "mbox_sha1sum": "हैश किया हुआ ईमेल (निजी)",
+        "account": "आपकी साइट पर अकाउंट"
+      },
+      "actor_hint": {
+        "mbox": "स्टेटमेंट में शिक्षार्थी का ईमेल होता है, इसलिए कोई भी LRS उन्हें लोगों से मिला सकता है।",
+        "mbox_sha1sum": "स्टेटमेंट में ईमेल का SHA-1 होता है: मिलान संभव है, पर पता कभी LearnHouse से बाहर नहीं जाता।",
+        "account": "स्टेटमेंट में आपकी साइट पर शिक्षार्थी की LearnHouse ID होती है, ईमेल नहीं।"
+      },
+      "retention": "स्टेटमेंट रखें",
+      "retention_hint": "बिल्ट-इन LRS स्टेटमेंट कितने समय तक रखता है। आपके कनेक्शन अपनी अलग कॉपी रखते हैं।",
+      "retention_forever": "हमेशा",
+      "retention_days_one": "{{count}} दिन",
+      "retention_days_other": "{{count}} दिन",
+      "events_title_one": "{{count}} इवेंट रिकॉर्ड हुआ",
+      "events_title_other": "{{count}} इवेंट रिकॉर्ड हुए",
+      "event": {
+        "course_enrolled": "कोर्स में नामांकन किया",
+        "course_left": "कोर्स छोड़ा",
+        "course_completed": "कोर्स पूरा किया",
+        "activity_view": "पाठ खोला",
+        "activity_completed": "पाठ पूरा किया",
+        "video_progress": "वीडियो प्रगति",
+        "quiz_submitted": "क्विज़ जमा किया",
+        "assignment_submitted": "असाइनमेंट जमा किया",
+        "assignment_graded": "असाइनमेंट की ग्रेडिंग हुई",
+        "code_submitted": "कोड जमा किया",
+        "certificate_claimed": "प्रमाणपत्र प्राप्त किया",
+        "path_enrolled": "लर्निंग पाथ में नामांकन किया",
+        "path_completed": "लर्निंग पाथ पूरा किया",
+        "live_session_joined": "लाइव सत्र में शामिल हुए",
+        "time_on_activity": "पाठ पर बिताया समय",
+        "course_view": "कोर्स पेज देखा",
+        "podcast_episode_played": "पॉडकास्ट एपिसोड चलाया",
+        "discussion_posted": "चर्चा पोस्ट की",
+        "comment_posted": "चर्चा पर टिप्पणी की",
+        "resource_downloaded": "रिसोर्स डाउनलोड किया",
+        "user_logged_in": "साइन इन किया",
+        "user_joined_org": "संगठन से जुड़े",
+        "ai_message_sent": "AI असिस्टेंट से पूछा"
+      },
+      "stat": {
+        "total": "सहेजे गए स्टेटमेंट",
+        "platform": "LearnHouse इवेंट (30 दिन)",
+        "content": "पैकेज से (30 दिन)",
+        "external": "दूसरे सिस्टम से (30 दिन)"
+      },
+      "connections_title": "LRS कनेक्शन",
+      "connections_subtitle": "हर स्टेटमेंट हर कनेक्शन तक पहुँचाया जाता है, और पहुँचने तक दोबारा कोशिश होती है।",
+      "connections_help": "Learning Locker, SCORM Cloud, Watershed, Veracity, SQL LRS, Ralph, TRAX या कोई भी xAPI 1.0.3 / 2.0 LRS जोड़ें।",
+      "add_connection": "कनेक्शन जोड़ें",
+      "connection_added": "कनेक्शन जोड़ा गया",
+      "no_connections": "कोई LRS जुड़ा नहीं है",
+      "no_connections_hint": "कनेक्शन जोड़ने तक स्टेटमेंट आपके बिल्ट-इन LRS में रहते हैं।",
+      "provider": "LRS",
+      "name": "नाम",
+      "endpoint": "xAPI एंडपॉइंट",
+      "endpoint_hint": "आमतौर पर ऐसा दिखता है: {{example}}",
+      "auth_type": "प्रमाणीकरण",
+      "auth_basic": "कुंजी और सीक्रेट (Basic)",
+      "auth_bearer": "टोकन (Bearer)",
+      "version": "xAPI संस्करण",
+      "key": "कुंजी",
+      "secret": "सीक्रेट",
+      "token": "टोकन",
+      "sources": "भेजें",
+      "source": {
+        "all": "सभी",
+        "platform": "LearnHouse इवेंट",
+        "content": "पैकेज कंटेंट",
+        "external": "दूसरे सिस्टम से"
+      },
+      "sources_hint": "पैकेज कंटेंट वह है जो Tin Can और cmi5 गतिविधियाँ रिपोर्ट करती हैं; दूसरे सिस्टम वे हैं जो आपके LRS क्रेडेंशियल इस्तेमाल करते हैं।",
+      "test": "टेस्ट",
+      "send_test": "टेस्ट स्टेटमेंट भेजें",
+      "test_step": {
+        "about": "एंडपॉइंट xAPI में जवाब देता है",
+        "auth": "क्रेडेंशियल स्वीकार हुए",
+        "write": "टेस्ट स्टेटमेंट सहेजा गया"
+      },
+      "test_elapsed": "{{ms}} ms में जाँचा गया",
+      "manage": "प्रबंधित करें",
+      "enabled": "चालू",
+      "paused": "रुका हुआ",
+      "failed_count_one": "{{count}} विफल",
+      "failed_count_other": "{{count}} विफल",
+      "pending_count_one": "{{count}} प्रतीक्षा में",
+      "pending_count_other": "{{count}} प्रतीक्षा में",
+      "sent_one": "{{count}} स्टेटमेंट भेजा गया",
+      "sent_other": "{{count}} स्टेटमेंट भेजे गए",
+      "last_success": "आखिरी डिलीवरी: {{date}}",
+      "last_error": "आखिरी त्रुटि: {{error}} ({{date}})",
+      "retry": "विफल दोबारा आज़माएँ",
+      "retry_queued_one": "{{count}} स्टेटमेंट फिर कतार में",
+      "retry_queued_other": "{{count}} स्टेटमेंट फिर कतार में",
+      "delete": "हटाएँ",
+      "delete_connection": "कनेक्शन हटाएँ",
+      "delete_connection_confirm": "{{name}} को स्टेटमेंट भेजना बंद करें? जो स्टेटमेंट अभी तक नहीं पहुँचे, वे हटा दिए जाएँगे।",
+      "save": "सहेजें",
+      "saved": "सहेजा गया",
+      "cancel": "रद्द करें",
+      "lrs_title": "बिल्ट-इन LRS",
+      "lrs_subtitle": "आपके संगठन के लिए xAPI 1.0.3 के अनुरूप LRS। किसी दूसरे LMS, ऑथरिंग टूल या BI टूल को स्टेटमेंट भेजने या पढ़ने के लिए कुंजी दें।",
+      "lrs_enabled": "क्रेडेंशियल स्वीकार करें",
+      "lrs_endpoint": "एंडपॉइंट",
+      "credential_name_placeholder": "कौन इस्तेमाल करता है (जैसे Moodle, Power BI)",
+      "credential_default_name": "LRS क्रेडेंशियल",
+      "create_credential": "क्रेडेंशियल बनाएँ",
+      "secret_once": "सीक्रेट अभी कॉपी करें: यह सिर्फ़ एक बार दिखता है।",
+      "done": "हो गया",
+      "no_credentials": "अभी कोई क्रेडेंशियल नहीं",
+      "no_credentials_hint": "LearnHouse में चलने वाले पैकेज अपनी छोटी अवधि वाली कुंजियाँ इस्तेमाल करते हैं; क्रेडेंशियल दूसरे सिस्टम के लिए हैं।",
+      "last_used": "आखिरी इस्तेमाल: {{date}}",
+      "revoke": "क्रेडेंशियल रद्द करें",
+      "revoke_confirm": "{{name}} रद्द करें? इसे इस्तेमाल करने वाले सिस्टम की पहुँच तुरंत बंद हो जाएगी।",
+      "copy": "कॉपी करें",
+      "copied": "कॉपी हो गया",
+      "copy_failed": "कॉपी नहीं हो सका",
+      "refresh": "रीफ़्रेश करें",
+      "loading": "लोड हो रहा है…",
+      "no_statements": "अभी कोई स्टेटमेंट नहीं",
+      "no_statements_hint": "शिक्षार्थियों के काम करने, पैकेज के रिपोर्ट करने और दूसरे सिस्टम के भेजने पर स्टेटमेंट यहाँ दिखते हैं।",
+      "voided": "रद्द किया गया",
+      "load_more": "और लोड करें"
+    }
   }
 }
