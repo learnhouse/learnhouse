@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { Bell, CircleHalf, IconContext, Notepad, Plugs, Receipt, ShieldCheck, UserCircle } from '@phosphor-icons/react'
@@ -32,6 +32,18 @@ export function AccountNav({ orgslug, current }: { orgslug: string; current: Acc
   const session = useLHSession() as any
   const user = session?.data?.user
   const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ')
+  const rowRef = useRef<HTMLDivElement>(null)
+
+  // On phones the row is wider than the screen: bring the active tab into
+  // view (centred), or later sections open with their tab cut off at the edge.
+  useEffect(() => {
+    const row = rowRef.current
+    const active = row?.querySelector('[aria-current="page"]') as HTMLElement | null
+    if (!row || !active) return
+    const r = row.getBoundingClientRect()
+    const a = active.getBoundingClientRect()
+    if (a.left < r.left || a.right > r.right) row.scrollBy({ left: a.left + a.width / 2 - (r.left + r.width / 2) })
+  }, [current])
 
   return (
     <IconContext.Provider value={DUOTONE}>
@@ -70,7 +82,7 @@ export function AccountNav({ orgslug, current }: { orgslug: string; current: Acc
 
       {/* Phone: underlined row, scrolls inside itself */}
       <nav aria-label={t('account.title')} className="md:hidden -mx-4 px-4 sm:-mx-6 sm:px-6 border-b border-neutral-200">
-        <div className="flex gap-5 overflow-x-auto scrollbar-hide">
+        <div ref={rowRef} className="flex gap-5 overflow-x-auto scrollbar-hide">
           {ACCOUNT_SECTIONS.map(({ id, icon: Icon, labelKey }) => {
             const active = id === current
             return (
