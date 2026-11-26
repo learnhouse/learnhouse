@@ -413,6 +413,55 @@ async def test_markdown_course_activity_path_podcast(db, org, mock_request):
         await public.markdown_data(mock_request, db, org.slug, "course", "intro-to-python")
 
 
+async def _chapter_with(db, org, course, uuid, name, order, activity_uuid, **chapter_kw):
+    chapter = await _add(db, Chapter(name=name, org_id=org.id, course_id=course.id, chapter_uuid=uuid, **chapter_kw))
+    await _add(db, CourseChapter(order=order, course_id=course.id, chapter_id=chapter.id, org_id=org.id, creation_date=NOW, update_date=NOW))
+    act = await _add(db, _activity(org, course, activity_uuid, f"{SECRET} {name} lesson"))
+    await _add(db, ChapterActivity(order=0, chapter_id=chapter.id, activity_id=act.id, course_id=course.id, org_id=org.id,
+                                   creation_date=NOW, update_date=NOW))
+    return chapter
+
+
+async def test_locked_and_unreleased_chapters_stay_out_of_public_outputs(db, org, mock_request):
+    """A public lesson inside a members-only, group-only or not yet released
+    chapter is locked on its page, so it never reaches llms.txt or Markdown."""
+    cat = await _catalog(db, org)
+    await _chapter_with(db, org, cat.course, "chapter_members", "Members", 1, "activity_in_members", lock_type="authenticated")
+    await _chapter_with(db, org, cat.course, "chapter_group", "Group", 2, "activity_in_group", lock_type="restricted")
+    await _chapter_with(
+        db, org, cat.course, "chapter_later", "Later", 3, "activity_in_later",
+        drip_rule={"mode": "date", "release_at": (datetime.now() + timedelta(days=30)).isoformat()},
+    )
+    cat.course.drip_settings = {"enabled": True, "anchor": "fixed_date", "start_date": OLD}
+    await _add(db, cat.course)
+
+    full = await public.llms_data(mock_request, db, org.slug, full=True)
+    assert [a["name"] for a in full["courses"][0]["outline"]] == ["Open lesson", "Video lesson"]
+    assert SECRET not in _dump(full)
+    course = await public.markdown_data(mock_request, db, org.slug, "course", "intro-to-python")
+    assert SECRET not in _dump(course)
+    for sub in ("activity_in_members", "activity_in_group", "activity_in_later"):
+        with pytest.raises(HTTPException) as e:
+            await public.markdown_data(mock_request, db, org.slug, "activity", "intro-to-python", sub)
+        assert e.value.status_code == 404
+
+
+async def test_markdown_lesson_is_rendered_for_an_anonymous_reader(db, org, mock_request):
+    """Conditional blocks resolve server side, as on the lesson page: a block
+    for signed-in members never reaches the public Markdown."""
+    await _catalog(db, org)
+    lesson = (await db.execute(select(Activity).where(Activity.activity_uuid == "activity_open"))).scalars().first()
+    lesson.content = {"type": "doc", "content": [
+        {"type": "paragraph", "content": [{"type": "text", "text": "Everyone sees this"}]},
+        {"type": "conditionalBlock", "attrs": {"rules": {"conditions": [{"field": "user.signed_in", "op": "is_true", "value": None}]}},
+         "content": [{"type": "paragraph", "content": [{"type": "text", "text": SECRET}]}]},
+    ]}
+    await _add(db, lesson)
+    data = await public.markdown_data(mock_request, db, org.slug, "activity", "intro-to-python", "activity_open")
+    assert "Everyone sees this" in _dump(data)
+    assert SECRET not in _dump(data)
+
+
 async def test_markdown_community_and_thread(db, org, mock_request):
     f = await _forum(db, org)
     community = await public.markdown_data(mock_request, db, org.slug, "community", "club")
