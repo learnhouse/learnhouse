@@ -1,7 +1,7 @@
 import type { HttpCore } from '../core/http'
 import { paginate } from '../core/paginate'
 import type { BaseRequestOptions } from '../core/types'
-import type { Course, CourseMeta } from '../models'
+import type { Course, CourseMeta, CourseUpdate } from '../models'
 
 export interface ListCoursesOptions extends BaseRequestOptions {
   /** 1-based. Default 1. */
@@ -27,6 +27,13 @@ export interface CourseMetaOptions extends BaseRequestOptions {
   slim?: boolean
   /** Include unpublished activities (only honoured for users who may edit the course). */
   withUnpublishedActivities?: boolean
+}
+
+export interface SearchCoursesOptions extends BaseRequestOptions {
+  /** 1-based. Default 1 (server side). */
+  page?: number
+  /** Default 20 (server side). */
+  limit?: number
 }
 
 export function createCoursesResource(http: HttpCore) {
@@ -66,6 +73,34 @@ export function createCoursesResource(http: HttpCore) {
     /** `GET /api/v1/courses/{course_uuid}` */
     get(courseUuid: string, options?: BaseRequestOptions): Promise<Course> {
       return http.GET('/api/v1/courses/{course_uuid}', {
+        ...options,
+        params: { path: { course_uuid: courseUuid } },
+      })
+    },
+    /** By numeric id, e.g. a trail run's `course_id`. `GET /api/v1/courses/id/{course_id}` */
+    getById(courseId: number, options?: BaseRequestOptions): Promise<Course> {
+      return http.GET('/api/v1/courses/id/{course_id}', {
+        ...options,
+        params: { path: { course_id: courseId } },
+      })
+    },
+    /**
+     * Courses of the org whose name or description matches `query`.
+     * `GET /api/v1/courses/org_slug/{org_slug}/search`
+     */
+    search(orgSlug: string, query: string, options: SearchCoursesOptions = {}): Promise<Course[]> {
+      const { page, limit, ...rest } = options
+      return http.GET('/api/v1/courses/org_slug/{org_slug}/search', {
+        ...rest,
+        params: { path: { org_slug: orgSlug }, query: { query, page, limit } },
+      })
+    },
+    /**
+     * Announcements posted on a course, newest first.
+     * `GET /api/v1/courses/{course_uuid}/updates`
+     */
+    listUpdates(courseUuid: string, options?: BaseRequestOptions): Promise<CourseUpdate[]> {
+      return http.GET('/api/v1/courses/{course_uuid}/updates', {
         ...options,
         params: { path: { course_uuid: courseUuid } },
       })
