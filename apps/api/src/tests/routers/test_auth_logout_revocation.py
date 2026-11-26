@@ -133,3 +133,25 @@ async def test_logout_skips_revocation_when_user_no_longer_exists(client):
     assert response.status_code == 200
     revoke.assert_not_called()
     unset.assert_called_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("amr", ["embed", "api_token"])
+async def test_logout_refuses_embed_and_api_token_sessions(client, admin_user, amr):
+    """A host-app embed session or an API-token JWT never signs the person out."""
+    with patch(
+        "src.routers.auth.extract_jwt_from_request",
+        return_value="opaque",
+    ), patch(
+        "src.routers.auth.decode_jwt",
+        return_value={"sub": admin_user.email, "amr": amr, "exp": 999},
+    ), patch(
+        "src.routers.auth.revoke_user_sessions_before"
+    ) as revoke, patch(
+        "src.routers.auth.unset_auth_cookies"
+    ) as unset:
+        response = await client.delete("/api/v1/auth/logout")
+
+    assert response.status_code == 403
+    revoke.assert_not_called()
+    unset.assert_not_called()

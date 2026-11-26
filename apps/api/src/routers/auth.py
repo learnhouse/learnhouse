@@ -65,6 +65,9 @@ from src.security.impersonation import (
     error_detail as impersonation_error_detail,
 )
 from src.security.session_context import (
+    AMR_CLAIM,
+    AUTH_METHOD_API_TOKEN,
+    AUTH_METHOD_EMBED,
     AUTH_METHOD_GOOGLE,
     AUTH_METHOD_PASSWORD,
     carry_session_claims,
@@ -1562,6 +1565,10 @@ async def logout(
         # An impersonation's token never signs the impersonated member out
         # (the impersonation gate refuses this route for it; defense in depth).
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=impersonation_error_detail(IMPERSONATION_CODE_DENIED))
+    if payload and payload.get(AMR_CLAIM) in (AUTH_METHOD_EMBED, AUTH_METHOD_API_TOKEN):
+        # A session minted by a host app or an API token acts for the person
+        # without being them: it can't sign them out of their own sessions.
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This session can't log out the account")
     if not payload or not payload.get("sub"):
         refresh_token = request.cookies.get(JWT_REFRESH_COOKIE_NAME)
         if refresh_token:
