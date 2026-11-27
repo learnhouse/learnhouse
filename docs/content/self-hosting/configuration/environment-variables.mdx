@@ -245,6 +245,7 @@ These variables only take effect on Enterprise builds, which include the `ee/` c
 | `LEARNHOUSE_SCORM_MAX_FILE_SIZE_MB` | Largest single file inside a package, in MB. | integer | `2048` (2 GB) | EE backend |
 | `LEARNHOUSE_SCORM_MAX_UNCOMPRESSED_MB` | Cap on the total uncompressed size of a package, in MB (zip-bomb guard). | integer | `25600` (25 GB) | EE backend |
 | `LEARNHOUSE_SCORM_TEMP_TTL_MINUTES` | How long an uploaded package that was analyzed but not imported is kept, in minutes. | integer | `120` | EE backend |
+| `LEARNHOUSE_PACKAGE_CONTENT_URL` | Separate origin that SCORM, Tin Can and cmi5 packages run on, e.g. `https://content.example-lms.net`. It must be on a different registrable domain than the platform, so it never receives login cookies, and route to the web app. Set the same value on the backend and the web app. Unset, packages run on the organization's own site. Recommended on multi-organization deployments. | URL | unset | EE backend, web |
 
 ### Live sessions
 
