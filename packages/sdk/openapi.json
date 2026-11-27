@@ -60453,19 +60453,18 @@
             "type": "string",
             "enum": [
               "youtube",
-              "kinescope",
               "video",
               "pdf"
             ],
             "title": "Kind",
-            "description": "youtube: a YouTube video shown in the video player; kinescope: a video hosted on Kinescope (kinescope.io/<id>), played by the Enterprise Edition's Kinescope player; video: an mp4/webm file, fetched and stored (up to 200 MB); pdf: a PDF document, fetched and stored (up to 50 MB)."
+            "description": "youtube: a YouTube video shown in the video player; video: an mp4/webm file, fetched and stored (up to 200 MB); pdf: a PDF document, fetched and stored (up to 50 MB)."
           },
           "url": {
             "type": "string",
             "maxLength": 2048,
             "minLength": 8,
             "title": "Url",
-            "description": "The YouTube or Kinescope link, or the public URL of the file itself."
+            "description": "The YouTube link, or the public URL of the file itself."
           },
           "position": {
             "anyOf": [
@@ -62995,8 +62994,7 @@
             "enum": [
               "youtube",
               "vimeo",
-              "loom",
-              "kinescope"
+              "loom"
             ],
             "title": "Type"
           },
@@ -63062,8 +63060,7 @@
                 "enum": [
                   "youtube",
                   "vimeo",
-                  "loom",
-                  "kinescope"
+                  "loom"
                 ]
               },
               {

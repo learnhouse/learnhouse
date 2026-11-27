@@ -133,23 +133,6 @@ def test_embed_edge_cases():
     assert parse_embed("https://docs.google.com/presentation/d/e/2PACX/pub").embed_url.endswith("/embed")
 
 
-def test_kinescope_links():
-    from src.services.ai.tools.embeds import kinescope_id
-
-    share = parse_embed("https://kinescope.io/203613411?t=60")
-    assert share.provider == "kinescope" and share.embed_url == "https://kinescope.io/embed/203613411?t=60"
-    assert parse_embed("kinescope.io/embed/jZrVWUsQnDS4RCZhnhH9Ab").embed_url == "https://kinescope.io/embed/jZrVWUsQnDS4RCZhnhH9Ab"
-    assert parse_embed("https://kinescope.io/203613411?t=abc").embed_url == "https://kinescope.io/embed/203613411"
-    assert kinescope_id("https://kinescope.io/embed/") is None
-    assert kinescope_id("https://kinescope.io/a/b") is None
-    assert kinescope_id("https://kinescope.com/203613411") is None
-    assert kinescope_id("not a url") is None
-    # A video block with a Kinescope link stays an embed (played by the EE player).
-    doc = bs.to_converted(bs.parse_blocks([{"type": "video", "url": "https://kinescope.io/203613411"}])).doc
-    assert doc["content"][0]["type"] == "blockEmbed"
-    assert doc["content"][0]["attrs"]["embedProvider"] == "kinescope"
-
-
 def test_member_cards_only_through_the_typed_block_and_only_for_members():
     card = {"type": "blockUser", "attrs": {"user_id": 999, "layout": "card"}}
     for raw in (

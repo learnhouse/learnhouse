@@ -18,11 +18,10 @@ const SOURCE_TONES: Record<string, string> = {
   youtube: 'bg-rose-50 text-rose-700 ring-rose-600/15',
   vimeo: 'bg-sky-50 text-sky-700 ring-sky-600/15',
   loom: 'bg-violet-50 text-violet-700 ring-violet-600/15',
-  kinescope: 'bg-amber-50 text-amber-800 ring-amber-600/20',
   upload: 'bg-neutral-100 text-neutral-700 ring-neutral-900/10',
 }
 
-/** "YouTube", "Kinescope", "Upload"… as a small coloured pill. */
+/** "YouTube", "Vimeo", "Upload"… as a small coloured pill. */
 export function VideoSourceBadge({ provider, label, className }: { provider: string; label: string; className?: string }) {
   return (
     <span

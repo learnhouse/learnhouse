@@ -683,7 +683,7 @@ class EmbedB(_B):
 
 class VideoB(_B):
     type: Literal["video"]
-    url: WebUrl = Field(..., min_length=8, max_length=2048, description="YouTube/Vimeo/Loom/Kinescope link (embedded) or a .mp4/.webm file (stored; needs approval).")
+    url: WebUrl = Field(..., min_length=8, max_length=2048, description="YouTube/Vimeo/Loom link (embedded) or a .mp4/.webm file (stored; needs approval).")
     caption: str | None = Field(None, max_length=500)
 
 

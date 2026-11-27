@@ -268,6 +268,23 @@ async def _course_authors(db_session: AsyncSession, uuids: list[str]) -> dict[st
     return out
 
 
+async def _unreleased_chapter_ids(course: Course, db_session: AsyncSession) -> set[int]:
+    """Chapters the drip schedule still holds back from an anonymous visitor."""
+    from src.services.courses.drip import (
+        _ordered_chapters,
+        _published_activity_ids,
+        course_drip_settings,
+        drip_states_for_reader,
+    )
+
+    if course_drip_settings(course) is None:
+        return set()
+    chapters = await _ordered_chapters(course.id, db_session)
+    activity_ids = await _published_activity_ids([c.id for c in chapters], db_session)
+    states = await drip_states_for_reader(course, chapters, activity_ids, AnonymousUser(), db_session)
+    return {chapter_id for chapter_id, state in states.items() if state.locked}
+
+
 async def _public_activities(request, db_session, course: Course, limit: int = LLMS_FULL_ACTIVITY_LIMIT) -> list[dict]:
     """Ordered outline (chapters → lessons) of the lessons anonymous visitors can open, and only those."""
     rows = (
@@ -281,8 +298,12 @@ async def _public_activities(request, db_session, course: Course, limit: int = L
             .limit(limit)
         )
     ).all()
-    locked = await get_ee_paid_locked_activity_ids(request, course.id, AnonymousUser(), db_session)
+    from src.services.courses.locks import is_locked_for_user
+
+    anonymous = AnonymousUser()
+    locked = await get_ee_paid_locked_activity_ids(request, course.id, anonymous, db_session)
     course_locked = locked is None and await _anon_locked(request, db_session, course.course_uuid)
+    unreleased = await _unreleased_chapter_ids(course, db_session)
     out: list[dict] = []
     for chapter, activity, _, _ in rows:
         public = (
@@ -290,10 +311,14 @@ async def _public_activities(request, db_session, course: Course, limit: int = L
             and activity.lock_type == ActivityLockType.PUBLIC
             and not course_locked
             and not (locked and activity.id in locked)
+            # The lesson page applies its chapter's lock and release date too.
+            and chapter.id not in unreleased
+            and not await is_locked_for_user(chapter.lock_type, chapter.chapter_uuid, course.org_id, anonymous, db_session)
         )
         if not public:
-            # Drafts, members-only, group-restricted and sold lessons are left
-            # out entirely: not even their names reach public outputs.
+            # Drafts, members-only, group-restricted, unreleased and sold
+            # lessons are left out entirely: not even their names reach
+            # public outputs.
             continue
         out.append(
             {
@@ -730,7 +755,14 @@ async def markdown_data(
         ).scalars().first()
         content: Any = None
         if activity is not None and activity.activity_type == ActivityTypeEnum.TYPE_DYNAMIC:
-            content = activity.content
+            from src.services.courses.activities.dynamic_context import render_for_reader
+
+            # What the lesson page shows an anonymous visitor: conditional
+            # blocks and variables resolved, editor comment marks gone.
+            content = await render_for_reader(
+                request, activity.content, course=course, current_user=AnonymousUser(), db_session=db_session,
+                activity_name=activity.name, activity_uuid=activity.activity_uuid, is_editor=False,
+            )
         base["activity"] = {**entry, "content": content, "details": None}
         return base
 

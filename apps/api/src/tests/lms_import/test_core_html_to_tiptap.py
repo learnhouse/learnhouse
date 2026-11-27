@@ -410,21 +410,6 @@ def test_node_builders():
     assert math_node("  x^2 ")["attrs"]["math_equation"] == "x^2"
 
 
-def test_kinescope_embeds():
-    assert h2t.kinescope_id("https://kinescope.io/embed/203613411?autoplay=1") == "203613411"
-    assert h2t.kinescope_id("https://kinescope.io/embed/") is None
-    assert h2t.kinescope_id("https://kinescope.com/203613411") is None
-    assert h2t.kinescope_id(None) is None
-    e = embed_node("https://kinescope.io/jZrVWUsQnDS4RCZhnhH9Ab", height=450)
-    assert e["attrs"]["embedProvider"] == "kinescope"
-    assert e["attrs"]["embedUrl"] == "https://kinescope.io/embed/jZrVWUsQnDS4RCZhnhH9Ab"
-    assert e["attrs"]["embedAspectRatio"] == 16 / 9
-    assert_valid_blocks([e])
-    out, _, _ = conv('<iframe src="https://kinescope.io/embed/203613411"></iframe>'
-                     '<video src="https://kinescope.io/203613411"></video>')
-    assert [b["attrs"]["embedProvider"] for b in out] == ["kinescope", "kinescope"]
-
-
 def test_embed_node_attrs():
     e = embed_node("https://youtu.be/dQw4w9WgXcQ", height=50)
     assert e["attrs"]["embedUrl"] == "https://www.youtube.com/embed/dQw4w9WgXcQ"

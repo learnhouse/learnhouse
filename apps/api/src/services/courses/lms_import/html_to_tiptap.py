@@ -137,15 +137,6 @@ _YOUTUBE = re.compile(
 _VIMEO = re.compile(r"vimeo\.com/(?:video/|channels/[^/]+/|groups/[^/]+/videos/)?(\d+)")
 
 
-# Kinescope share and embed links (kinescope.io/<id>, kinescope.io/embed/<id>).
-_KINESCOPE = re.compile(r"^https?://(?:www\.)?kinescope\.io/(?:embed/)?([A-Za-z0-9][A-Za-z0-9-]{4,63})/?(?:[?#].*)?$")
-
-
-def kinescope_id(url: str) -> Optional[str]:
-    m = _KINESCOPE.match((url or "").strip())
-    return m.group(1) if m and m.group(1).lower() != "embed" else None
-
-
 def youtube_id(url: str) -> Optional[str]:
     m = _YOUTUBE.search(url or "")
     return m.group(1) if m else None
@@ -208,24 +199,6 @@ def math_node(latex: str) -> dict:
 
 
 def embed_node(url: str = "", code: str = "", height: int = 500) -> dict:
-    kid = kinescope_id(url) if url else None
-    if kid:
-        # Same attrs the editor stores for a pasted Kinescope link, so the
-        # Enterprise Edition plays it with its own player.
-        return {
-            "type": "blockEmbed",
-            "attrs": {
-                "embedUrl": f"https://kinescope.io/embed/{kid}",
-                "embedSourceUrl": url,
-                "embedProvider": "kinescope",
-                "embedCode": None,
-                "embedType": "url",
-                "embedHeight": max(150, min(int(height or 500), 2000)),
-                "embedAspectRatio": 16 / 9,
-                "embedWidth": "100%",
-                "alignment": "center",
-            },
-        }
     return {
         "type": "blockEmbed",
         "attrs": {
@@ -571,7 +544,7 @@ class HtmlConverter:
 
     def _src_block(self, src: str, kind: Optional[MediaKind], title: str) -> Optional[dict]:
         if is_http_url(src):
-            if youtube_id(src) or vimeo_id(src) or kinescope_id(src):
+            if youtube_id(src) or vimeo_id(src):
                 return embed_node(src, height=450)
             if kind == MediaKind.IMAGE:
                 return self.media.remote_image_node(src)
