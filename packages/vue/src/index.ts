@@ -1,8 +1,9 @@
 export { LearnHouseActivity } from './LearnHouseActivity'
 export { LearnHouseProvider, provideLearnHouse, useLearnHouseClient } from './provider'
 export type { LearnHouseContext, LearnHouseOptions, LinkTarget } from './provider'
-export { useActivity } from './composables'
-export type { UseActivityOptions, UseActivityReturn } from './composables'
+export { useActivity, useCourseProgress, useTrail } from './composables'
+export type { UseActivityOptions, UseActivityReturn, UseCourseProgressReturn, UseTrailReturn } from './composables'
+export type { CourseKey, CourseProgress, Trail } from '@learnhouse/sdk'
 export type {
   ActivityDocument,
   LearnHouseActivityData,

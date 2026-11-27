@@ -1,0 +1,309 @@
+---
+title: SDK Accounts and Sign-in
+description: "Every @learnhouse/sdk auth and account method: sign in, two-factor, sign up, email verification, magic links, password reset, profile, avatar, password and preferences."
+seoTitle: "LMS Sign-in, Signup and Account API in TypeScript – @learnhouse/sdk"
+---
+
+import { Callout } from '@/components/mdx'
+
+# Accounts and sign-in
+
+`lh.auth` signs users in and out and runs the account flows that happen before a session exists. `lh.users` reads and
+changes accounts once someone is signed in. Every method takes an optional last `options` argument (`signal`,
+`headers`, `timeoutMs`, `retry`) and throws a [`LearnHouseError`](/developers/sdk/requests#errors) on failure.
+
+The anonymous flows (login, signup, magic links, verification, password reset) never send the client's bearer token,
+even when the client has one, so a stale token can't make them fail.
+
+## Signing in
+
+### `auth.login(input, options?)`
+
+```ts signature
+login(input: { email: string; password: string; orgSlug?: string }, options?: BaseRequestOptions): Promise<LoginResult>
+```
+
+`POST /api/v1/auth/login` (form-encoded). **Auth:** none.
+
+Returns either a session or a two-factor challenge. `LoginResult` is a union you narrow on `mfa_required`:
+
+```ts
+const res = await lh.auth.login({ email, password, orgSlug: 'your-school' })
+
+if (res.mfa_required) {
+  // Ask for the 6-digit code from the authenticator app (valid for 5 minutes).
+  const session = await lh.auth.loginMfa({ mfaToken: res.mfa_token, code })
+  console.log(session.user.username, session.backup_codes_remaining)
+} else {
+  res.tokens.access_token  // 8 hours
+  res.tokens.refresh_token // single-use, see refresh()
+  res.tokens.expiry        // access token expiry, Unix ms
+}
+```
+
+`orgSlug` applies that organization's sign-in rules (for example "SSO only"). In a browser on the instance's domain
+the API also sets the `LH_access` / `LH_refresh` cookies.
+
+| Status | `err.code` | When |
+| --- | --- | --- |
+| `401` | `HTTP_ERROR` | Wrong email or password |
+| `403` | `HTTP_ERROR` | Email not verified yet (Cloud), or password sign-in is turned off for this org |
+| `429` | `HTTP_ERROR` | Too many attempts from this IP, or the account is paused after failures. `err.retryAfterMs` says how long |
+
+### `auth.loginMfa(input, options?)`
+
+```ts signature
+loginMfa(input: { mfaToken: string; code: string; isBackupCode?: boolean }, options?: BaseRequestOptions):
+  Promise<LoginSuccess & { backup_codes_remaining?: number }>
+```
+
+`POST /api/v1/auth/login/mfa`. **Auth:** none. Finishes a sign-in that returned `mfa_required`. Pass a backup code with
+`isBackupCode: true`. Errors: `401` `INVALID_CODE`, `401` `MFA_SESSION_EXPIRED` (sign in again), `429` `RATE_LIMITED`.
+
+### `auth.loginWithOAuth(input, options?)`
+
+```ts signature
+loginWithOAuth(input: { provider: 'google'; email: string; accessToken: string; orgId?: number; inviteCode?: string }, options?: BaseRequestOptions):
+  Promise<LoginResult>
+```
+
+`POST /api/v1/auth/oauth`. **Auth:** none. Signs in (and creates the account if needed) with a Google OAuth access token
+your app obtained for that email. The API checks the token with Google and refuses it if the email doesn't match.
+`orgId` / `inviteCode` join an organization on the way.
+
+### `auth.verifyMagicLink(token, options?)`
+
+```ts signature
+verifyMagicLink(token: string, options?: BaseRequestOptions): Promise<MagicLinkResult>
+```
+
+`POST /api/v1/auth/magic-link/verify`. **Auth:** none. Exchanges the `token` of a magic link for a session, the same
+`LoginResult` shape plus `next` / `redirect_to` (where the link wanted to land). Works for emailed links
+(`requestMagicLink()`) and for links your server minted with [`admin.auth.magicLink()`](/developers/sdk/admin#sign-in-links-and-tokens).
+Each link works once: a second call answers `410` with code `MAGIC_LINK_INVALID`.
+
+### `auth.requestMagicLink(input, options?)`
+
+```ts signature
+requestMagicLink(input: { email: string; orgSlug?: string; next?: string }, options?: BaseRequestOptions): Promise<{ detail: string }>
+```
+
+`POST /api/v1/auth/magic-link/request`. **Auth:** none. Emails a one-time sign-in link. It answers the same whether or
+not the account exists, so it can't be used to discover accounts. With `orgSlug` the email is branded as the org's and
+the link lands on its sign-in page; `next` is a relative path to land on afterwards.
+
+## Sessions
+
+### `auth.refresh(options?)`
+
+```ts signature
+refresh(options?: { refreshToken?: string } & BaseRequestOptions): Promise<AuthTokens>
+```
+
+`GET /api/v1/auth/refresh`. **Auth:** the refresh token. Returns a new access token **and a new refresh token**; the old
+refresh token stops working, so store both. Outside a browser pass `refreshToken` (it is sent as the `LH_refresh`
+cookie). In a browser on the instance's domain, call it without arguments and create the client with
+`credentials: 'include'`.
+
+```ts
+const tokens = await lh.auth.refresh({ refreshToken: stored.refresh_token })
+await save(tokens.access_token, tokens.refresh_token)
+```
+
+It is never retried, even with `retry` set: replaying a refresh token after its short grace window signs the user out
+everywhere. On `401` (expired, revoked, or the password changed since) send the user to sign in again.
+
+### `auth.logout(options?)`
+
+`DELETE /api/v1/auth/logout` → `{ msg }`. **Auth:** session. Revokes **every** session of the user (all devices) and
+clears the auth cookies. Tokens issued before the current second stop working at once.
+
+### `auth.me(options?)`
+
+`GET /api/v1/auth/me` → `AuthMe` (`user_uuid`, `username`, `org_id`, `org_slug`, `is_api_token`, `token_name`).
+**Auth:** session or API token. The quickest way to check which credential a client holds; with an API token it tells
+you the token's organization.
+
+## Creating accounts
+
+### `auth.signup(input, options?)`
+
+```ts signature
+signup(input: SignupInput, options?: BaseRequestOptions): Promise<UserSignup | User>
+```
+
+```ts
+interface SignupInput {
+  email: string
+  username: string        // unique on the instance
+  password: string
+  firstName?: string
+  lastName?: string
+  orgId?: number          // join this organization
+  inviteCode?: string     // an org invite code (needs orgId)
+  customFields?: Record<string, unknown> // the org's extra signup fields
+  bio?: string
+  next?: string           // where the verification email should land
+}
+```
+
+**Auth:** none. Picks the endpoint from the input:
+
+| Input | Endpoint |
+| --- | --- |
+| `orgId` + `inviteCode` | `POST /api/v1/users/{org_id}/invite/{invite_code}` |
+| `orgId` | `POST /api/v1/users/{org_id}` |
+| neither | `POST /api/v1/users/` (a platform account with no organization) |
+
+`inviteCode` without `orgId` rejects with a `TypeError` before any request. Signing up does not sign in. On LearnHouse
+Cloud the address must be verified first (`verifyEmail()`); self-hosted instances mark it verified, so `login()` works
+right away.
+
+```ts
+const org = await lh.orgs.get('your-school')
+await lh.auth.signup({ email, username: 'ada', password, firstName: 'Ada', orgId: org.id! })
+const res = await lh.auth.login({ email, password, orgSlug: 'your-school' })
+```
+
+| Status | When |
+| --- | --- |
+| `400` | Email or username taken, password too weak, or the org doesn't take open signups |
+| `403` | The org only takes invited members (pass `inviteCode`) |
+| `422` | `VALIDATION_ERROR`: an invalid field, e.g. not an email. `err.message` names the field |
+
+### `auth.verifyEmail(input, options?)`
+
+```ts signature
+verifyEmail(input: { token: string; userUuid: string; orgUuid: string; email?: string }, options?: BaseRequestOptions): Promise<VerifyEmailResult>
+```
+
+`POST /api/v1/auth/verify-email`. **Auth:** none. Pass the `token`, `user` and `org` query parameters of the link in
+the verification email. When the account allows it, this also signs the user in: `tokens` and `user` are set (or
+`mfa_required` / `mfa_token`). Limited to 5 attempts per 5 minutes per user (`429`).
+
+### `auth.resendVerification(input, options?)`
+
+`POST /api/v1/auth/resend-verification` → `{ message }`. **Auth:** none. Input `{ email, orgId?, next? }`. Answers the
+same whether or not the account exists.
+
+## Password reset
+
+### `auth.requestPasswordReset(input, options?)`
+
+```ts signature
+requestPasswordReset(input: { email: string; orgId?: number; next?: string }, options?: BaseRequestOptions): Promise<unknown>
+```
+
+**Auth:** none. Emails a reset code. With `orgId`: `POST /api/v1/users/reset_password/send_reset_code`, the org's email
+and code. Without: `POST /api/v1/users/reset_password/platform/send_reset_code`, for platform accounts (`next` is only
+used here). Rate limited per IP and per address (`429`).
+
+### `auth.resetPassword(input, options?)`
+
+```ts signature
+resetPassword(input: { email: string; code: string; newPassword: string; orgId?: number }, options?: BaseRequestOptions): Promise<unknown>
+```
+
+**Auth:** none. Sets the new password with the emailed code and signs out every session. Use the same `orgId` as the
+request. `POST /api/v1/users/reset_password/change_password` or `…/platform/change_password`. Errors: `400` for a wrong
+or expired code or a weak password.
+
+```ts
+await lh.auth.requestPasswordReset({ email, orgId: org.id! })
+// …the user types the code from the email…
+await lh.auth.resetPassword({ email, code, newPassword, orgId: org.id! })
+```
+
+## Two-factor authentication
+
+`lh.auth.mfa` manages TOTP two-factor for the signed-in user. **Auth:** session only; API tokens and embed sessions are
+refused (`403` `API_TOKEN_NOT_ALLOWED` or `EMBED_SESSION_ROUTE_NOT_ALLOWED`).
+
+| Method | Endpoint | Returns |
+| --- | --- | --- |
+| `mfa.status()` | `GET /api/v1/auth/mfa/status` | `MfaStatus`: `enabled`, `confirmed_at`, `backup_codes_remaining`, `has_password` |
+| `mfa.setup({ password? })` | `POST /api/v1/auth/mfa/setup` | `MfaSetup`: `secret`, `provisioning_uri` |
+| `mfa.confirm(code)` | `POST /api/v1/auth/mfa/confirm` | `MfaEnabled`: `backup_codes`, new `tokens` |
+| `mfa.disable({ code, password? })` | `POST /api/v1/auth/mfa/disable` | `MfaDisabled`: new `tokens` |
+| `mfa.regenerateBackupCodes(code)` | `POST /api/v1/auth/mfa/backup-codes/regenerate` | `{ backup_codes }` |
+
+```ts
+const { provisioning_uri } = await lh.auth.mfa.setup({ password })
+// Show provisioning_uri as a QR code, then ask for the first code:
+const { backup_codes, tokens } = await lh.auth.mfa.confirm(code)
+// Turning two-factor on (or off) signs out other sessions: switch to the new tokens.
+await save(tokens.access_token, tokens.refresh_token)
+```
+
+Pass `password` when `status().has_password` is true. Errors: `401` `INVALID_PASSWORD`, `400` `INVALID_CODE`,
+`409` `MFA_ALREADY_ENABLED`, `400` `MFA_NOT_ENABLED`, `400` `NO_ENROLLMENT`, `429` `RATE_LIMITED`.
+
+## The signed-in user
+
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `users.session()` | `GET /api/v1/users/session` | `UserSession`: `user` and `roles` per org | Session, embed |
+| `users.profile()` | `GET /api/v1/users/profile` | `User` (with email) | Session |
+| `users.getById(id)` | `GET /api/v1/users/id/{user_id}` | `PublicUserProfile` | Session, embed |
+| `users.getByUuid(uuid)` | `GET /api/v1/users/uuid/{user_uuid}` | `PublicUserProfile` | Session, embed |
+| `users.getByUsername(name)` | `GET /api/v1/users/username/{username}` | `PublicUserProfile` | Session, embed |
+| `users.listCourses(id, { page, limit })` | `GET /api/v1/users/{user_id}/courses` | `Course[]`, courses they authored or contribute to (max 50 per page) | Session |
+| `orgs.listMine({ page, limit })` | `GET /api/v1/orgs/user/page/{page}/limit/{limit}` | `Organization[]` they belong to | Session |
+
+`users.profile()` gives anonymous callers a placeholder record with id `0` instead of an error. To know whether someone
+is signed in, call `users.session()` (anonymous: `400`) or `auth.me()` (anonymous: `401`).
+
+## Changing the account
+
+All of these need a user session and act on the signed-in user only; another user's id answers `403`.
+
+### `users.update(userId, input, options?)`
+
+`PUT /api/v1/users/{user_id}` → `User`. The API replaces the profile, so `input` must include `username` and `email`
+(the type enforces it). Start from `profile()`:
+
+```ts
+const me = await lh.users.profile()
+await lh.users.update(me.id, { username: me.username, email: me.email, first_name: 'Ada', bio: 'Learning Rust' })
+```
+
+Changing `email` needs `current_password` (or `mfa_code` for accounts without a password). Fields are checked for links
+and length (`400` `PROFILE_FIELD_INVALID`).
+
+### `users.updateAvatar(userId, file, options?)`
+
+```ts signature
+updateAvatar(userId: number, file: UploadFile, options?: { filename?: string } & BaseRequestOptions): Promise<User>
+```
+
+`PUT /api/v1/users/update_avatar/{user_id}` (multipart field `avatar_file`). `file` is a `File`, a `Blob` (sent with
+`filename`, default `avatar.png`) or React Native's `{ uri, name, type }`. JPEG, PNG, WebP or GIF.
+
+```ts
+const input = document.querySelector<HTMLInputElement>('input[type=file]')!
+const user = await lh.users.updateAvatar(me.id, input.files![0])
+```
+
+### `users.changePassword(userId, input, options?)`
+
+`PUT /api/v1/users/change_password/{user_id}` → `User`. Input `{ oldPassword, newPassword }`. Signs out every other
+session, and the current one too: sign in again with the new password. Errors: `401` wrong old password, `400` weak
+new password.
+
+### `users.getPreferences()` / `users.updatePreferences(input)`
+
+`GET` / `PUT /api/v1/users/me/preferences` → `UserPreferences` (`{ theme: 'light' | 'dark' | null }`).
+
+### `users.deleteAccount(userId, options?)`
+
+`DELETE /api/v1/users/user_id/{user_id}`. Permanently deletes the account. It can't be undone.
+
+### `orgs.join(input)` / `orgs.leave(orgId)`
+
+`POST /api/v1/orgs/join` with `{ orgId, userId, inviteCode? }`, and `DELETE /api/v1/orgs/{org_id}/leave`. Join an
+organization as the signed-in user (invite-only orgs need `inviteCode`), or leave one.
+
+<Callout type="info">
+  Storing tokens on a device, refreshing them and reacting to a `401`: see [React Native](/developers/sdk/react-native)
+  and [Build a learner app](/developers/sdk/learner-app).
+</Callout>

@@ -108,7 +108,7 @@ your defaults.
 ```tsx
 import { LearnHouseProvider, LearnHouseActivity } from '@learnhouse/react'
 
-export function App({ session }) {
+export function App({ session }: { session: { accessToken: string } }) {
   return (
     <LearnHouseProvider
       baseUrl="https://learn.your-school.com"

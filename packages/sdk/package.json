@@ -35,7 +35,8 @@
     "generate:check": "node scripts/generate.mjs --check",
     "sync-version": "node scripts/sync-version.mjs",
     "sync-version:check": "node scripts/sync-version.mjs --check",
-    "prepublishOnly": "node scripts/sync-version.mjs --check && tsup"
+    "prepublishOnly": "node scripts/sync-version.mjs --check && tsup",
+    "docs:check": "node scripts/check-doc-snippets.mjs"
   },
   "repository": {
     "type": "git",

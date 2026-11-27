@@ -52,14 +52,19 @@ record `complete` with the [SDK](/developers/sdk/resources#progress) as the lear
 button in LearnHouse:
 
 ```tsx
-const lh = useLearnHouseClient() // the provider's @learnhouse/sdk client
+import { LearnHouseActivity, useLearnHouseClient } from '@learnhouse/react'
 
-<LearnHouseActivity
-  activityId={id}
-  trackCompletion
-  completion="none"
-  onEvent={(e) => e.type === 'complete' && lh.trail.completeActivity(id)}
-/>
+export function Lesson({ id }: { id: string }) {
+  const lh = useLearnHouseClient() // the provider's @learnhouse/sdk client
+  return (
+    <LearnHouseActivity
+      activityId={id}
+      trackCompletion
+      completion="none"
+      onEvent={(e) => e.type === 'complete' && lh.trail.completeActivity(id)}
+    />
+  )
+}
 ```
 
 ### Size a modal or an iframe to the content

@@ -46,6 +46,13 @@ export function createActivitiesResource(http: HttpCore) {
         params: { path: { activity_uuid: activityUuid } },
       })
     },
+    /** By numeric id, e.g. a trail step's `activity_id`. `GET /api/v1/activities/id/{activity_id}` */
+    getById(activityId: number, options?: BaseRequestOptions): Promise<Activity> {
+      return http.GET('/api/v1/activities/id/{activity_id}', {
+        ...options,
+        params: { path: { activity_id: activityId } },
+      })
+    },
     /** `GET /api/v1/activities/chapter/{chapter_id}` */
     listForChapter(chapterId: number, options?: BaseRequestOptions): Promise<Activity[]> {
       return http.GET('/api/v1/activities/chapter/{chapter_id}', {

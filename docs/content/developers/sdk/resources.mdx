@@ -1,71 +1,104 @@
 ---
 title: SDK Resources
-description: The @learnhouse/sdk resources (organizations, courses, chapters, activities, search, progress, users, auth and media URLs) and the endpoint each method calls.
-seoTitle: "SDK Resources: Courses, Activities, Progress – @learnhouse/sdk"
+description: The @learnhouse/sdk resources for organizations, courses, chapters, activities, search, podcasts, instance info and media URLs, with the endpoint, return type and auth modes of each method.
+seoTitle: "SDK Resources: Courses, Activities, Search – @learnhouse/sdk"
 ---
 
 import { Callout } from '@/components/mdx'
 
 # Resources
 
-Resources wrap the calls most integrations need. Each method returns typed data and throws a
-[`LearnHouseError`](/developers/sdk/requests#errors) on failure. Every method takes a last `options` argument with
-`signal`, `headers`, `timeoutMs`, `retry` and `skipAuth`.
+The client groups its methods by resource. This page covers the content a catalog or a lesson page reads; the rest
+has its own page:
+
+| Page | Resources |
+| --- | --- |
+| [Accounts and sign-in](/developers/sdk/accounts) | `auth`, `auth.mfa`, `users`, `orgs.listMine` / `join` / `leave` |
+| [Progress, assignments and certificates](/developers/sdk/learning) | `trail`, `assignments`, `certificates`, `paths`, `notes`, `calendar`, `TrailStore` |
+| [Communities, notifications and groups](/developers/sdk/community) | `communities`, `discussions`, `notifications`, `usergroups` |
+| [Admin API](/developers/sdk/admin) | `admin.*` (server, API token) |
+| [Embed sessions](/developers/sdk/embed-sessions) | `embed.createSession` |
+| [Agent API](/developers/agent-api) | `agent` (Enterprise) |
+
+Conventions for every method:
+
+- The last argument is `options`: `signal`, `headers`, `timeoutMs`, `retry`, `skipAuth`. Methods with their own options
+  (`page`, `limit`, `lang`…) take them in the same object.
+- It resolves with the typed response data, or rejects with a [`LearnHouseError`](/developers/sdk/requests#errors)
+  (an aborted `signal` rejects with the platform's `AbortError`).
+- Ids are uuids with their prefix (`course_…`, `activity_…`), except where a method says "numeric id".
+- **Auth** lists the [modes](/developers/sdk/auth-modes) the API accepts. "Anyone" means anonymous callers too
+  (public content only).
 
 ## Organizations
 
-| Method | Calls |
-| --- | --- |
-| `lh.orgs.get(slug)` | `GET /api/v1/orgs/slug/{org_slug}` |
-| `lh.orgs.getByUuid(uuid)` | `GET /api/v1/orgs/uuid/{org_uuid}` |
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `orgs.get(slug)` | `GET /api/v1/orgs/slug/{org_slug}` | `Organization` | Anyone, session, embed. **Not API tokens** |
+| `orgs.getByUuid(uuid)` | `GET /api/v1/orgs/uuid/{org_uuid}` | `Organization` | Anyone, session, embed. **Not API tokens** |
+| `orgs.resolveDomain(domain)` | `GET /api/v1/orgs/resolve/domain/{domain}` | `{ org_id, org_slug, org_uuid }` | Anyone (404 for an unknown domain) |
+
+You need the org's numeric `id` for several learner methods (`trail.getForOrg(org.id)`, `paths.list(org.id)`…):
+
+```ts
+const org = await lh.orgs.get('your-school')
+const trail = await lh.trail.getForOrg(org.id!)
+```
+
+With an API token, `orgs.get` answers `403`; `auth.me()` returns the token's `org_id` and `org_slug` instead.
 
 ## Courses
 
-| Method | Calls |
-| --- | --- |
-| `lh.courses.list(orgSlug, { page, limit, includeUnpublished })` | `GET /api/v1/courses/org_slug/{org_slug}/page/{page}/limit/{limit}` |
-| `lh.courses.listAll(orgSlug, { pageSize, includeUnpublished })` | The same endpoint, page after page, as an async iterator |
-| `lh.courses.count(orgSlug)` | `GET /api/v1/courses/org_slug/{org_slug}/count` |
-| `lh.courses.get(courseUuid)` | `GET /api/v1/courses/{course_uuid}` |
-| `lh.courses.getMeta(courseUuid, { slim, withUnpublishedActivities })` | `GET /api/v1/courses/{course_uuid}/meta`: the course with its chapters and activities |
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `courses.list(orgSlug, { page, limit, includeUnpublished })` | `GET /api/v1/courses/org_slug/{org_slug}/page/{page}/limit/{limit}` | `Course[]` | Anyone, session, API token |
+| `courses.listAll(orgSlug, { pageSize, includeUnpublished })` | The same, page after page | async iterator of `Course` | Anyone, session, API token |
+| `courses.count(orgSlug)` | `GET /api/v1/courses/org_slug/{org_slug}/count` | `number` | Anyone, session, API token |
+| `courses.search(orgSlug, query, { page, limit })` | `GET /api/v1/courses/org_slug/{org_slug}/search` | `Course[]` | Anyone, session, API token |
+| `courses.get(courseUuid)` | `GET /api/v1/courses/{course_uuid}` | `Course` | Anyone, session, API token, embed |
+| `courses.getById(courseId)` | `GET /api/v1/courses/id/{course_id}` (numeric id) | `Course` | Anyone, session, API token, embed |
+| `courses.getMeta(courseUuid, { slim, withUnpublishedActivities })` | `GET /api/v1/courses/{course_uuid}/meta` | `CourseMeta`: the course with chapters and activities | Anyone, session, API token, embed |
+| `courses.listUpdates(courseUuid)` | `GET /api/v1/courses/{course_uuid}/updates` | `CourseUpdate[]` (announcements) | Anyone, session, API token |
 
 ```ts
+const page = await lh.courses.list('your-school', { page: 1, limit: 12 })
+const found = await lh.courses.search('your-school', 'python')
 const course = await lh.courses.getMeta('course_…', { slim: true }) // slim: no activity content, enough for navigation
-```
 
-`listAll` yields every course of the org. It stops after the first short page, so it never fetches past the end:
-
-```ts
-for await (const course of lh.courses.listAll('your-school')) {
-  console.log(course.name)
+for (const chapter of course.chapters) {
+  console.log(chapter.name, chapter.activities?.map((a) => a.name))
 }
 ```
 
-`pageSize` defaults to 100, the most the API returns per page. See [Pagination](/developers/sdk/requests#pagination).
+`listAll` yields every course of the org and stops after the first short page, so it never fetches past the end.
+`pageSize` defaults to 100, the API's maximum. Anonymous callers and learners see published courses they may open;
+`includeUnpublished` only helps users who can edit them. `trail` runs and steps carry numeric ids: use
+`courses.getById()` and `activities.getById()` to turn them back into objects.
 
 ## Chapters
 
-| Method | Calls |
-| --- | --- |
-| `lh.chapters.get(chapterId)` | `GET /api/v1/chapters/{chapter_id}` |
-| `lh.chapters.listForCourse(courseUuid)` | The `chapters` of `GET /api/v1/courses/{course_uuid}/meta?slim=true` |
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `chapters.get(chapterId)` | `GET /api/v1/chapters/{chapter_id}` (numeric id) | `Chapter` | Anyone, session, API token |
+| `chapters.listForCourse(courseUuid)` | The `chapters` of `GET /api/v1/courses/{course_uuid}/meta?slim=true` | `Chapter[]` with their activities | Anyone, session, API token, embed |
 
 ## Activities
 
-| Method | Calls |
-| --- | --- |
-| `lh.activities.get(activityUuid)` | `GET /api/v1/activities/{activity_uuid}`, including its `content` |
-| `lh.activities.listForChapter(chapterId)` | `GET /api/v1/activities/chapter/{chapter_id}` |
-| `lh.activities.resolve({ activityId })` | `GET /api/v1/activities/{activity_uuid}`. Takes the id with or without its `activity_` prefix |
-| `lh.activities.resolve({ courseId, activityName })` | Finds the activity by name in `GET /api/v1/courses/{course_uuid}/meta?slim=true`, then loads it |
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `activities.get(activityUuid)` | `GET /api/v1/activities/{activity_uuid}` | `Activity`, including `content` | Anyone, session, API token, embed |
+| `activities.getById(activityId)` | `GET /api/v1/activities/id/{activity_id}` (numeric id) | `Activity` | Anyone, session, API token, embed |
+| `activities.listForChapter(chapterId)` | `GET /api/v1/activities/chapter/{chapter_id}` | `Activity[]` | Anyone, session, API token |
+| `activities.resolve({ activityId })` | `GET /api/v1/activities/{activity_uuid}` (id with or without `activity_`) | `Activity` | Like `get` |
+| `activities.resolve({ courseId, activityName })` | Name lookup in `GET /api/v1/courses/{course_uuid}/meta?slim=true`, then `get` | `Activity` | Like `get` |
 
 An activity's `content` is the document [`<LearnHouseActivity>`](/developers/react) renders.
 
 ### Load an activity to render
 
-`resolve` loads an activity the same way `<LearnHouseActivity>` does: by id, or by name inside a course. Ids work with
-or without their prefix, so you can paste them from a LearnHouse URL (`/course/<id>/activity/<id>`). Names match
-without regard to case, spacing or punctuation.
+`resolve` loads an activity the way `<LearnHouseActivity>` does: by id, or by name inside a course. Ids work with or
+without their prefix, so you can paste them from a LearnHouse URL (`/course/<id>/activity/<id>`). Names match without
+regard to case, spacing or punctuation.
 
 ```ts
 const byId = await lh.activities.resolve({ activityId: 'activity_…' })
@@ -97,13 +130,14 @@ Keep `courseId` and `baseUrl` on the component: media blocks use them to build i
 
 ## Search
 
-| Method | Calls |
-| --- | --- |
-| `lh.search.org(orgSlug, query, { page, limit })` | `GET /api/v1/search/org_slug/{org_slug}` |
-| `lh.search.orgPages(orgSlug, query, { pageSize })` | The same endpoint, page after page, as an async iterator |
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `search.org(orgSlug, query, { page, limit })` | `GET /api/v1/search/org_slug/{org_slug}` | `SearchResult` | Anyone, session, API token (`search` right) |
+| `search.orgPages(orgSlug, query, { pageSize })` | The same, page after page | async iterator of `SearchResult` | Same |
 
-Each search result type (courses, activities, users…) is paged on its own. `orgPages` yields one `SearchResult` per page
-and stops once every type comes back shorter than `pageSize` (default and maximum 50):
+The query must be 3 to 200 characters (`422` otherwise). Each result type (courses, activities, users…) is paged on
+its own. `orgPages` yields one `SearchResult` per page and stops once every type comes back shorter than `pageSize`
+(default and maximum 50):
 
 ```ts
 for await (const page of lh.search.orgPages('your-school', 'payouts')) {
@@ -114,38 +148,29 @@ for await (const page of lh.search.orgPages('your-school', 'payouts')) {
 Search is rate limited per user. If you hit the limit, the SDK waits for the time the API asks, within `maxDelayMs`.
 See [Rate limits](/developers/sdk/requests#rate-limits).
 
-## Progress
+## Podcasts
 
-Progress belongs to a learner, so these need a [signed-in learner](/developers/sdk/authentication#signed-in-learner-browsers-and-apps),
-not an API token.
+| Method | Endpoint | Returns | Auth |
+| --- | --- | --- | --- |
+| `podcasts.list(orgSlug, { page, limit, includeUnpublished })` | `GET /api/v1/podcasts/org_slug/{org_slug}/page/{page}/limit/{limit}` | `PodcastWithEpisodeCount[]` | Anyone, session, API token |
+| `podcasts.listAll(orgSlug, { pageSize, includeUnpublished })` | The same, page after page | async iterator | Same |
+| `podcasts.count(orgSlug)` | `GET /api/v1/podcasts/org_slug/{org_slug}/count` | `number` | Same |
+| `podcasts.get(podcastUuid)` | `GET /api/v1/podcasts/{podcast_uuid}` | `Podcast` | Same |
+| `podcasts.getMeta(podcastUuid)` | `GET /api/v1/podcasts/{podcast_uuid}/meta` | `{ podcast, episodes }` | Same |
+| `podcasts.listEpisodes(podcastUuid, { includeUnpublished })` | `GET /api/v1/podcasts/{podcast_uuid}/episodes` | `PodcastEpisode[]` | Same |
+| `podcasts.getEpisode(episodeUuid)` | `GET /api/v1/podcasts/episodes/{episode_uuid}` | `PodcastEpisode` | Same |
 
-| Method | Calls |
-| --- | --- |
-| `lh.trail.get()` | `GET /api/v1/trail/`: the learner's courses and progress |
-| `lh.trail.getForOrg(orgId)` | `GET /api/v1/trail/org/{org_id}/trail` |
-| `lh.trail.startCourse(courseUuid)` | `POST /api/v1/trail/add_course/{course_uuid}` |
-| `lh.trail.leaveCourse(courseUuid)` | `DELETE /api/v1/trail/remove_course/{course_uuid}` |
-| `lh.trail.completeActivity(activityUuid)` | `POST /api/v1/trail/add_activity/{activity_uuid}`: same as "Mark as complete" |
-| `lh.trail.uncompleteActivity(activityUuid)` | `DELETE /api/v1/trail/remove_activity/{activity_uuid}` |
+An episode's `audio_file` is a file name; build its URL with `lh.media` (below).
 
-## Users
+## Instance
 
-| Method | Calls |
-| --- | --- |
-| `lh.users.session()` | `GET /api/v1/users/session`: the signed-in user and their roles |
-| `lh.users.getByUuid(userUuid)` | `GET /api/v1/users/uuid/{user_uuid}` |
+`instance.info()` → `InstanceInfo` (`tenancy`, `default_org_slug`, `frontend_domain`, `top_domain`, `mode`,
+`license_locked`). `GET /api/v1/instance/info`. **Auth:** anyone. Useful to find the default org of a single-org
+instance:
 
-## Auth
-
-| Method | Calls |
-| --- | --- |
-| `lh.auth.login({ email, password, orgSlug })` | `POST /api/v1/auth/login` |
-| `lh.auth.loginMfa({ mfaToken, code, isBackupCode })` | `POST /api/v1/auth/login/mfa` |
-| `lh.auth.refresh({ refreshToken })` | `GET /api/v1/auth/refresh` (never retried) |
-| `lh.auth.logout()` | `DELETE /api/v1/auth/logout` |
-| `lh.auth.me()` | `GET /api/v1/auth/me` |
-
-See [Authentication](/developers/sdk/authentication).
+```ts
+const { default_org_slug } = await lh.instance.info()
+```
 
 ## Media URLs
 

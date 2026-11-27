@@ -94,7 +94,9 @@ await lh.PUT("/api/v1/courses/{course_uuid}/thumbnail", {
       <GuideSection id="install" title="Install and connect">
         <p>
           The SDK has no runtime dependencies and runs in browsers, Node 18+, Bun, Deno, edge
-          workers and React Native. Its version matches the LearnHouse release it was generated
+          workers and React Native. Besides the typed calls below, it has resources for sign-in,
+          progress, assignments, certificates, notifications and the Admin API (see{' '}
+          <Link href="/developers/sdk/auth-modes">which credential each one takes</Link>). Its version matches the LearnHouse release it was generated
           from. The full documentation lives at <Link href="/developers/sdk">Developers → SDK</Link>.
         </p>
         <CodePanel title="Install" snippets={{ curl: install }} tabs={[{ key: 'curl', label: 'npm' }]} />
@@ -160,6 +162,13 @@ await lh.PUT("/api/v1/courses/{course_uuid}/thumbnail", {
             </span>
           ))}
           ; their SDK tab already uses <code>lh.request</code>.
+        </p>
+        <p>
+          The headless Admin API (<code>/api/v1/admin/&#123;org_slug&#125;/...</code>) also has typed
+          methods generated from its own schema: <code>lh.admin.users</code>,{' '}
+          <code>lh.admin.enrollments</code>, <code>lh.admin.progress</code>,{' '}
+          <code>lh.admin.certificates</code>, <code>lh.admin.usergroups</code> and{' '}
+          <code>lh.admin.auth</code>. See <Link href="/developers/sdk/admin">Admin API</Link>.
         </p>
       </GuideSection>
     </GuidePage>

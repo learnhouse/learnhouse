@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState, createContext } from 'react'
-import { SessionStore, createClient, refreshDelay } from '@learnhouse/sdk'
+import { SessionStore, TrailStore, createClient, refreshDelay } from '@learnhouse/sdk'
 import type { LearnHouseClient, ResolvedSession } from '@learnhouse/sdk'
 import { LearnHouseInternalContext } from './context'
 import type { LearnHouseInternal } from './context'
@@ -153,6 +153,16 @@ export function LearnHouseProvider(props: LearnHouseProviderProps) {
   // ── Who the learner is ───────────────────────────────────────────────────
   const token = current?.token ?? legacyToken
   const subject = tokenSubject(token)
+
+  // One trail copy per client; a different learner starts from scratch.
+  const trailStore = useMemo(() => new TrailStore(client), [client])
+  const lastSubject = useRef(subject)
+  useEffect(() => {
+    if (lastSubject.current !== subject) {
+      lastSubject.current = subject
+      trailStore.clear()
+    }
+  }, [trailStore, subject])
   const [learner, setLearner] = useState<{ subject: string; user: any; roles: any[] } | null>(null)
   useEffect(() => {
     if (props.user || !subject || !token) return
@@ -177,6 +187,7 @@ export function LearnHouseProvider(props: LearnHouseProviderProps) {
       baseUrl,
       emit,
       getAccessToken: () => resolveTokenRef.current(),
+      trailStore,
       session: {
         data:
           token || user
@@ -196,7 +207,7 @@ export function LearnHouseProvider(props: LearnHouseProviderProps) {
         },
       },
     }),
-    [client, baseUrl, emit, token, user, roles, pending, store, current?.expiresAt],
+    [client, baseUrl, emit, token, user, roles, pending, store, current?.expiresAt, trailStore],
   )
 
   const defaults = useMemo<LearnHouseDefaults>(

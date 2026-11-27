@@ -1,6 +1,6 @@
 import { computed, defineComponent, inject, onScopeDispose, provide, toValue, watch } from 'vue'
 import type { ComputedRef, InjectionKey, MaybeRefOrGetter, PropType, SlotsType } from 'vue'
-import { SessionStore, createClient } from '@learnhouse/sdk'
+import { SessionStore, TrailStore, createClient } from '@learnhouse/sdk'
 import type { GetLearnHouseSession, LearnHouseClient, LearnHouseSessionInput } from '@learnhouse/sdk'
 import type { LearnHouseEvent, LearnHouseTheme } from '@learnhouse/react'
 
@@ -44,6 +44,21 @@ export interface LearnHouseContext {
   client: ComputedRef<LearnHouseClient>
   /** The learner session every activity below shares (one refresh for all). */
   sessionStore: SessionStore
+  /** The learner's trail per org, shared by useTrail / useCourseProgress below. */
+  trailStore: ComputedRef<TrailStore>
+}
+
+/** `sub` of a JWT, to tell a renewed session from another learner. */
+function tokenSubject(token: string | null): string | null {
+  if (!token) return null
+  try {
+    const part = token.split('.')[1]
+    const json = atob(part.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (part.length % 4)) % 4))
+    const sub = JSON.parse(json)?.sub
+    return typeof sub === 'string' ? sub : token
+  } catch {
+    return token
+  }
 }
 
 export const LEARNHOUSE_KEY: InjectionKey<LearnHouseContext> = Symbol('learnhouse')
@@ -94,7 +109,18 @@ export function provideLearnHouse(options: MaybeRefOrGetter<LearnHouseOptions>):
     }
     return createClient({ baseUrl: baseUrl.value, mediaUrl: mediaUrl.value, sessionStore })
   })
-  const context = { options: resolved, client, sessionStore }
+  const trailStore = computed(() => new TrailStore(client.value))
+  // A different learner (new token subject) starts from an empty trail.
+  let subject = tokenSubject(sessionStore.session?.token ?? null)
+  const offSession = sessionStore.subscribe((session) => {
+    const next = tokenSubject(session?.token ?? null)
+    if (next !== subject) {
+      subject = next
+      trailStore.value.clear()
+    }
+  })
+  onScopeDispose(offSession)
+  const context = { options: resolved, client, sessionStore, trailStore }
   provide(LEARNHOUSE_KEY, context)
   return context
 }

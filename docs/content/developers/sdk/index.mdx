@@ -59,7 +59,6 @@ npm install @learnhouse/sdk
 ### Call the API
 
 ```ts
-const org = await lh.orgs.get('your-school')
 const courses = await lh.courses.list('your-school', { limit: 12 })
 const course = await lh.courses.getMeta(courses[0].course_uuid!)   // chapters and activities
 
@@ -79,10 +78,23 @@ error, not a runtime surprise.
 
 More in [Authentication](/developers/sdk/authentication).
 
+## What's in it
+
+| Area | Resources | Guide |
+| --- | --- | --- |
+| Content | `orgs`, `courses`, `chapters`, `activities`, `search`, `podcasts`, `instance`, `media` | [Resources](/developers/sdk/resources) |
+| Accounts | `auth` (login, two-factor, signup, magic links, email verification, password reset), `users` | [Accounts and sign-in](/developers/sdk/accounts) |
+| Learning | `trail` (enroll, complete, progress), `assignments`, `certificates`, `paths`, `notes`, `calendar` | [Progress, assignments and certificates](/developers/sdk/learning) |
+| Community | `communities`, `discussions`, `notifications`, `usergroups` | [Communities, notifications and groups](/developers/sdk/community) |
+| Server | `admin` (users, enrollments, progress, certificates, groups, sign-in links), `embed` | [Admin API](/developers/sdk/admin), [Embed sessions](/developers/sdk/embed-sessions) |
+| AI | `agent` (Enterprise) | [Agent API](/developers/agent-api) |
+
+Which credential each method takes is in one table: [Auth modes](/developers/sdk/auth-modes). Step-by-step:
+[Build a learner app](/developers/sdk/learner-app) and [Server-side usage](/developers/sdk/server).
+
 ## Everything else
 
-The resources (`orgs`, `courses`, `activities`, `trail`…) cover the common reads and progress. For anything else, call
-any endpoint by its path, still fully typed:
+For any endpoint the resources don't wrap, call it by its path, still fully typed:
 
 ```ts
 const meta = await lh.GET('/api/v1/courses/{course_uuid}/meta', {
@@ -96,9 +108,9 @@ See [Typed requests & errors](/developers/sdk/requests), and the [API reference]
 
 `@learnhouse/react` uses this SDK. Fetch on your server with an API token, render in the browser:
 
-```tsx
+```tsx fragment
 const activity = await lh.activities.get('activity_…')
-return <LearnHouseActivity activity={activity} courseId="course_…" baseUrl={LEARNHOUSE_URL} />
+return <LearnHouseActivity activity={activity} courseId="course_…" baseUrl={process.env.LEARNHOUSE_URL} />
 ```
 
 <Callout type="info">

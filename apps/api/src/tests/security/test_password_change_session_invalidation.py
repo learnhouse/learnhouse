@@ -29,7 +29,7 @@ async def test_password_change_stamps_password_changed_at(
     db.add(user)
     await db.commit()
 
-    before = datetime.now(timezone.utc).replace(tzinfo=None)
+    before = datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
 
     await update_user_password(
         mock_request,
@@ -49,6 +49,9 @@ async def test_password_change_stamps_password_changed_at(
         "/auth/refresh use it to reject tokens minted before the change"
     )
     assert refreshed.password_changed_at >= before
+    # Whole seconds: a session minted right after the change carries an
+    # integer ``iat`` and must not read as issued before it.
+    assert refreshed.password_changed_at.microsecond == 0
 
 
 @pytest.mark.asyncio

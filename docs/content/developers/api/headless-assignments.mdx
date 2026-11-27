@@ -157,3 +157,16 @@ A custom frontend can run the whole lifecycle with one token (`create` + `read` 
 5. `PUT  /assignments/{uuid}/submissions/42`: set the grade and feedback.
 
 See [API Authentication](/developers/api/authentication) for how to create and use API tokens, and the [Assignments platform guide](/platform/assignments) for the in-app workflow.
+
+## With the SDK
+
+`@learnhouse/sdk` wraps the learner side of these calls, including submitting for a learner:
+
+```ts
+await lh.assignments.saveTaskSubmission(assignmentUuid, taskUuid, { taskSubmission: { answer: 'my custom answer' } }, { onBehalfOfUserId: 42 })
+await lh.assignments.submit(assignmentUuid, { onBehalfOfUserId: 42 })
+const grade = await lh.assignments.getGrade(assignmentUuid, 42)
+```
+
+Authoring and grading go through the typed `lh.POST(...)` / `lh.PUT(...)` calls. See
+[Assignments in the SDK](/developers/sdk/learning#assignments).

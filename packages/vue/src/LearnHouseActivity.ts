@@ -141,7 +141,12 @@ export const LearnHouseActivity = defineComponent({
       },
       'lh-ready': () => emit('ready'),
       'lh-complete': (e) => emit('complete', e.detail),
-      'lh-progress': (e) => emit('progress', e.detail),
+      'lh-progress': (e) => {
+        // The element keeps its own copy of the trail; bring the provider's
+        // (useTrail / useCourseProgress) up to date.
+        void context?.trailStore.value.reload()
+        emit('progress', e.detail)
+      },
       'lh-session-expired': (e) => emit('sessionExpired', e.detail),
       'lh-media': (e) => emit('media', e.detail),
       'lh-resize': (e) => emit('resize', e.detail),

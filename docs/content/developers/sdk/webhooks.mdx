@@ -122,7 +122,7 @@ LearnHouse tries a delivery up to 3 times within about half a minute, with the s
 signed `timestamp` a useful second check: reject deliveries older than a few minutes, and you only need to keep
 delivery ids for that long.
 
-```ts
+```ts fragment
 const age = Date.now() - Date.parse(timestamp)
 if (age > 5 * 60_000) return Response.json({ error: 'stale' }, { status: 400 })
 ```

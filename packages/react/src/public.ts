@@ -2,7 +2,7 @@
 // the LearnHouse web app's source, whose types don't belong in this package's
 // public surface; tests/exports.test.ts keeps both entries in sync.
 import type { FC, CSSProperties } from 'react'
-import type { LearnHouseClient } from '@learnhouse/sdk'
+import type { CourseKey, CourseProgress, LearnHouseClient, Trail } from '@learnhouse/sdk'
 import type { LearnHouseActivityProps, LearnHouseProviderProps, LearnHouseTheme } from './types'
 
 export type * from './types'
@@ -16,6 +16,38 @@ export declare function useLearnHouseSession(): {
   status: 'loading' | 'authenticated' | 'unauthenticated'
   update: () => Promise<void>
 }
+
+// ── Progress hooks (shared trail per provider) ─────────────────────────────
+export interface UseTrailReturn {
+  /** `undefined` while loading the first time, `null` when signed out or unavailable. */
+  trail: Trail | null | undefined
+  loading: boolean
+  error: Error | null
+  /** Load it again from the API. */
+  refresh: () => Promise<Trail | null>
+}
+export interface UseCourseProgressReturn {
+  /** `null` until the trail is loaded (or when signed out). */
+  progress: CourseProgress | null
+  loading: boolean
+  error: Error | null
+  /** Enroll the learner (no-op when already enrolled). Embed sessions can't enroll. */
+  enroll: () => Promise<void>
+  /** Leave the course: removes its progress. */
+  leave: () => Promise<void>
+  complete: (activityUuid: string) => Promise<void>
+  uncomplete: (activityUuid: string) => Promise<void>
+  /** Whether an activity (numeric id) is completed. */
+  isCompleted: (activityId: number) => boolean
+  refresh: () => Promise<void>
+}
+/** The signed-in learner's trail in one org, shared under the provider. */
+export declare function useTrail(orgId: number | null | undefined): UseTrailReturn
+/** Progress through one course (numeric id or uuid), with enroll/leave/complete. */
+export declare function useCourseProgress(
+  orgId: number | null | undefined,
+  course: CourseKey | null | undefined,
+): UseCourseProgressReturn
 export declare function themeToStyle(theme?: LearnHouseTheme): CSSProperties
 export declare const SUPPORTED_LOCALES: string[]
 export declare const VERSION: string

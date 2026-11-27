@@ -1,0 +1,115 @@
+---
+title: SDK Auth Modes
+description: Which @learnhouse/sdk methods work anonymously, with a signed-in user session, with an org API token, and with an embed session.
+seoTitle: "LMS API Auth Modes: Sessions, API Tokens, Embed Sessions – @learnhouse/sdk"
+---
+
+import { Callout } from '@/components/mdx'
+
+# Auth modes
+
+Every request carries at most one credential. Which one decides what the API lets you do.
+
+| Mode | How the client gets it | Acts as |
+| --- | --- | --- |
+| **Anonymous** | No `token`, `getToken` or `session` | A visitor: public courses only |
+| **User session** | `credentials: 'include'` (the `LH_access` cookie on the instance's domain), or `token` / `getToken` with an access token from `auth.login()` | That user, with their roles in each org |
+| **API token** | `token: 'lh_…'`, on a server | The organization, with the token's rights, capped by its creator's role |
+| **Embed session** | `session` / `getSession` with a token from `embed.createSession()` | One learner, inside one org, on the embed routes only |
+
+A cookie session and a bearer user token are the same mode: the API treats them identically. The tables below call
+both **Session**.
+
+<Callout type="info">
+  The tables were checked against a running API (OSS, single organization) with the SDK's integration suite and a probe
+  of each method in each mode. "Yes" means the API accepts the credential; the user still needs the right role for the
+  data (RBAC applies on top). On LearnHouse Cloud some resources also need a plan: certificates and learning paths
+  (Pro), communities and user groups (Standard), the Admin API and API tokens (Pro).
+</Callout>
+
+What a refused mode returns:
+
+| Situation | Status | `err.code` |
+| --- | --- | --- |
+| No credential on a route that needs one | `401` | `HTTP_ERROR` |
+| API token on a session-only route (accounts, progress, notifications…) | `403` | `HTTP_ERROR` (detail says API tokens are not allowed) |
+| Embed session outside the embed routes | `403` | `EMBED_SESSION_ROUTE_NOT_ALLOWED` |
+| Embed session for another organization | `403` | `SESSION_NOT_BOUND_TO_ORG` |
+| User session on the Admin API | `403` | `HTTP_ERROR` |
+
+## Content
+
+| Method | Anonymous | Session | API token | Embed |
+| --- | --- | --- | --- | --- |
+| `orgs.get`, `orgs.getByUuid` | Yes | Yes | **No** (403) | Yes |
+| `orgs.resolveDomain` | Yes | Yes | Yes | Yes |
+| `courses.list`, `courses.listAll`, `courses.count`, `courses.search` | Yes (public courses) | Yes | Yes | No |
+| `courses.get`, `courses.getById`, `courses.getMeta` | Yes (public courses) | Yes | Yes | Yes |
+| `courses.listUpdates` | Yes | Yes | Yes | No |
+| `chapters.get`, `activities.listForChapter` | Yes | Yes | Yes | No |
+| `chapters.listForCourse`, `activities.get`, `activities.getById`, `activities.resolve` | Yes | Yes | Yes | Yes |
+| `search.org`, `search.orgPages` | Yes | Yes | Yes (`search` right) | No |
+| `podcasts.*` | Yes (public podcasts) | Yes | Yes | No |
+| `instance.info` | Yes | Yes | Yes | Yes |
+
+<Callout type="warning">
+  `orgs.get()` refuses API tokens: the organizations router only takes user sessions. On a server, read the org's
+  courses directly with `courses.list(orgSlug)`; `auth.me()` tells you the token's `org_id` and `org_slug`.
+</Callout>
+
+## Accounts
+
+| Method | Anonymous | Session | API token | Embed |
+| --- | --- | --- | --- | --- |
+| `auth.login`, `auth.loginMfa`, `auth.loginWithOAuth`, `auth.signup`, `auth.requestMagicLink`, `auth.verifyMagicLink`, `auth.verifyEmail`, `auth.resendVerification`, `auth.requestPasswordReset`, `auth.resetPassword` | Yes (no credential is sent) | n/a | n/a | n/a |
+| `auth.refresh` | With a refresh token | n/a | No | No |
+| `auth.me` | No (401) | Yes | Yes | No |
+| `auth.logout` | No (401) | Yes | No (401) | Yes: revokes every session of that learner |
+| `auth.mfa.*` | No | Yes | No | No |
+| `users.session` | No | Yes | No | Yes |
+| `users.getById`, `users.getByUuid`, `users.getByUsername` | No (401) | Yes | No | Yes |
+| `users.profile` | Placeholder (id 0) | Yes | No | No |
+| `users.update`, `users.updateAvatar`, `users.changePassword`, `users.getPreferences`, `users.updatePreferences`, `users.deleteAccount`, `users.listCourses` | No | Yes | No | No |
+| `orgs.listMine`, `orgs.join`, `orgs.leave` | No | Yes | No | No |
+
+## Learning
+
+| Method | Anonymous | Session | API token | Embed |
+| --- | --- | --- | --- | --- |
+| `trail.get`, `trail.startCourse`, `trail.leaveCourse` | No (401) | Yes | No | No |
+| `trail.getForOrg`, `trail.getCourseProgress`, `trail.completeActivity`, `trail.uncompleteActivity` | No (401) | Yes | No | Yes |
+| `assignments.get`, `assignments.getForActivity`, `assignments.listTasks`, `assignments.getTask` | No | Yes | Yes | Yes |
+| `assignments.listForCourse` | No | Yes | Yes | No |
+| `assignments.listMine`, `assignments.getMySubmission`, `assignments.getMyTaskSubmissions`, `assignments.getMyTaskSubmission`, `assignments.uploadTaskFile`, `assignments.retry` | No | Yes | No | Yes |
+| `assignments.saveTaskSubmission`, `assignments.submit` | No | Yes | Yes, with `onBehalfOfUserId` | Yes |
+| `assignments.getGrade` | No | Own grade | Yes | Own grade |
+| `certificates.get`, `certificates.verify`, `certificates.getForCourse` | Yes | Yes | Yes | No |
+| `certificates.listMine`, `certificates.listMineForCourse` | No | Yes | No | No |
+| `paths.list`, `paths.listForCourse`, `paths.get`, `paths.getCertificate` | Yes | Yes | Yes | No |
+| `paths.listMine`, `paths.enroll`, `paths.leave`, `paths.listMyCertificates` | No | Yes | No | No |
+| `notes.*`, `calendar.events` | No | Yes | No | No |
+
+## Community and inbox
+
+| Method | Anonymous | Session | API token | Embed |
+| --- | --- | --- | --- | --- |
+| `communities.list`, `communities.listAll`, `communities.summary` | Yes (public communities) | Yes | Yes | No |
+| `communities.activity` | No (401) | Admins only | Yes | No |
+| `communities.get`, `communities.getForCourse`, `communities.listDiscussions` | Yes (public communities) | Yes | No | No |
+| `discussions.labels` | Yes | Yes | Yes | Yes |
+| `discussions.get`, `discussions.listComments`, `discussions.countComments`, `discussions.listReactions` | Yes (public communities) | Yes | No | No |
+| `communities.createDiscussion`, `discussions.update`, `discussions.delete`, `discussions.reply`, `discussions.updateComment`, `discussions.deleteComment`, `discussions.vote`, `discussions.unvote`, `discussions.voteComment`, `discussions.unvoteComment`, `discussions.react` | No | Yes | No | No |
+| `notifications.*` | No | Yes | No | No |
+| `usergroups.listMine`, `usergroups.join` | No | Yes | No | No |
+
+## Server side
+
+| Method | Anonymous | Session | API token | Embed |
+| --- | --- | --- | --- | --- |
+| `embed.createSession` | No | No (403) | Yes (`users: update`) | No |
+| `admin.*` | No | No (403) | Yes (see each method's right) | No |
+
+## The Agent API
+
+`lh.agent` (Atlas, the learner copilot, custom agents) is an Enterprise feature with its own rules; see
+[Agent API security](/developers/agent-api/security). Embed sessions reach the learner side of it.

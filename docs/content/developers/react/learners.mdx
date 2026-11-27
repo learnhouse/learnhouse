@@ -77,8 +77,9 @@ If you already have a session (rendered on the server, say), pass it as `session
 | Assignments | Not shown | Full learner view: answer, upload, submit, retry, grade |
 | User and dynamic blocks | Generic | Personalised |
 
-Enrol learners first, from your server: `POST /api/v1/admin/{org_slug}/enrollments/{user_id}/{course_uuid}`. A session
-does not enrol anyone on its own.
+Enrol learners first, from your server, with [`lh.admin.enrollments.enroll()`](/developers/sdk/admin#enrollments)
+(`POST /api/v1/admin/{org_slug}/enrollments/{user_id}/{course_uuid}`). An embed session does not enrol anyone on its
+own.
 
 ### Completion
 
@@ -98,6 +99,42 @@ Assignments have no toggle: they are complete when submitted. Every change fires
   onEvent={(e) => e.type === 'progress' && refreshMyCourseSidebar(e.activityId, e.completed)}
 />
 ```
+
+### Progress hooks
+
+`useTrail(orgId)` and `useCourseProgress(orgId, course)` give you the learner's progress as React state, for a course
+header, a sidebar or a "continue where you left off" card. They share one copy of the trail with every activity's
+**Mark as complete** button under the same provider: it loads once, and a change made anywhere shows up everywhere
+without another request.
+
+```tsx
+import { useCourseProgress } from '@learnhouse/react'
+
+export function CourseHeader({ orgId, courseUuid }: { orgId: number; courseUuid: string }) {
+  const { progress, loading, error } = useCourseProgress(orgId, courseUuid)
+  if (loading || !progress) return <p>Loading…</p>
+  if (error) return <p>Progress unavailable</p>
+  return (
+    <p>
+      {progress.completed} of {progress.total} lessons ({progress.percent}%)
+    </p>
+  )
+}
+```
+
+`useCourseProgress(orgId, course)` (`course`: the course's numeric id or uuid) returns:
+
+| Field | |
+| --- | --- |
+| `progress` | `CourseProgress` (`enrolled`, `completed`, `total`, `percent`, `completedActivityIds`), or `null` until loaded and when signed out |
+| `loading`, `error` | Load state of the shared trail |
+| `complete(activityUuid)`, `uncomplete(activityUuid)` | Change completion; every hook and button updates |
+| `enroll()`, `leave()` | Need the course uuid and a full LearnHouse sign-in. Embed sessions can't enroll: do it from your server |
+| `isCompleted(activityId)` | By numeric activity id |
+| `refresh()` | Load the trail again |
+
+`useTrail(orgId)` returns `{ trail, loading, error, refresh }`: `trail` is `undefined` until loaded and `null` when
+signed out or unavailable. Pass `null` as `orgId` until you know it. Both hooks need `<LearnHouseProvider>`.
 
 ### Who is signed in
 

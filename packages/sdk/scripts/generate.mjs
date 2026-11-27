@@ -3,6 +3,8 @@
 // source in apps/api. Nothing in src/generated is written by hand.
 //
 //   node scripts/generate.mjs            regenerate openapi.json + src/generated/schema.ts
+//                                        (and the Admin API snapshot: openapi.admin.json +
+//                                        src/generated/admin-schema.ts)
 //   node scripts/generate.mjs --check    fail (exit 1) if the committed output is stale
 //   node scripts/generate.mjs --from x   use an existing raw schema file instead of running Python
 //   node scripts/generate.mjs --with-ee  include routes mounted by the EE folder (off by default)
@@ -25,6 +27,12 @@ const repoRoot = resolve(sdkDir, '..', '..')
 const apiDir = join(repoRoot, 'apps', 'api')
 const openapiOut = join(sdkDir, 'openapi.json')
 const schemaOut = join(sdkDir, 'src', 'generated', 'schema.ts')
+// The headless Admin API (`/api/v1/admin/{org_slug}/...`, API tokens only) is
+// kept out of the main snapshot, so `lh.GET(...)` never offers it, but gets
+// its own snapshot: `lh.admin` takes its types from there.
+const adminOpenapiOut = join(sdkDir, 'openapi.admin.json')
+const adminSchemaOut = join(sdkDir, 'src', 'generated', 'admin-schema.ts')
+const ADMIN_PREFIX = '/api/v1/admin/'
 
 // Route prefixes that are not part of the public API surface.
 const EXCLUDED_PREFIXES = [
@@ -120,10 +128,10 @@ function collectRefs(node, into) {
   }
 }
 
-function filterSchema(raw) {
+function filterSchema(raw, include = (p) => !isExcluded(p)) {
   const paths = {}
   for (const [p, item] of Object.entries(raw.paths ?? {})) {
-    if (!isExcluded(p)) paths[p] = item
+    if (include(p)) paths[p] = item
   }
 
   // Drop component schemas that only excluded routes referenced.
@@ -173,6 +181,9 @@ const raw = fromFile ? JSON.parse(readFileSync(fromFile, 'utf8')) : dumpSchemaFr
 const filtered = filterSchema(raw)
 const openapiText = `${JSON.stringify(filtered, null, 2)}\n`
 const schemaText = await toTypeScript(filtered)
+const admin = filterSchema(raw, (p) => p.startsWith(ADMIN_PREFIX))
+const adminOpenapiText = `${JSON.stringify(admin, null, 2)}\n`
+const adminSchemaText = await toTypeScript(admin)
 
 const sdkVersion = JSON.parse(readFileSync(join(sdkDir, 'package.json'), 'utf8')).version
 if (filtered.info?.version && filtered.info.version !== sdkVersion) {
@@ -190,6 +201,10 @@ if (check) {
   const stale = []
   if (!existsSync(openapiOut) || readFileSync(openapiOut, 'utf8') !== openapiText) stale.push('openapi.json')
   if (!existsSync(schemaOut) || readFileSync(schemaOut, 'utf8') !== schemaText) stale.push('src/generated/schema.ts')
+  if (!existsSync(adminOpenapiOut) || readFileSync(adminOpenapiOut, 'utf8') !== adminOpenapiText) stale.push('openapi.admin.json')
+  if (!existsSync(adminSchemaOut) || readFileSync(adminSchemaOut, 'utf8') !== adminSchemaText) {
+    stale.push('src/generated/admin-schema.ts')
+  }
   if (stale.length) {
     fail(`generated output is stale: ${stale.join(', ')}. Run \`bun run generate\` and commit the result.`)
   }
@@ -198,7 +213,12 @@ if (check) {
   mkdirSync(dirname(schemaOut), { recursive: true })
   writeFileSync(openapiOut, openapiText)
   writeFileSync(schemaOut, schemaText)
+  writeFileSync(adminOpenapiOut, adminOpenapiText)
+  writeFileSync(adminSchemaOut, adminSchemaText)
   console.log(
     `[generate] wrote openapi.json and src/generated/schema.ts (${Object.keys(filtered.paths).length} paths, ${opCount} operations, ${Object.keys(filtered.components.schemas).length} schemas)`,
+  )
+  console.log(
+    `[generate] wrote openapi.admin.json and src/generated/admin-schema.ts (${Object.keys(admin.paths).length} paths, ${Object.keys(admin.components.schemas).length} schemas)`,
   )
 }

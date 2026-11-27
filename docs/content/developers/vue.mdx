@@ -164,7 +164,7 @@ model; the Vue component behaves the same.
 
 ## Composables
 
-Both need a provider (or `provideLearnHouse`) above them.
+They need a provider (or `provideLearnHouse`) above them.
 
 ```vue
 <script setup lang="ts">
@@ -191,6 +191,34 @@ const loadOutline = () => client.courses.getMeta('course_…', { slim: true })
 | --- | --- |
 | `useActivity(id, { client? })` | `{ activity, error, loading, refresh }`. `id` can be a string, a ref or a getter |
 | `useLearnHouseClient()` | The provider's [SDK client](/developers/sdk/resources) |
+| `useTrail(orgId)` | `{ trail, loading, error, refresh }`: the learner's trail in one org. `trail` is `undefined` until loaded, `null` when signed out or unavailable |
+| `useCourseProgress(orgId, course)` | `{ progress, loading, error, enroll, leave, complete, uncomplete, isCompleted, refresh }` for one course (numeric id or uuid) |
+
+### Progress
+
+`useTrail` and `useCourseProgress` share one copy of the trail per provider: it loads once, and a change made through
+any of them reaches all of them from the trail the API returns. When a learner uses an activity's own **Mark as
+complete** button, the provider reloads it, so your progress UI follows.
+
+```vue
+<script setup lang="ts">
+import { useCourseProgress } from '@learnhouse/vue'
+
+const props = defineProps<{ orgId: number; courseUuid: string }>()
+const { progress, loading, enroll } = useCourseProgress(() => props.orgId, () => props.courseUuid)
+</script>
+
+<template>
+  <p v-if="loading || !progress">Loading…</p>
+  <button v-else-if="!progress.enrolled" @click="enroll">Start the course</button>
+  <p v-else>{{ progress.completed }} of {{ progress.total }} lessons ({{ progress.percent }}%)</p>
+</template>
+```
+
+`progress` is a computed `CourseProgress` (`enrolled`, `completed`, `total`, `percent`, `completedActivityIds`), or
+`null` until loaded and when signed out. `enroll()` and `leave()` need the course uuid and a full LearnHouse sign-in:
+embed sessions can't enroll, so enroll learners from your server with
+[`admin.enrollments.enroll()`](/developers/sdk/admin#enrollments). Both arguments can be values, refs or getters.
 
 ## Events
 

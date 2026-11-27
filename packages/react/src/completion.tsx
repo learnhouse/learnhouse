@@ -28,7 +28,7 @@ export interface CompletionProps {
  */
 export function Completion({ activity, course, mode, reachedEnd }: CompletionProps) {
   const { t } = useTranslation()
-  const { client, emit } = useLearnHouseInternal()
+  const { client, emit, trailStore } = useLearnHouseInternal()
   const orgId: number | undefined = course?.org_id ?? activity.org_id
   const courseId: number | undefined = course?.id ?? activity.course_id
   const activityId: number | undefined = activity.id
@@ -36,18 +36,39 @@ export function Completion({ activity, course, mode, reachedEnd }: CompletionPro
   const [busy, setBusy] = useState(false)
   const ready = !!client && orgId != null && courseId != null && activityId != null
 
+  // Read from the provider's shared trail, so progress hooks elsewhere on the
+  // page and this button agree (and the trail loads once for all of them).
   useEffect(() => {
     if (!ready) return
     let alive = true
+    if (trailStore) {
+      const sync = () => {
+        const { trail, loading } = trailStore.get(orgId!)
+        // Not enrolled yet, or progress unavailable: start from "not completed".
+        if (alive && !loading && trail !== undefined) setCompleted(trail ? isCompletedInTrail(trail, courseId!, activityId!) : false)
+      }
+      const off = trailStore.subscribe((org) => {
+        if (org !== orgId) return
+        sync()
+        // Cleared for another learner: read theirs.
+        const { trail, loading } = trailStore.get(orgId)
+        if (trail === undefined && !loading) void trailStore.load(orgId)
+      })
+      sync()
+      void trailStore.load(orgId!)
+      return () => {
+        alive = false
+        off()
+      }
+    }
     client.trail
       .getForOrg(orgId!)
       .then((trail: Trail) => alive && setCompleted(isCompletedInTrail(trail, courseId!, activityId!)))
-      // Not enrolled yet, or progress unavailable: start from "not completed".
       .catch(() => alive && setCompleted(false))
     return () => {
       alive = false
     }
-  }, [client, ready, orgId, courseId, activityId])
+  }, [client, trailStore, ready, orgId, courseId, activityId])
 
   const busyRef = useRef(false)
   const setCompletion = useCallback(
@@ -56,9 +77,13 @@ export function Completion({ activity, course, mode, reachedEnd }: CompletionPro
       busyRef.current = true
       setBusy(true)
       try {
-        const trail: Trail = next
-          ? await client.trail.completeActivity(activity.activity_uuid)
-          : await client.trail.uncompleteActivity(activity.activity_uuid)
+        const trail: Trail = trailStore
+          ? next
+            ? await trailStore.complete(orgId!, activity.activity_uuid)
+            : await trailStore.uncomplete(orgId!, activity.activity_uuid)
+          : next
+            ? await client.trail.completeActivity(activity.activity_uuid)
+            : await client.trail.uncompleteActivity(activity.activity_uuid)
         const now = trail?.runs ? isCompletedInTrail(trail, courseId!, activityId!) : next
         setCompleted(now)
         emit({ type: 'progress', activityId: activity.activity_uuid, completed: now })
@@ -70,7 +95,7 @@ export function Completion({ activity, course, mode, reachedEnd }: CompletionPro
         setBusy(false)
       }
     },
-    [client, ready, activity.activity_uuid, courseId, activityId, emit, t],
+    [client, trailStore, ready, orgId, activity.activity_uuid, courseId, activityId, emit, t],
   )
 
   useEffect(() => {

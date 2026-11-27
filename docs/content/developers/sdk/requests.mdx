@@ -82,6 +82,34 @@ try {
 
 `isLearnHouseError` also recognises errors from another copy of the SDK (two bundles on one page).
 
+### Codes you will meet
+
+`err.code` is the API's own code when it sends one (`detail.code`), otherwise one of the SDK's:
+
+| Code | Meaning |
+| --- | --- |
+| `HTTP_ERROR` | Any non-2xx without its own code. Read `err.status` and `err.message` |
+| `VALIDATION_ERROR` | A `422`: a parameter or field is invalid. `err.message` is `body.email: value is not a valid email address` |
+| `NETWORK_ERROR`, `TIMEOUT`, `PARSE_ERROR` | No usable response |
+| `RATE_LIMITED` | Too many attempts (login, uploads, two-factor). `err.retryAfterMs` says how long |
+| `INVALID_CODE`, `MFA_SESSION_EXPIRED`, `MFA_ALREADY_ENABLED`, `MFA_NOT_ENABLED` | Two-factor flows |
+| `MAGIC_LINK_INVALID` | A magic link that was used or expired (`410`) |
+| `EMBED_SESSION_ROUTE_NOT_ALLOWED`, `SESSION_NOT_BOUND_TO_ORG` | An embed session outside its routes or org |
+| `ACTIVITY_NOT_FOUND` | `activities.resolve()` found no activity with that name |
+
+```ts
+try {
+  await lh.auth.verifyMagicLink(token)
+} catch (err) {
+  if (isLearnHouseError(err) && err.code === 'MAGIC_LINK_INVALID') showLinkExpired()
+  else throw err
+}
+```
+
+A typical policy: `401` → refresh the session or sign in again; `403` → hide the feature (wrong role or credential);
+`404` → show "not found"; `429` → wait `retryAfterMs`; `5xx` and `NETWORK_ERROR` → offer a retry (reads were already
+retried for you).
+
 ## Timeouts, retries, cancellation
 
 ```ts
@@ -167,6 +195,18 @@ for await (const course of pages) {
 
 Search results are paged per result type, so they have their own iterator. See
 [Search](/developers/sdk/resources#search).
+
+Every iterator the SDK ships:
+
+| Iterator | Pages by | Stops |
+| --- | --- | --- |
+| `courses.listAll(orgSlug)` | `page` / `limit` (100) | After a short page |
+| `communities.listAll(orgId)` | `page` / `limit` (50) | After a short page |
+| `podcasts.listAll(orgSlug)` | `page` / `limit` (50) | After a short page |
+| `search.orgPages(orgSlug, query)` | `page` / `limit` (50), per result type | When every type is short |
+| `notifications.listAll()` | The API's `next_cursor` | When `next_cursor` is null or a page is empty |
+
+All of them stop fetching as soon as you `break`, and take `signal` to stop between pages.
 
 ## Hooks
 
