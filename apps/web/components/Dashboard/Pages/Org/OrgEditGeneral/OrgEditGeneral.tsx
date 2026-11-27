@@ -316,7 +316,7 @@ const OrgEditGeneral: React.FC = () => {
         <div id="organization" className="scroll-mt-6">
           <SectionCard icon={SECTION_ICONS.organization} title={sectionLabel('organization')} description={t(`${G}.sections.organization_desc`)}>
             <div className="grid gap-5">
-              <div className="flex items-center gap-4 rounded-xl ring-1 ring-inset ring-neutral-200/70 p-3">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl ring-1 ring-inset ring-neutral-200/70 p-3">
                 {/* The org's own logo keeps its colors on a light tile in dark mode too. */}
                 <div data-lh-user-content className="w-12 h-12 rounded-xl bg-white ring-1 ring-inset ring-neutral-900/5 overflow-hidden flex items-center justify-center shrink-0">
                   {logo ? (
@@ -325,7 +325,8 @@ const OrgEditGeneral: React.FC = () => {
                     <Buildings size={20} className="text-neutral-400" />
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
+                {/* min-w lets the button wrap under the text on phones instead of squeezing it */}
+                <div className="min-w-[10rem] flex-1">
                   <p className="text-sm font-semibold text-neutral-800">{t(`${G}.logo`)}</p>
                   <p className="text-xs text-neutral-500">{t(`${G}.logo_hint`)}</p>
                 </div>

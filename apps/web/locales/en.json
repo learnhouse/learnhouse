@@ -504,7 +504,13 @@
     "theme_dark": "Dark",
     "switch_to_dark": "Switch to dark mode",
     "switch_to_light": "Switch to light mode",
-    "appearance": "Appearance"
+    "appearance": "Appearance",
+    "no_access": {
+      "title": "You don't have access",
+      "community": "You do not have permission to view this community.",
+      "discussion": "You do not have permission to view this discussion.",
+      "podcast": "You do not have permission to view this podcast."
+    }
   },
   "banner": {
     "viewing_as_guest": "You're viewing {{name}} as a guest.",
@@ -5471,6 +5477,12 @@
       "update_failed": "Error while updating role",
       "submit": "Update user role",
       "updating": "Updating role..."
+    },
+    "names": {
+      "admin": "Admin",
+      "maintainer": "Maintainer",
+      "instructor": "Instructor",
+      "user": "User"
     }
   },
   "time": {

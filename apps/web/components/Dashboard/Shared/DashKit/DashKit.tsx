@@ -148,7 +148,7 @@ export function StatCard({
     <>
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}>{icon}</div>
       <div className="min-w-0 text-start">
-        <p className="text-xs text-neutral-500 truncate">{label}</p>
+        <p className="text-xs text-neutral-500 leading-snug max-sm:line-clamp-2 sm:truncate">{label}</p>
         {value === null ? (
           <div className="mt-1 h-5 w-8 rounded bg-neutral-100 animate-pulse" />
         ) : (
@@ -577,7 +577,7 @@ export function SectionCard({
   return (
     <section className={`bg-white rounded-2xl nice-shadow ${className}`}>
       {(title || actions) && (
-        <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-5">
+        <div className={`flex flex-wrap items-start justify-between gap-3 px-5 pt-5 ${children ? '' : 'pb-5'}`}>
           <div className="flex items-start gap-3 min-w-0">
             {icon && (
               <div className="w-9 h-9 rounded-xl bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0">{icon}</div>
@@ -601,14 +601,21 @@ export function SettingRow({
   description,
   control,
   icon,
+  stackOnMobile,
 }: {
   title: React.ReactNode
   description?: React.ReactNode
   control: React.ReactNode
   icon?: React.ReactNode
+  /** Put a wide control (select, date) under the text on phones instead of squeezing the text. */
+  stackOnMobile?: boolean
 }) {
   return (
-    <div className="flex items-start justify-between gap-6 py-4 first:pt-0 last:pb-0">
+    <div
+      className={`flex justify-between py-4 first:pt-0 last:pb-0 ${
+        stackOnMobile ? 'flex-col gap-3 sm:flex-row sm:items-start sm:gap-6' : 'items-start gap-6'
+      }`}
+    >
       <div className="flex items-start gap-3 min-w-0">
         {icon && <span className="mt-0.5 text-neutral-400 shrink-0">{icon}</span>}
         <div className="min-w-0">
@@ -616,7 +623,7 @@ export function SettingRow({
           {description && <p className="text-xs text-neutral-500 mt-0.5 max-w-xl">{description}</p>}
         </div>
       </div>
-      <div className="shrink-0">{control}</div>
+      <div className={`shrink-0 ${stackOnMobile && icon ? 'ps-[30px] sm:ps-0' : ''}`}>{control}</div>
     </div>
   )
 }

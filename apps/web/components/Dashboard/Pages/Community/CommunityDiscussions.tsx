@@ -517,7 +517,7 @@ export default function CommunityDiscussions({ orgslug }: { orgslug: string }) {
                     <div className="min-w-0">
                       <button
                         type="button"
-                        className="block max-w-full text-start text-sm font-semibold text-neutral-900 truncate hover:underline underline-offset-2"
+                        className="block max-w-full text-start text-sm font-semibold text-neutral-900 max-lg:line-clamp-2 lg:truncate hover:underline underline-offset-2"
                         dir="auto"
                       >
                         {d.emoji && <span className="me-1">{d.emoji}</span>}

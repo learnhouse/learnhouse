@@ -506,7 +506,13 @@
     "theme_dark": "Ciemny",
     "switch_to_dark": "Przełącz na tryb ciemny",
     "switch_to_light": "Przełącz na tryb jasny",
-    "appearance": "Wygląd"
+    "appearance": "Wygląd",
+    "no_access": {
+      "title": "Nie masz dostępu",
+      "community": "Nie masz uprawnień do wyświetlania tej społeczności.",
+      "discussion": "Nie masz uprawnień do wyświetlania tej dyskusji.",
+      "podcast": "Nie masz uprawnień do wyświetlania tego podcastu."
+    }
   },
   "banner": {
     "viewing_as_guest": "Przeglądasz {{name}} jako gość.",
@@ -5657,6 +5663,12 @@
       "update_failed": "Błąd podczas aktualizacji roli",
       "submit": "Zaktualizuj rolę użytkownika",
       "updating": "Aktualizowanie roli..."
+    },
+    "names": {
+      "admin": "Administrator",
+      "maintainer": "Moderator",
+      "instructor": "Instruktor",
+      "user": "Użytkownik"
     }
   },
   "time": {

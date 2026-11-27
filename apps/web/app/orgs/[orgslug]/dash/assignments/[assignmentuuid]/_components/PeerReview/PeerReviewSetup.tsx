@@ -246,6 +246,7 @@ export default function PeerReviewSetup({
               </div>
               {toggle('require_reviews_to_see_feedback', t('peer_review.instructor.settings.require_reviews'), t('peer_review.instructor.settings.require_reviews_hint'))}
               <SettingRow
+                stackOnMobile
                 title={t('peer_review.instructor.settings.due_date')}
                 description={t('peer_review.instructor.settings.due_date_hint')}
                 icon={<CalendarBlank size={16} />}

@@ -72,13 +72,30 @@ export function DashTabBar({ tabs, className = '', prefetch = true }: DashTabBar
   // Measured with client rects so it works the same in LTR and RTL.
   useEffect(() => {
     const container = scrollRef.current
-    const activeEl = container?.querySelector('[data-tab-active]') as HTMLElement | null
-    if (!container || !activeEl) return
-    const c = container.getBoundingClientRect()
-    const a = activeEl.getBoundingClientRect()
-    if (a.left < c.left) container.scrollBy({ left: a.left - c.left - 8 })
-    else if (a.right > c.right) container.scrollBy({ left: a.right - c.right + 8 })
-  }, [activeKey])
+    if (!container) return
+    const reveal = () => {
+      const activeEl = container.querySelector('[data-tab-active]') as HTMLElement | null
+      if (!activeEl) return
+      const c = container.getBoundingClientRect()
+      const a = activeEl.getBoundingClientRect()
+      // The row fades out over 40px at each scrollable edge (and the arrow sits
+      // there), so a tab that only just fits stays half hidden. Centre it instead.
+      const FADE = 40
+      if (a.left < c.left + FADE || a.right > c.right - FADE) {
+        container.scrollBy({ left: a.left + a.width / 2 - (c.left + c.width / 2) })
+      }
+    }
+    reveal()
+    // Labels and plan badges can still be loading on first paint, which moves
+    // the active tab after this ran: check again once the row settles.
+    const ro = new ResizeObserver(reveal)
+    Array.from(container.children).forEach((child) => ro.observe(child))
+    const stop = window.setTimeout(() => ro.disconnect(), 3000)
+    return () => {
+      ro.disconnect()
+      window.clearTimeout(stop)
+    }
+  }, [activeKey, tabs.length])
 
   const scroll = useCallback(
     (towards: 'start' | 'end') => {

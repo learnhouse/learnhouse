@@ -503,7 +503,13 @@
     "theme_dark": "ダーク",
     "switch_to_dark": "ダークモードに切り替え",
     "switch_to_light": "ライトモードに切り替え",
-    "appearance": "外観"
+    "appearance": "外観",
+    "no_access": {
+      "title": "アクセス権がありません",
+      "community": "このコミュニティを表示する権限がありません。",
+      "discussion": "このディスカッションを表示する権限がありません。",
+      "podcast": "このポッドキャストを表示する権限がありません。"
+    }
   },
   "banner": {
     "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",
@@ -5458,6 +5464,12 @@
       "update_failed": "ロールの更新中にエラーが発生しました",
       "submit": "ユーザーのロールを更新",
       "updating": "ロールを更新中..."
+    },
+    "names": {
+      "admin": "管理者",
+      "maintainer": "メンテナー",
+      "instructor": "講師",
+      "user": "ユーザー"
     }
   },
   "time": {

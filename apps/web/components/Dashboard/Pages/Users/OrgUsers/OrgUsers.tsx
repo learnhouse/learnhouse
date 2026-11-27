@@ -71,7 +71,7 @@ import { apiFetch, asArray } from '@services/utils/ts/requests'
 import { readSignupFields } from '@services/settings/org'
 import { queryKeys } from '@/lib/query/keys'
 import { InvitationsList, InviteMembersModal, useInvitedUsers } from '../OrgUsersAdd/invites'
-import { CheckBox, ListPager, PersonCell, RolePicker, RowSkeleton, displayName, useDebounced } from '../usersUi'
+import { CheckBox, ListPager, PersonCell, RolePicker, RowSkeleton, displayName, roleLabel, useDebounced } from '../usersUi'
 import { openUserPanel, prefetchMemberSummary, type PanelTab } from '../UserPanel/panelState'
 
 // The member panel loads after the table, in its own chunk.
@@ -312,7 +312,7 @@ function OrgUsers() {
       onChange: setFilterRole,
       options: [
         { value: '', label: t('dashboard.users.active_users.filters.all_roles') },
-        ...(roles ?? []).map((role: any) => ({ value: String(role.id), label: role.name })),
+        ...(roles ?? []).map((role: any) => ({ value: String(role.id), label: roleLabel(role, t) })),
       ],
     },
     {
@@ -845,7 +845,7 @@ function OrgUsers() {
       )}
 
       {view === 'invited' ? (
-        <div className="bg-white rounded-2xl nice-shadow overflow-hidden">
+        <div className="bg-white rounded-2xl nice-shadow overflow-hidden pt-3 sm:pt-4">
           <InvitationsList search={searchValue} onInvite={() => setInviteOpen(true)} />
         </div>
       ) : (

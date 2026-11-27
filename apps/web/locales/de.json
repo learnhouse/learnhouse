@@ -504,7 +504,13 @@
     "theme_dark": "Dunkel",
     "switch_to_dark": "Zum dunklen Modus wechseln",
     "switch_to_light": "Zum hellen Modus wechseln",
-    "appearance": "Darstellung"
+    "appearance": "Darstellung",
+    "no_access": {
+      "title": "Du hast keinen Zugriff",
+      "community": "Du hast keine Berechtigung, diese Community anzusehen.",
+      "discussion": "Du hast keine Berechtigung, diese Diskussion anzusehen.",
+      "podcast": "Du hast keine Berechtigung, diesen Podcast anzusehen."
+    }
   },
   "banner": {
     "viewing_as_guest": "Sie betrachten {{name}} als Gast.",
@@ -5477,6 +5483,12 @@
       "update_failed": "Fehler beim Aktualisieren der Rolle",
       "submit": "Benutzerrolle aktualisieren",
       "updating": "Rolle wird aktualisiert..."
+    },
+    "names": {
+      "admin": "Admin",
+      "maintainer": "Verwalter",
+      "instructor": "Lehrer",
+      "user": "Benutzer"
     }
   },
   "time": {

@@ -49,6 +49,19 @@ export function roleTone(name?: string): ChipTone {
   return ROLE_TONE[roleKind(name)]
 }
 
+const SYSTEM_ROLE_KEYS: Record<string, string> = {
+  role_global_admin: 'admin',
+  role_global_maintainer: 'maintainer',
+  role_global_instructor: 'instructor',
+  role_global_user: 'user',
+}
+
+/** A role's display name: the four built-in roles are translated, custom roles keep the name they were given. */
+export function roleLabel(role: { name?: string; role_uuid?: string } | null | undefined, t: (key: string) => string): string {
+  const key = role?.role_uuid ? SYSTEM_ROLE_KEYS[role.role_uuid] : undefined
+  return key ? t(`roles.names.${key}`) : role?.name ?? ''
+}
+
 const PICKER_TONES: Record<string, string> = {
   violet: 'text-violet-800 bg-violet-50 ring-violet-600/10',
   sky: 'text-sky-800 bg-sky-50 ring-sky-600/10',
@@ -76,7 +89,7 @@ export function RolePicker({
     return (
       <span className={chipClass}>
         <RoleIcon name={name} />
-        {name || '—'}
+        {roleLabel(role, t) || '—'}
       </span>
     )
   }
@@ -89,7 +102,7 @@ export function RolePicker({
           aria-label={t('dashboard.users.dash.members.change_role')}
         >
           <RoleIcon name={name} />
-          {name || '—'}
+          {roleLabel(role, t) || '—'}
           <CaretDown size={10} className="opacity-60" />
         </button>
       </DropdownMenuTrigger>
@@ -109,7 +122,7 @@ export function RolePicker({
               <span className="text-neutral-500">
                 <RoleIcon name={r.name} size={14} />
               </span>
-              <span className="flex-1 truncate">{r.name}</span>
+              <span className="flex-1 truncate">{roleLabel(r, t)}</span>
               {current && <CheckCircle size={14} weight="fill" className="text-neutral-900" />}
             </DropdownMenuItem>
           )

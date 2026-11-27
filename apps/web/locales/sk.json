@@ -506,7 +506,13 @@
     "theme_dark": "Tmavý",
     "switch_to_dark": "Prepnúť na tmavý režim",
     "switch_to_light": "Prepnúť na svetlý režim",
-    "appearance": "Vzhľad"
+    "appearance": "Vzhľad",
+    "no_access": {
+      "title": "Nemáte prístup",
+      "community": "Nemáte oprávnenie zobraziť túto komunitu.",
+      "discussion": "Nemáte oprávnenie zobraziť túto diskusiu.",
+      "podcast": "Nemáte oprávnenie zobraziť tento podcast."
+    }
   },
   "banner": {
     "viewing_as_guest": "Prezeráte si {{name}} ako hosť.",
@@ -5657,6 +5663,12 @@
       "update_failed": "Chyba pri aktualizácii roly",
       "submit": "Aktualizovať rolu používateľa",
       "updating": "Aktualizuje sa rola..."
+    },
+    "names": {
+      "admin": "Admin",
+      "maintainer": "Správca",
+      "instructor": "Inštruktor",
+      "user": "Používateľ"
     }
   },
   "time": {

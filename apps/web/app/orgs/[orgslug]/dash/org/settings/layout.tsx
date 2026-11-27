@@ -109,7 +109,7 @@ export default function OrgSettingsLayout(props: { children: React.ReactNode; pa
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 truncate">
               {t(copy.title, { defaultValue: copy.titleFallback ?? copy.title })}
             </h1>
-            <p className="mt-1 text-sm text-neutral-500 truncate">
+            <p className="mt-1 text-sm text-neutral-500">
               {t(copy.subtitle, { defaultValue: copy.subtitleFallback ?? copy.subtitle })}
             </p>
           </div>

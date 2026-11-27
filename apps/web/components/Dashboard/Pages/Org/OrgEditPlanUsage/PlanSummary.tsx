@@ -317,6 +317,9 @@ export function LicenseCard({ overview }: { overview: PlanOverview }) {
     )
   }
   if (!lic) return null
+  const showReason = !lic.active && !!lic.reason
+  // No facts to show: skip the body so the card doesn't end in an empty band.
+  const hasFacts = !!lic.tier || !!lic.expires_at || showReason
   return (
     <SectionCard
       icon={<Certificate size={18} />}
@@ -327,11 +330,13 @@ export function LicenseCard({ overview }: { overview: PlanOverview }) {
         </StatusPill>
       }
     >
-      <div className="flex flex-wrap gap-x-10 gap-y-3" data-testid="plan-license">
-        {lic.tier && <Fact label={t(`${P}.license.tier`)}>{lic.tier}</Fact>}
-        {lic.expires_at && <Fact label={t(`${P}.license.expires`)}>{date(lic.expires_at)}</Fact>}
-        {!lic.active && lic.reason && <Fact label={t(`${P}.license.reason`)}>{lic.reason}</Fact>}
-      </div>
+      {hasFacts && (
+        <div className="flex flex-wrap gap-x-10 gap-y-3" data-testid="plan-license">
+          {lic.tier && <Fact label={t(`${P}.license.tier`)}>{lic.tier}</Fact>}
+          {lic.expires_at && <Fact label={t(`${P}.license.expires`)}>{date(lic.expires_at)}</Fact>}
+          {showReason && <Fact label={t(`${P}.license.reason`)}>{lic.reason}</Fact>}
+        </div>
+      )}
     </SectionCard>
   )
 }

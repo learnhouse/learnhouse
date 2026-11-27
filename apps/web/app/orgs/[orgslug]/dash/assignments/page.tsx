@@ -61,7 +61,7 @@ const SORT_KEYS: readonly SortKey[] = ['course', 'needs_grading', 'due', 'title'
 // each row are subgrids spanning it, so every column (including the auto-sized
 // actions column) lines up across rows.
 const TABLE_GRID =
-  'xl:grid xl:grid-cols-[minmax(0,2.3fr)_minmax(0,1.3fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.9fr)_auto] xl:gap-x-4'
+  'xl:grid xl:grid-cols-[minmax(0,2fr)_minmax(0,1.6fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.9fr)_auto] xl:gap-x-4'
 const ROW_GRID = 'xl:col-span-full xl:grid xl:grid-cols-subgrid xl:items-center xl:gap-x-4'
 
 const shortAssignmentUuid = (uuid: string) => uuid.replace('assignment_', '')
@@ -340,7 +340,7 @@ function AssignmentsHome() {
                 value={searchQuery}
                 onChange={setSearchQuery}
                 placeholder={t('dashboard.assignments.home.search_placeholder')}
-                className='lg:max-w-xs lg:min-w-[220px]'
+                className='lg:max-w-sm lg:min-w-[220px]'
               />
               <div className='flex flex-wrap items-center gap-2 min-w-0 lg:ms-auto'>
                 <SegmentedControl
@@ -665,7 +665,7 @@ function AssignmentRow({
             }
             className='w-10 h-6 rounded-md ring-1 ring-black/5 flex-none'
           />
-          <span className='truncate hover:underline underline-offset-2'>{course.name}</span>
+          <span className='line-clamp-2 leading-snug hover:underline underline-offset-2'>{course.name}</span>
         </Link>
 
         {/* Submissions */}

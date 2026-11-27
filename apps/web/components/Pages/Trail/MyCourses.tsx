@@ -133,8 +133,8 @@ export default function MyCourses({
               { key: 'all', label: t('trail.courses.all', 'All'), count: counts.all },
             ]}
           />
-          <div className="ms-auto flex items-center gap-2 min-w-0 w-full sm:w-auto">
-            <SearchInput value={query} onChange={setQuery} placeholder={t('trail.courses.search', 'Search your courses')} className="flex-1 sm:flex-none sm:w-64 min-w-0" />
+          <div className="ms-auto flex flex-wrap sm:flex-nowrap items-center gap-2 min-w-0 w-full sm:w-auto">
+            <SearchInput value={query} onChange={setQuery} placeholder={t('trail.courses.search', 'Search your courses')} className="basis-full sm:basis-auto sm:flex-none sm:w-64 min-w-0" />
             <ToolbarSelect
               ariaLabel={t('trail.courses.sort', 'Sort')}
               icon={<SortAscending size={14} />}

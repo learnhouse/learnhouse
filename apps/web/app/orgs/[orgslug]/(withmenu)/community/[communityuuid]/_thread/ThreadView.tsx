@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import NoAccessNotice from '@components/Objects/StyledElements/Error/NoAccessNotice'
 import { getServerSession } from '@/lib/auth/server'
 import { getOrgOr404 } from '@/lib/org.server'
 import { getCommunity } from '@services/communities/communities'
@@ -67,12 +68,7 @@ export default async function ThreadView({
 
   if (!community || !discussion) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-600">You don&apos;t have access</h1>
-          <p className="text-gray-400 mt-2">You do not have permission to view this discussion.</p>
-        </div>
-      </div>
+      <NoAccessNotice kind="discussion" />
     )
   }
 

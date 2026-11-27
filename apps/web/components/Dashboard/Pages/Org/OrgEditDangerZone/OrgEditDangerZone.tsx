@@ -107,6 +107,7 @@ const OrgEditDangerZone: React.FC = () => {
       >
         <div className="divide-y divide-rose-100/80">
           <SettingRow
+            stackOnMobile
             icon={<UserMinus size={18} />}
             title={t('dashboard.organization.danger_zone.remove_members_title')}
             description={t('dashboard.organization.danger_zone.remove_members_desc')}
@@ -117,6 +118,7 @@ const OrgEditDangerZone: React.FC = () => {
             }
           />
           <SettingRow
+            stackOnMobile
             icon={<Eraser size={18} />}
             title={t('dashboard.organization.danger_zone.wipe_title')}
             description={t('dashboard.organization.danger_zone.wipe_desc')}
@@ -128,6 +130,7 @@ const OrgEditDangerZone: React.FC = () => {
           />
           {canDeleteOrg && (
             <SettingRow
+              stackOnMobile
               icon={<Trash size={18} className="text-rose-500" />}
               title={<span className="text-rose-700">{t('dashboard.organization.danger_zone.delete_title')}</span>}
               description={

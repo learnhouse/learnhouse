@@ -274,7 +274,7 @@ function ActivityElement(props: ActivitiyElementProps) {
 
           {/* Status badge + quick actions; their own row under the name on phones */}
           {!props.selectionMode && (
-            <div className="flex items-center gap-2 flex-shrink-0 ms-auto basis-full sm:basis-auto justify-between sm:justify-start ps-[3.75rem] sm:ps-0">
+            <div className="flex items-center gap-2 flex-shrink-0 min-w-0 ms-auto basis-full sm:basis-auto justify-between sm:justify-start">
               <button
                 onClick={changePublicStatus}
                 disabled={isPublishing}
@@ -305,7 +305,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                 </span>
               </button>
               <div className="hidden sm:block w-px h-5 bg-neutral-200 mx-0.5" />
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 sm:gap-1">
               <AtlasItemMenu
                 activity={{
                   uuid: props.activity.activity_uuid,

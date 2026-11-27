@@ -504,7 +504,13 @@
     "theme_dark": "Koyu",
     "switch_to_dark": "Koyu moda geç",
     "switch_to_light": "Açık moda geç",
-    "appearance": "Görünüm"
+    "appearance": "Görünüm",
+    "no_access": {
+      "title": "Erişiminiz yok",
+      "community": "Bu topluluğu görüntüleme izniniz yok.",
+      "discussion": "Bu tartışmayı görüntüleme izniniz yok.",
+      "podcast": "Bu podcast'i görüntüleme izniniz yok."
+    }
   },
   "banner": {
     "viewing_as_guest": "{{name}} sitesini misafir olarak görüntülüyorsunuz.",
@@ -5477,6 +5483,12 @@
       "update_failed": "Rol güncellenirken hata oluştu",
       "submit": "Kullanıcı rolünü güncelle",
       "updating": "Rol güncelleniyor..."
+    },
+    "names": {
+      "admin": "Yönetici",
+      "maintainer": "Sorumlu",
+      "instructor": "Eğitmen",
+      "user": "Kullanıcı"
     }
   },
   "time": {
