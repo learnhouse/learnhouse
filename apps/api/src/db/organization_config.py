@@ -272,6 +272,9 @@ class GeneralCustomization(BaseModel):
     # Empty means "fall back to logo_image".
     square_logo_image: str = ""
     watermark: bool = True
+    # Set when an admin chooses the badge explicitly. White-label plans hide
+    # the badge unless this is true.
+    watermark_opt_in: bool = False
     font: str = ""
     default_language: str = "en"
     # Display name on transactional email from this org. The From ADDRESS is
@@ -633,6 +636,7 @@ class OrgGeneralConfig(BaseModel):
     color: str = ""
     footer_text: str = ""
     watermark: bool = True
+    watermark_opt_in: bool = False
     favicon_image: str = ""
     square_logo_image: str = ""
     auth_branding: AuthBrandingConfig = AuthBrandingConfig()

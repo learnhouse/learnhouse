@@ -7293,7 +7293,7 @@
         "watermark_label": "Filigrane \"Made with LearnHouse\"",
         "watermark_desc": "Afficher le filigrane LearnHouse sur les pages de votre organisation",
         "watermark_free_plan": "Le filigrane est toujours affiché sur le plan gratuit",
-        "watermark_ee": "Masqué par votre licence Enterprise Edition"
+        "watermark_opt_in": "Masqué avec votre forfait. Activez-le pour afficher le badge sur les pages de votre organisation."
       },
       "images": {
         "title": "Images et aperçus",

@@ -7166,7 +7166,7 @@
         "watermark_label": "Watermark \"Made with LearnHouse\"",
         "watermark_desc": "Tampilkan watermark branding LearnHouse di halaman organisasi Anda",
         "watermark_free_plan": "Watermark selalu ditampilkan pada paket gratis",
-        "watermark_ee": "Disembunyikan oleh lisensi Enterprise Edition Anda"
+        "watermark_opt_in": "Disembunyikan di paket Anda. Aktifkan untuk menampilkan lencana di halaman organisasi Anda."
       },
       "images": {
         "title": "Gambar & Pratinjau",

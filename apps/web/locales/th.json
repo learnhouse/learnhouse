@@ -7166,7 +7166,7 @@
         "watermark_label": "ลายน้ำ \"Made with LearnHouse\"",
         "watermark_desc": "แสดงลายน้ำแบรนด์ LearnHouse บนหน้าองค์กรของคุณ",
         "watermark_free_plan": "ลายน้ำจะแสดงตลอดเวลาบนแผนฟรี",
-        "watermark_ee": "ซ่อนโดยใบอนุญาต Enterprise Edition ของคุณ"
+        "watermark_opt_in": "ซ่อนอยู่ในแพ็กเกจของคุณ เปิดเพื่อแสดงตราบนหน้าขององค์กร"
       },
       "images": {
         "title": "รูปภาพและตัวอย่าง",

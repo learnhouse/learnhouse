@@ -7178,7 +7178,7 @@
         "watermark_label": "\"Made with LearnHouse\" watermark",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
         "watermark_free_plan": "Watermark is always shown on the free plan",
-        "watermark_ee": "Hidden by your Enterprise Edition license"
+        "watermark_opt_in": "Hidden on your plan. Turn it on to show the badge on your organization pages."
       },
       "images": {
         "title": "Images & Previews",

@@ -7418,7 +7418,7 @@
         "watermark_label": "Водяной знак \"Made with LearnHouse\"",
         "watermark_desc": "Показывать водяной знак LearnHouse на страницах организации",
         "watermark_free_plan": "Водяной знак всегда отображается на бесплатном плане",
-        "watermark_ee": "Скрыто лицензией Enterprise Edition"
+        "watermark_opt_in": "Скрыто на вашем тарифе. Включите, чтобы показывать значок на страницах организации."
       },
       "images": {
         "title": "Изображения и превью",

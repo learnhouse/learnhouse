@@ -7166,7 +7166,7 @@
         "watermark_label": "\"Made with LearnHouse\" 워터마크",
         "watermark_desc": "조직 페이지에 LearnHouse 브랜드 워터마크 표시",
         "watermark_free_plan": "무료 플랜에서는 워터마크가 항상 표시됩니다",
-        "watermark_ee": "Enterprise Edition 라이선스에 의해 숨겨짐"
+        "watermark_opt_in": "현재 플랜에서는 숨겨져 있습니다. 켜면 조직 페이지에 배지가 표시됩니다."
       },
       "images": {
         "title": "이미지 및 미리보기",

@@ -70543,6 +70543,11 @@
             "title": "Watermark",
             "default": true
           },
+          "watermark_opt_in": {
+            "type": "boolean",
+            "title": "Watermark Opt In",
+            "default": false
+          },
           "favicon_image": {
             "type": "string",
             "title": "Favicon Image",
