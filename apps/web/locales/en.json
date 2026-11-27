@@ -21066,6 +21066,10 @@
         "admin_email_disposable": "An admin uses a disposable email",
         "all_admins_disposable": "Every admin uses a disposable email",
         "admin_email_free_provider": "Admins use a personal email (Gmail, Outlook…)",
+        "admin_email_work_domain": "An admin uses a work email",
+        "paying_customer": "Paying customer",
+        "on_free_trial": "On the no-card trial",
+        "had_plan_change": "Plan was ever changed",
         "admin_email_verified": "An admin verified their email",
         "admin_logins_count": "Admins who signed in",
         "days_since_admin_last_login": "Days since an admin signed in",
@@ -21095,6 +21099,7 @@
         "follow_org": "Follow the organization",
         "assign_account_owner": "Assign an account owner",
         "schedule_org_deletion": "Schedule deletion (guarded)",
+        "purge_lazy_org": "Delete lazy org and its users now",
         "create_task": "Create a task"
       },
       "params": {
