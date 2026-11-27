@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowCounterClockwise,
   ArrowLeft,
@@ -43,6 +44,7 @@ function BlockHeader({ icon, title, right }: { icon: React.ReactNode; title: str
 /* ------------------------------------------------------------------------ */
 
 export function QuizBlock({ data }: { data: QuizData }) {
+  const { t } = useTranslation()
   const [picked, setPicked] = useState<Record<number, number>>({})
   const answered = Object.keys(picked).length
   const score = data.questions.reduce((n, q, i) => n + (picked[i] === q.answer ? 1 : 0), 0)
@@ -52,7 +54,7 @@ export function QuizBlock({ data }: { data: QuizData }) {
     <div className={shell}>
       <BlockHeader
         icon={<Question size={14} weight="bold" />}
-        title={data.questions.length > 1 ? `Quiz · ${data.questions.length} questions` : 'Quiz'}
+        title={data.questions.length > 1 ? t('messaging.rich.quiz_questions', { count: data.questions.length }) : t('messaging.rich.quiz')}
         right={
           answered > 0 && (
             <span className="text-xs font-semibold tabular-nums text-gray-600">
@@ -115,7 +117,9 @@ export function QuizBlock({ data }: { data: QuizData }) {
                     <XCircle size={16} weight="fill" className="shrink-0 mt-0.5 text-red-500" />
                   )}
                   <span>
-                    <strong>{choice === q.answer ? 'Correct.' : `Answer: ${q.options[q.answer]}.`}</strong>{' '}
+                    <strong>
+                      {choice === q.answer ? t('messaging.rich.correct') : t('messaging.rich.answer_is', { answer: q.options[q.answer] })}
+                    </strong>{' '}
                     {q.explanation}
                   </span>
                 </div>
@@ -127,7 +131,9 @@ export function QuizBlock({ data }: { data: QuizData }) {
       {done && (
         <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-gray-100 bg-gray-50/70">
           <span className="text-sm font-semibold">
-            {score === data.questions.length ? 'Perfect score 🎉' : `You got ${score} of ${data.questions.length}`}
+            {score === data.questions.length
+              ? t('messaging.rich.perfect_score')
+              : t('messaging.rich.score', { score, total: data.questions.length })}
           </span>
           <button
             type="button"
@@ -135,7 +141,7 @@ export function QuizBlock({ data }: { data: QuizData }) {
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-gray-900"
           >
             <ArrowCounterClockwise size={13} weight="bold" />
-            Retry
+            {t('messaging.retry')}
           </button>
         </div>
       )}
@@ -148,6 +154,7 @@ export function QuizBlock({ data }: { data: QuizData }) {
 /* ------------------------------------------------------------------------ */
 
 export function FlashcardsBlock({ data }: { data: FlashcardsData }) {
+  const { t } = useTranslation()
   const [order, setOrder] = useState(() => data.cards.map((_, i) => i))
   const [pos, setPos] = useState(0)
   const [flipped, setFlipped] = useState(false)
@@ -172,7 +179,7 @@ export function FlashcardsBlock({ data }: { data: FlashcardsData }) {
     <div className={shell}>
       <BlockHeader
         icon={<Cards size={14} weight="bold" />}
-        title="Flashcards"
+        title={t('messaging.rich.flashcards')}
         right={
           <button
             type="button"
@@ -180,7 +187,7 @@ export function FlashcardsBlock({ data }: { data: FlashcardsData }) {
             className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-900"
           >
             <Shuffle size={13} weight="bold" />
-            Shuffle
+            {t('messaging.rich.shuffle')}
           </button>
         }
       />
@@ -189,18 +196,18 @@ export function FlashcardsBlock({ data }: { data: FlashcardsData }) {
           type="button"
           onClick={() => setFlipped((f) => !f)}
           className="block w-full [perspective:1200px] focus:outline-none"
-          aria-label={flipped ? 'Show front' : 'Show back'}
+          aria-label={flipped ? t('messaging.rich.show_front') : t('messaging.rich.show_back')}
         >
           <div
             className="relative w-full h-40 transition-transform duration-500 [transform-style:preserve-3d]"
             style={{ transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
           >
             <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-gray-900 text-white px-5 text-center [backface-visibility:hidden]">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Term</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">{t('messaging.rich.term')}</span>
               <span className="text-base font-semibold leading-snug">{card.front}</span>
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-gray-50 border border-gray-200 px-5 text-center [backface-visibility:hidden] [transform:rotateY(180deg)]">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Definition</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">{t('messaging.rich.definition')}</span>
               <span className="text-sm leading-relaxed text-gray-800 overflow-y-auto">{card.back}</span>
             </div>
           </div>
@@ -210,7 +217,7 @@ export function FlashcardsBlock({ data }: { data: FlashcardsData }) {
             type="button"
             onClick={() => go(-1)}
             className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-            aria-label="Previous card"
+            aria-label={t('messaging.rich.previous_card')}
           >
             <ArrowLeft size={15} weight="bold" />
           </button>
@@ -226,13 +233,13 @@ export function FlashcardsBlock({ data }: { data: FlashcardsData }) {
             type="button"
             onClick={() => go(1)}
             className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-            aria-label="Next card"
+            aria-label={t('messaging.rich.next_card')}
           >
             <ArrowRight size={15} weight="bold" />
           </button>
         </div>
         <p className="text-center text-[11px] text-gray-400 mt-1">
-          {pos + 1} / {order.length} · tap the card to flip
+          {t('messaging.rich.flip_hint', { current: pos + 1, total: order.length })}
         </p>
       </div>
     </div>
@@ -244,6 +251,7 @@ export function FlashcardsBlock({ data }: { data: FlashcardsData }) {
 /* ------------------------------------------------------------------------ */
 
 export function StepsBlock({ data }: { data: StepsData }) {
+  const { t } = useTranslation()
   const [done, setDone] = useState<Set<number>>(new Set())
   const toggle = (i: number) =>
     setDone((prev) => {
@@ -258,7 +266,7 @@ export function StepsBlock({ data }: { data: StepsData }) {
     <div className={shell}>
       <BlockHeader
         icon={<ListChecks size={14} weight="bold" />}
-        title={data.title || 'Steps'}
+        title={data.title || t('messaging.rich.steps')}
         right={<span className="text-xs font-semibold tabular-nums text-gray-500">{progress}%</span>}
       />
       <div className="h-0.5 bg-gray-100">
@@ -277,7 +285,7 @@ export function StepsBlock({ data }: { data: StepsData }) {
                 className={`relative z-[1] mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full border text-[11px] font-bold shrink-0 transition-colors ${
                   checked ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-300 text-gray-500 hover:border-gray-900'
                 }`}
-                aria-label={checked ? 'Mark step not done' : 'Mark step done'}
+                aria-label={checked ? t('messaging.rich.mark_not_done') : t('messaging.rich.mark_done')}
               >
                 {checked ? <Check size={12} weight="bold" /> : i + 1}
               </button>
@@ -308,6 +316,7 @@ export function CourseBlock({
   courses?: Record<string, CourseCard>
   orgslug: string
 }) {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const course = courses?.[data.course_uuid]
   // Only courses the backend resolved for this reader render; anything else
@@ -333,13 +342,13 @@ export function CourseBlock({
         )}
       </div>
       <div className="flex-1 min-w-0 p-3">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Recommended course</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t('messaging.rich.recommended_course')}</p>
         <p className="text-sm font-bold text-gray-900 leading-snug truncate">{course.name}</p>
         {(data.reason || course.description) && (
           <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 mt-0.5">{data.reason || course.description}</p>
         )}
         <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-semibold text-gray-900 group-hover:underline">
-          Open course
+          {t('messaging.rich.open_course')}
           <ArrowUpRight size={12} weight="bold" />
         </span>
       </div>
@@ -351,23 +360,13 @@ export function CourseBlock({
 /* Streaming placeholder                                                    */
 /* ------------------------------------------------------------------------ */
 
-const PENDING_LABEL: Record<RichBlockKind, string> = {
-  quiz: 'Writing a quiz',
-  flashcards: 'Making flashcards',
-  steps: 'Laying out steps',
-  course: 'Finding a course',
-  chart: 'Drawing a chart',
-  mindmap: 'Mapping it out',
-  timeline: 'Building a timeline',
-  exercise: 'Writing an exercise',
-  reminder: 'Setting a reminder',
-}
-
+// Each kind's "writing it" label lives under messaging.rich.pending.<kind>.
 export function PendingBlock({ kind }: { kind: RichBlockKind }) {
+  const { t } = useTranslation()
   const rows = useMemo(() => (kind === 'course' || kind === 'reminder' ? 1 : 3), [kind])
   return (
     <div className="not-prose my-2.5 rounded-xl border border-gray-200 bg-white p-3.5 space-y-2.5 overflow-hidden">
-      <p className="text-xs font-semibold text-gray-500">{PENDING_LABEL[kind]}…</p>
+      <p className="text-xs font-semibold text-gray-500">{t(`messaging.rich.pending.${kind}`)}…</p>
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="lh-msg-shimmer h-8 rounded-xl" style={{ width: `${92 - i * 14}%` }} />
       ))}

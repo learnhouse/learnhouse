@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Check, Copy } from '@phosphor-icons/react'
 import { lowlight } from '@components/Objects/Editor/editorLowlight'
 
@@ -34,6 +35,7 @@ function highlight(code: string, language: string): React.ReactNode[] | null {
 }
 
 export default function CodeBlock({ code, language }: { code: string; language: string }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
   // Highlighting is the expensive part of a streamed reply; only redo it when
   // this block's own text changes.
@@ -52,15 +54,15 @@ export default function CodeBlock({ code, language }: { code: string; language: 
   return (
     <div className="lh-msg-code not-prose my-2 rounded-lg overflow-hidden bg-[#0d0d0d] text-xs">
       <div className="flex items-center justify-between px-4 h-8 border-b border-white/10">
-        <span className="text-[11px] font-mono font-medium text-gray-400 lowercase">{language || 'code'}</span>
+        <span className="text-[11px] font-mono font-medium text-gray-400 lowercase">{language || t('messaging.rich.code')}</span>
         <button
           type="button"
           onClick={copy}
           className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-400 hover:text-white transition-colors"
-          aria-label="Copy code"
+          aria-label={t('messaging.rich.copy_code')}
         >
           {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? t('messaging.copied') : t('messaging.rich.copy')}
         </button>
       </div>
       <pre className="m-0 px-4 py-3 overflow-x-auto leading-relaxed" dir="ltr" style={{ fontFamily: "'JetBrainsMono', monospace" }}>

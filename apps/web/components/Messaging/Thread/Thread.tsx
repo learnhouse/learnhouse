@@ -28,6 +28,7 @@ import {
 import { Button, buttonClass, useStoredState } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { MessagesPage, messageOrder, messagingKeys, useMessaging } from '@components/Messaging/MessagingProvider'
 import { useAgents, useConversations } from '@components/Messaging/hooks'
+import { agentDescription } from '@components/Messaging/Agents/agentText'
 import { AvatarStack, ConversationAvatar } from '@components/Messaging/ui/Avatars'
 import { IconButton } from '@components/Messaging/ui/kit'
 import MessageItem, { LocalMessage } from '@components/Messaging/Thread/MessageItem'
@@ -500,7 +501,7 @@ export default function Thread({
     ) : (
       t('messaging.org_announcements_count', { defaultValue: 'Organization announcements · {{count}} people', count: conversation.member_count })
     )
-  else if (conversation.kind === 'agent') subtitle = conversation.agent?.description || t('messaging.ai_agent', { defaultValue: 'AI agent' })
+  else if (conversation.kind === 'agent') subtitle = agentDescription(conversation.agent, t) || t('messaging.ai_agent', { defaultValue: 'AI agent' })
 
   const online = conversation.kind === 'dm' && other && presence[other.id]?.state === 'online'
 

@@ -23,6 +23,7 @@ import {
 import { Chip } from '@components/Dashboard/Shared/DashKit/DashKit'
 import { useMessaging } from '@components/Messaging/MessagingProvider'
 import AgentAvatar from '@components/Messaging/Agents/AgentAvatar'
+import { TONES, agentDescription } from '@components/Messaging/Agents/agentText'
 import { ConversationAvatar, CourseThumb, PersonAvatar } from '@components/Messaging/ui/Avatars'
 import { IconButton } from '@components/Messaging/ui/kit'
 import { Agent, ChatMessage, Conversation, CourseCard, UserSummary, conversationTitle, displayName } from '@services/messaging/messaging'
@@ -141,9 +142,11 @@ export function AgentIntro({ agent, onPick, compact = false }: { agent: Agent | 
     <div className={`flex flex-col items-center text-center ${compact ? 'px-2 pt-6 pb-4' : 'px-6 pt-12 pb-6'}`}>
       <AgentAvatar agent={agent} size={compact ? 44 : 60} />
       <h2 className="mt-3 text-lg font-bold tracking-tight text-neutral-900">{agent.name}</h2>
-      {agent.description && <p className="mt-1 max-w-md text-sm text-neutral-500">{agent.description}</p>}
+      {agent.description && <p className="mt-1 max-w-md text-sm text-neutral-500">{agentDescription(agent, t)}</p>}
       <div className="mt-3 flex flex-wrap justify-center gap-1.5">
-        {agent.tone && <Chip className="capitalize">{agent.tone}</Chip>}
+        {agent.tone && (
+          <Chip className="capitalize">{TONES.includes(agent.tone) ? t(`messaging.agent_tones.${agent.tone}`) : agent.tone}</Chip>
+        )}
         <Chip icon={agent.knowledge_mode === 'general' ? <GlobeSimple size={11} /> : <BookOpen size={11} />}>
           {agent.knowledge_mode === 'general'
             ? t('messaging.agent_general', { defaultValue: 'Courses + general knowledge' })
@@ -292,7 +295,7 @@ export function DetailsPanel({
           {subtitle && <p className="mt-0.5 max-w-full truncate text-xs text-neutral-500">{subtitle}</p>}
           {other && <p className="mt-1 text-xs text-neutral-400">{presenceLine(presence[other.id]) || t('messaging.offline', { defaultValue: 'Offline' })}</p>}
           {kind === 'agent' && conversation.agent?.description && (
-            <p className="mt-2 text-xs leading-relaxed text-neutral-500">{conversation.agent.description}</p>
+            <p className="mt-2 text-xs leading-relaxed text-neutral-500">{agentDescription(conversation.agent, t)}</p>
           )}
         </div>
 

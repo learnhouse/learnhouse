@@ -8,6 +8,8 @@
  */
 
 import React, { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import {
   Bar,
   BarChart,
@@ -86,11 +88,12 @@ function Header({ icon, title }: { icon: React.ReactNode; title: string }) {
 const SERIES = ['#171717', '#525252', '#a3a3a3', '#d4d4d4', '#404040', '#737373', '#e5e5e5', '#262626']
 
 export function ChartBlock({ data }: { data: ChartData }) {
+  const { t } = useTranslation()
   const rows = useMemo(() => data.data.map((d) => ({ label: String(d.label), value: Number(d.value) })), [data])
   const fmt = (v: number) => `${v.toLocaleString()}${data.unit ? ` ${data.unit}` : ''}`
   return (
     <div className={shell}>
-      <Header icon={<ChartBar size={14} weight="bold" />} title={data.title || 'Chart'} />
+      <Header icon={<ChartBar size={14} weight="bold" />} title={data.title || t('messaging.rich.chart')} />
       <div className="h-56 px-2 py-3">
         <ResponsiveContainer width="100%" height="100%">
           {data.type === 'pie' ? (
@@ -140,9 +143,10 @@ export function ChartBlock({ data }: { data: ChartData }) {
 /* ------------------------------------------------------------------------ */
 
 export function MindmapBlock({ data }: { data: MindmapData }) {
+  const { t } = useTranslation()
   return (
     <div className={shell}>
-      <Header icon={<TreeStructure size={14} weight="bold" />} title="Mind map" />
+      <Header icon={<TreeStructure size={14} weight="bold" />} title={t('messaging.rich.mindmap')} />
       <div className="p-4 overflow-x-auto">
         <div className="flex justify-center">
           <span className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-semibold text-white">{data.center}</span>
@@ -180,9 +184,10 @@ export function MindmapBlock({ data }: { data: MindmapData }) {
 /* ------------------------------------------------------------------------ */
 
 export function TimelineBlock({ data }: { data: TimelineData }) {
+  const { t } = useTranslation()
   return (
     <div className={shell}>
-      <Header icon={<CalendarBlank size={14} weight="bold" />} title={data.title || 'Timeline'} />
+      <Header icon={<CalendarBlank size={14} weight="bold" />} title={data.title || t('messaging.rich.timeline')} />
       <ol className="px-4 py-3">
         {data.events.map((e, i) => (
           <li key={`${e.title}-${i}`} className="relative flex gap-3 pb-3 last:pb-0">
@@ -207,34 +212,35 @@ export function TimelineBlock({ data }: { data: TimelineData }) {
 /* ------------------------------------------------------------------------ */
 
 export function ExerciseBlock({ data }: { data: ExerciseData }) {
+  const { t } = useTranslation()
   const hints = data.hints || []
   const [shownHints, setShownHints] = useState(0)
   const [solved, setSolved] = useState(false)
   const [draft, setDraft] = useState('')
   return (
     <div className={shell}>
-      <Header icon={<PencilSimpleLine size={14} weight="bold" />} title="Practice" />
+      <Header icon={<PencilSimpleLine size={14} weight="bold" />} title={t('messaging.rich.practice')} />
       <div className="space-y-3 px-3.5 py-3">
         <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">{data.prompt}</p>
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           rows={3}
-          placeholder="Work it out here (only you see this)"
+          placeholder={t('messaging.rich.practice_placeholder')}
           className="w-full resize-y rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2 text-sm outline-none focus:border-gray-300 focus:bg-white"
         />
         {hints.slice(0, shownHints).map((h, i) => (
           <div key={i} className="flex gap-2 rounded-lg bg-gray-50 px-3 py-2 text-[13px] text-gray-700">
             <Lightbulb size={15} weight="fill" className="mt-0.5 shrink-0 text-gray-500" />
             <span>
-              <span className="font-semibold">Hint {i + 1}.</span> {h}
+              <span className="font-semibold">{t('messaging.rich.hint', { number: i + 1 })}</span> {h}
             </span>
           </div>
         ))}
         {solved && (
           <div className="rounded-lg border border-gray-200 px-3 py-2.5 text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">
             <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-gray-500">
-              <CheckCircle size={14} weight="fill" /> Solution
+              <CheckCircle size={14} weight="fill" /> {t('messaging.rich.solution')}
             </p>
             {data.solution}
           </div>
@@ -246,7 +252,7 @@ export function ExerciseBlock({ data }: { data: ExerciseData }) {
               onClick={() => setShownHints((n) => n + 1)}
               className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
-              Show a hint
+              {t('messaging.rich.show_hint')}
             </button>
           )}
           {!solved && (
@@ -255,7 +261,7 @@ export function ExerciseBlock({ data }: { data: ExerciseData }) {
               onClick={() => setSolved(true)}
               className="rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
             >
-              Show solution
+              {t('messaging.rich.show_solution')}
             </button>
           )}
         </div>
@@ -268,7 +274,7 @@ export function ExerciseBlock({ data }: { data: ExerciseData }) {
 /* Reminder                                                                 */
 /* ------------------------------------------------------------------------ */
 
-export function formatDue(iso: string): string {
+export function formatDue(iso: string, t: TFunction): string {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
   const now = new Date()
@@ -276,9 +282,10 @@ export function formatDue(iso: string): string {
   const tomorrow = new Date(now)
   tomorrow.setDate(now.getDate() + 1)
   const time = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
-  if (sameDay) return `Today at ${time}`
-  if (d.toDateString() === tomorrow.toDateString()) return `Tomorrow at ${time}`
-  return `${d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${time}`
+  if (sameDay) return t('messaging.rich.due_today', { time })
+  if (d.toDateString() === tomorrow.toDateString()) return t('messaging.rich.due_tomorrow', { time })
+  const date = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+  return t('messaging.rich.due_date', { date, time })
 }
 
 /**
@@ -287,6 +294,7 @@ export function formatDue(iso: string): string {
  * nothing was scheduled.
  */
 export function ReminderBlock({ data, reminder }: { data: ReminderData; reminder?: Reminder }) {
+  const { t } = useTranslation()
   const { token, orgId } = useMessaging()
   const qc = useQueryClient()
   // The stored reminder arrives with the finished reply; a cancel here overrides it.
@@ -308,7 +316,13 @@ export function ReminderBlock({ data, reminder }: { data: ReminderData; reminder
   }
 
   const label =
-    status === 'cancelled' ? 'Cancelled' : status === 'sent' ? 'Sent' : status === 'pending' ? formatDue(due) : 'Not scheduled'
+    status === 'cancelled'
+      ? t('messaging.rich.cancelled')
+      : status === 'sent'
+        ? t('messaging.sent')
+        : status === 'pending'
+          ? formatDue(due, t)
+          : t('messaging.rich.not_scheduled')
   return (
     <div className="my-2.5 flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3.5 py-2.5">
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${status === 'pending' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'}`}>
@@ -325,7 +339,7 @@ export function ReminderBlock({ data, reminder }: { data: ReminderData; reminder
           disabled={busy}
           className="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
       )}
     </div>

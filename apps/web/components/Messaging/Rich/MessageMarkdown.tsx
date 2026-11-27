@@ -2,6 +2,7 @@
 
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
+import { useTranslation } from 'react-i18next'
 import { GlobeSimple, Info, Lightbulb, Warning, WarningOctagon } from '@phosphor-icons/react'
 import { MarkdownImageLink } from '@components/Objects/Activities/AI/MarkdownImageLink'
 import {
@@ -24,12 +25,13 @@ function hastText(node: any): string {
   return (node.children || []).map(hastText).join('')
 }
 
-const CALLOUTS: Record<CalloutKind, { label: string; Icon: any; tone: string; icon: string }> = {
-  tip: { label: 'Tip', Icon: Lightbulb, tone: 'bg-green-50 text-green-900', icon: 'text-green-500' },
-  note: { label: 'Note', Icon: Info, tone: 'bg-gray-100 text-gray-700', icon: 'text-gray-500' },
-  important: { label: 'Important', Icon: Info, tone: 'bg-gray-100 text-gray-700', icon: 'text-gray-500' },
-  warning: { label: 'Warning', Icon: Warning, tone: 'bg-yellow-100 text-yellow-900', icon: 'text-yellow-600' },
-  caution: { label: 'Caution', Icon: WarningOctagon, tone: 'bg-red-50 text-red-900', icon: 'text-red-500' },
+// Labels live under messaging.rich.callouts.<kind>.
+const CALLOUTS: Record<CalloutKind, { Icon: any; tone: string; icon: string }> = {
+  tip: { Icon: Lightbulb, tone: 'bg-green-50 text-green-900', icon: 'text-green-500' },
+  note: { Icon: Info, tone: 'bg-gray-100 text-gray-700', icon: 'text-gray-500' },
+  important: { Icon: Info, tone: 'bg-gray-100 text-gray-700', icon: 'text-gray-500' },
+  warning: { Icon: Warning, tone: 'bg-yellow-100 text-yellow-900', icon: 'text-yellow-600' },
+  caution: { Icon: WarningOctagon, tone: 'bg-red-50 text-red-900', icon: 'text-red-500' },
 }
 
 type Props = {
@@ -43,6 +45,7 @@ type Props = {
 }
 
 function MessageMarkdown({ content, sources, orgslug, streaming = false, inverted = false, agent = false }: Props) {
+  const { t } = useTranslation()
   const text = React.useMemo(() => {
     const normalized = normalizeMathDelimiters(content)
     return streaming ? dropUnclosedMath(normalized) : normalized
@@ -135,7 +138,7 @@ function MessageMarkdown({ content, sources, orgslug, streaming = false, inverte
             <div className={`not-prose my-2 flex gap-2.5 rounded-lg px-3 py-2.5 text-sm leading-relaxed ${c.tone}`}>
               <c.Icon size={16} weight="fill" className={`shrink-0 mt-0.5 ${c.icon}`} />
               <div className="min-w-0 [&>p]:m-0 [&>p+p]:mt-1.5">
-                <span className="font-semibold me-1">{c.label}.</span>
+                <span className="font-semibold me-1">{t(`messaging.rich.callouts.${kind}`)}.</span>
                 {children}
               </div>
             </div>
@@ -147,7 +150,7 @@ function MessageMarkdown({ content, sources, orgslug, streaming = false, inverte
             <div className="not-prose my-2 rounded-lg bg-gray-100 px-3 py-2.5 text-sm leading-relaxed text-gray-700 [&>p]:m-0 [&>p+p]:mt-1.5">
               <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
                 <GlobeSimple size={11} weight="bold" />
-                Beyond the course
+                {t('messaging.rich.beyond_course')}
               </span>
               {children}
             </div>
@@ -158,7 +161,7 @@ function MessageMarkdown({ content, sources, orgslug, streaming = false, inverte
         )
       },
     }
-  }, [sources, orgslug, inverted, agent])
+  }, [sources, orgslug, inverted, agent, t])
 
   return (
     <div

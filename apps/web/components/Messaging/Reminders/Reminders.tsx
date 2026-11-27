@@ -85,7 +85,7 @@ export function RemindersButton({ onOpenConversation }: { onOpenConversation?: (
                 }}
               >
                 <p className="truncate text-sm font-medium text-neutral-900">{r.text}</p>
-                <p className="text-xs text-neutral-500">{formatDue(r.due_at)}</p>
+                <p className="text-xs text-neutral-500">{formatDue(r.due_at, t)}</p>
               </button>
               <button
                 type="button"
@@ -108,7 +108,7 @@ export function RemindersButton({ onOpenConversation }: { onOpenConversation?: (
                   <Bell size={16} className="mt-0.5 shrink-0 text-neutral-400" />
                   <div className="min-w-0">
                     <p className="truncate text-sm text-neutral-700">{r.text}</p>
-                    <p className="text-xs text-neutral-400">{formatDue(r.due_at)}</p>
+                    <p className="text-xs text-neutral-400">{formatDue(r.due_at, t)}</p>
                   </div>
                 </div>
               ))}
@@ -158,7 +158,7 @@ export function RemindMeMenu({ message, children }: { message: ChatMessage; chil
     try {
       const r = await createReminder(orgId, { text: snippet, due_at: when.toISOString(), message_uuid: message.message_uuid }, token)
       qc.invalidateQueries({ queryKey: remindersKey(orgId) })
-      setDone(formatDue(r.due_at))
+      setDone(formatDue(r.due_at, t))
       setTimeout(() => {
         setOpen(false)
         setDone(null)

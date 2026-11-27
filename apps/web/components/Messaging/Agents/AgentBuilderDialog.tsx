@@ -1,6 +1,7 @@
 'use client'
 
 import React, { Suspense, lazy, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   BookOpen,
@@ -26,12 +27,12 @@ import { queryKeys } from '@/lib/query/keys'
 import {
   type Agent,
   type AgentInput,
-  type AgentTone,
   createAgent,
   deleteAgent,
   updateAgent,
 } from '@services/messaging/messaging'
 import AgentAvatar from './AgentAvatar'
+import { TONES } from './agentText'
 import { useColorScheme } from '@components/Contexts/ColorSchemeContext'
 
 const EmojiPicker = lazy(() => import('@emoji-mart/react'))
@@ -47,33 +48,22 @@ export type AgentBuilderDialogProps = {
   onSaved?: (_agent: Agent) => void
 }
 
-export const GRADIENT_PRESETS: { name: string; color: string; secondary: string }[] = [
-  { name: 'Ink', color: '#111827', secondary: '#4b5563' },
-  { name: 'Indigo', color: '#4f46e5', secondary: '#a855f7' },
-  { name: 'Ocean', color: '#0ea5e9', secondary: '#2563eb' },
-  { name: 'Mint', color: '#10b981', secondary: '#06b6d4' },
-  { name: 'Lime', color: '#84cc16', secondary: '#16a34a' },
-  { name: 'Sun', color: '#f59e0b', secondary: '#ef4444' },
-  { name: 'Peach', color: '#fb923c', secondary: '#f472b6' },
-  { name: 'Rose', color: '#e11d48', secondary: '#9333ea' },
-  { name: 'Grape', color: '#7c3aed', secondary: '#db2777' },
-  { name: 'Slate', color: '#334155', secondary: '#0ea5e9' },
+// `id` names the preset's label under messaging.agent_builder.presets.
+export const GRADIENT_PRESETS: { id: string; color: string; secondary: string }[] = [
+  { id: 'ink', color: '#111827', secondary: '#4b5563' },
+  { id: 'indigo', color: '#4f46e5', secondary: '#a855f7' },
+  { id: 'ocean', color: '#0ea5e9', secondary: '#2563eb' },
+  { id: 'mint', color: '#10b981', secondary: '#06b6d4' },
+  { id: 'lime', color: '#84cc16', secondary: '#16a34a' },
+  { id: 'sun', color: '#f59e0b', secondary: '#ef4444' },
+  { id: 'peach', color: '#fb923c', secondary: '#f472b6' },
+  { id: 'rose', color: '#e11d48', secondary: '#9333ea' },
+  { id: 'grape', color: '#7c3aed', secondary: '#db2777' },
+  { id: 'slate', color: '#334155', secondary: '#0ea5e9' },
 ]
 
-export const TONES: { value: AgentTone; label: string; hint: string }[] = [
-  { value: 'friendly', label: 'Friendly', hint: 'Warm and clear, short paragraphs.' },
-  { value: 'concise', label: 'Concise', hint: 'Straight to the point, bullets over prose.' },
-  { value: 'socratic', label: 'Socratic tutor', hint: 'Guides with questions instead of giving answers away.' },
-  { value: 'expert', label: 'Expert', hint: 'Precise terms, depth and nuance.' },
-  { value: 'playful', label: 'Playful', hint: 'Upbeat, a little humor, still accurate.' },
-]
-
-const INSTRUCTION_TEMPLATES = [
-  { label: 'Quiz me after each answer', text: 'After every answer, ask me one short question to check I understood.' },
-  { label: 'Answer in French', text: 'Always answer in French, even when I write in another language.' },
-  { label: "Explain like I'm 12", text: 'Explain things simply, as you would to a curious 12-year-old, with everyday examples.' },
-  { label: 'Exam coach', text: 'Act as an exam coach: focus on what is likely to be tested and point out common mistakes.' },
-]
+// Label under messaging.agent_builder.templates.<id>, inserted text under <id>_text.
+const INSTRUCTION_TEMPLATES = ['quiz_me', 'french', 'eli12', 'exam_coach'] as const
 
 const HEX = /^#[0-9a-fA-F]{6}$/
 
@@ -113,6 +103,7 @@ const inputCls =
 
 // Keyed on its value by the caller, so a preset click resets the text field.
 function ColorInput({ value, onChange, label }: { value: string; onChange: (_v: string) => void; label: string }) {
+  const { t } = useTranslation()
   const [text, setText] = useState(value)
   return (
     <div className="flex items-center gap-2 rounded-lg border border-gray-200 px-2 py-1.5 bg-white">
@@ -134,45 +125,46 @@ function ColorInput({ value, onChange, label }: { value: string; onChange: (_v: 
         }}
         className="w-full text-xs font-mono uppercase text-gray-700 focus:outline-none bg-transparent"
         maxLength={7}
-        aria-label={`${label} hex`}
+        aria-label={t('messaging.agent_builder.color_hex', { label })}
       />
     </div>
   )
 }
 
 function ChatPreview({ draft, isDefault = false }: { draft: Draft; isDefault?: boolean }) {
-  const tone = TONES.find((t) => t.value === draft.tone)
+  const { t } = useTranslation()
+  const avatarName = draft.name || t('messaging.agent')
   return (
     <div className="h-full flex flex-col rounded-xl bg-white nice-shadow overflow-hidden">
       <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <AgentAvatar agent={{ ...draft, name: draft.name || 'Agent', is_default: isDefault }} size={44} />
+          <AgentAvatar agent={{ ...draft, name: avatarName, is_default: isDefault }} size={44} />
           <div className="min-w-0">
-            <p className="text-base font-bold leading-tight text-gray-900 truncate">{draft.name || 'Your agent'}</p>
-            <p className="text-xs text-gray-500 line-clamp-2">{draft.description || 'Describe what it helps with.'}</p>
+            <p className="text-base font-bold leading-tight text-gray-900 truncate">{draft.name || t('messaging.agent_builder.preview_name')}</p>
+            <p className="text-xs text-gray-500 line-clamp-2">{draft.description || t('messaging.agent_builder.preview_description')}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-1 mt-3">
-          <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[11px] font-medium text-gray-600">{tone?.label}</span>
+          <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[11px] font-medium text-gray-600">{t(`messaging.agent_tones.${draft.tone}`)}</span>
           <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[11px] font-medium text-gray-600">
-            {draft.knowledge_mode === 'general' ? 'Courses + general knowledge' : 'Course content only'}
+            {draft.knowledge_mode === 'general' ? t('messaging.agent_general') : t('messaging.agent_builder.course_only')}
           </span>
         </div>
       </div>
       <div className="flex-1 p-4 space-y-3 overflow-y-auto bg-gray-50/60">
         <div className="flex items-end gap-2">
-          <AgentAvatar agent={{ ...draft, name: draft.name || 'Agent', is_default: isDefault }} size={26} />
+          <AgentAvatar agent={{ ...draft, name: avatarName, is_default: isDefault }} size={26} />
           <div className="max-w-[85%] rounded-xl rounded-es-sm bg-white border border-gray-200 px-3 py-2 text-sm text-gray-800 leading-relaxed">
-            {draft.greeting || 'Hi! Ask me anything about your courses.'}
+            {draft.greeting || t('messaging.agent_builder.preview_greeting')}
           </div>
         </div>
         <div className="flex justify-end">
           <div className="max-w-[80%] rounded-xl rounded-ee-sm bg-gray-900 px-3 py-2 text-sm text-white">
-            {draft.starters[0] || 'Can you explain this lesson?'}
+            {draft.starters[0] || t('messaging.agent_builder.preview_question')}
           </div>
         </div>
         <div className="flex items-end gap-2">
-          <AgentAvatar agent={{ ...draft, name: draft.name || 'Agent', is_default: isDefault }} size={26} />
+          <AgentAvatar agent={{ ...draft, name: avatarName, is_default: isDefault }} size={26} />
           <div className="rounded-xl rounded-es-sm bg-white border border-gray-200 px-3 py-2.5">
             <span className="inline-flex gap-1">
               {[0, 150, 300].map((d) => (
@@ -196,6 +188,7 @@ function ChatPreview({ draft, isDefault = false }: { draft: Draft; isDefault?: b
 }
 
 export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug, onSaved }: AgentBuilderDialogProps) {
+  const { t } = useTranslation()
   const { colorScheme } = useColorScheme()
   const org = useOrg() as any
   const session = useLHSession() as any
@@ -272,7 +265,7 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
       onSaved?.(saved)
       onOpenChange(false)
     } catch (e: any) {
-      setError(e?.message || 'Could not save the agent')
+      setError(e?.message || t('messaging.agent_builder.save_failed'))
     } finally {
       setSaving(false)
     }
@@ -287,7 +280,7 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
       await qc.invalidateQueries({ queryKey: messagingKeys.agents(org.id) })
       onOpenChange(false)
     } catch (e: any) {
-      setError(e?.message || 'Could not delete the agent')
+      setError(e?.message || t('messaging.agent_builder.delete_failed'))
     } finally {
       setSaving(false)
     }
@@ -298,10 +291,10 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
       <DialogContent className="w-[96vw] max-w-[980px] max-h-[92vh] p-0 overflow-hidden flex flex-col">
         <div className="px-5 py-4 border-b border-gray-100">
           <DialogTitle className="text-xl font-semibold text-gray-900">
-            {editing ? `Edit ${agent?.name}` : 'Create an agent'}
+            {editing ? t('messaging.agent_builder.title_edit', { name: agent?.name }) : t('messaging.agent_builder.title_create')}
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-500">
-            An assistant with its own personality that answers from your courses.
+            {t('messaging.agent_builder.subtitle')}
           </DialogDescription>
         </div>
 
@@ -317,9 +310,9 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
                     <button
                       type="button"
                       className="rounded-[16px] ring-1 ring-gray-200 hover:ring-gray-400 transition shrink-0"
-                      aria-label="Pick an emoji"
+                      aria-label={t('messaging.agent_builder.pick_emoji')}
                     >
-                      <AgentAvatar agent={{ ...draft, name: draft.name || 'Agent', is_default: isDefault }} size={56} />
+                      <AgentAvatar agent={{ ...draft, name: draft.name || t('messaging.agent'), is_default: isDefault }} size={56} />
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 border-none shadow-xl" align="start">
@@ -344,7 +337,7 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
                   <input
                     value={draft.name}
                     onChange={(e) => set('name', e.target.value.slice(0, 60))}
-                    placeholder="Name, e.g. Quizzy"
+                    placeholder={t('messaging.agent_builder.name_placeholder')}
                     className={`${inputCls} text-base font-semibold`}
                     autoFocus={!editing}
                   />
@@ -352,22 +345,22 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
                 <input
                   value={draft.description}
                   onChange={(e) => set('description', e.target.value.slice(0, 280))}
-                  placeholder="What does it help with?"
+                  placeholder={t('messaging.agent_builder.description_placeholder')}
                   className={inputCls}
                 />
               </div>
             </div>
 
             {!isDefault && (
-            <Field label="Colors">
+            <Field label={t('messaging.agent_builder.colors')}>
               <div className="flex flex-wrap gap-2">
                 {GRADIENT_PRESETS.map((p) => {
                   const active = p.color === draft.color && p.secondary === draft.secondary_color
                   return (
                     <button
-                      key={p.name}
+                      key={p.id}
                       type="button"
-                      title={p.name}
+                      title={t(`messaging.agent_builder.presets.${p.id}`)}
                       onClick={() => setDraft((d) => ({ ...d, color: p.color, secondary_color: p.secondary }))}
                       className={`w-8 h-8 rounded-lg ${active ? 'ring-2 ring-offset-2 ring-gray-900' : 'ring-1 ring-black/10'}`}
                       style={{ background: `linear-gradient(140deg, ${p.color}, ${p.secondary})` }}
@@ -378,47 +371,48 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
                 })}
               </div>
               <div className="grid grid-cols-2 gap-2 pt-1">
-                <ColorInput key={draft.color} label="Main color" value={draft.color} onChange={(v) => set('color', v)} />
-                <ColorInput key={draft.secondary_color} label="Second color" value={draft.secondary_color} onChange={(v) => set('secondary_color', v)} />
+                <ColorInput key={draft.color} label={t('messaging.agent_builder.main_color')} value={draft.color} onChange={(v) => set('color', v)} />
+                <ColorInput key={draft.secondary_color} label={t('messaging.agent_builder.second_color')} value={draft.secondary_color} onChange={(v) => set('secondary_color', v)} />
               </div>
             </Field>
             )}
 
-            <Field label="Tone">
+            <Field label={t('messaging.agent_builder.tone')}>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-                {TONES.map((t) => (
+                {TONES.map((tone) => (
                   <button
-                    key={t.value}
+                    key={tone}
                     type="button"
-                    onClick={() => set('tone', t.value)}
+                    onClick={() => set('tone', tone)}
                     className={`rounded-lg border px-2.5 py-2 text-xs font-semibold transition-colors ${
-                      draft.tone === t.value
+                      draft.tone === tone
                         ? 'border-gray-900 bg-gray-900 text-white'
                         : 'border-gray-200 text-gray-700 hover:border-gray-400'
                     }`}
                   >
-                    {t.label}
+                    {t(`messaging.agent_tones.${tone}`)}
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-gray-500">{TONES.find((t) => t.value === draft.tone)?.hint}</p>
+              <p className="text-xs text-gray-500">{TONES.includes(draft.tone) ? t(`messaging.agent_tone_hints.${draft.tone}`) : null}</p>
             </Field>
 
             {isDefault ? (
-              <Field label="Knowledge">
+              <Field label={t('messaging.agent_builder.knowledge')}>
                 <div className="flex items-start gap-3 rounded-xl border border-gray-200 px-3.5 py-3">
                   <GlobeSimple size={18} className="mt-0.5 shrink-0 text-gray-500" />
                   <p className="text-sm text-gray-600">
-                    <span className="font-semibold text-gray-900">Courses + general knowledge.</span> Copilot answers from your courses first and fills in from its own knowledge, clearly marked.
+                    <span className="font-semibold text-gray-900">{t('messaging.agent_builder.copilot_knowledge_title')}</span>{' '}
+                    {t('messaging.agent_builder.copilot_knowledge_desc', { name: draft.name })}
                   </p>
                 </div>
               </Field>
             ) : (
-            <Field label="Knowledge">
+            <Field label={t('messaging.agent_builder.knowledge')}>
               <div className="grid sm:grid-cols-2 gap-2">
                 {([
-                  { value: 'course_only', label: 'Course content only', hint: 'Sticks to what your courses say.', Icon: BookOpen },
-                  { value: 'general', label: 'Courses + general knowledge', hint: 'Adds its own knowledge, clearly marked.', Icon: GlobeSimple },
+                  { value: 'course_only', label: t('messaging.agent_builder.course_only'), hint: t('messaging.agent_builder.course_only_hint'), Icon: BookOpen },
+                  { value: 'general', label: t('messaging.agent_general'), hint: t('messaging.agent_builder.general_hint'), Icon: GlobeSimple },
                 ] as const).map((k) => (
                   <button
                     key={k.value}
@@ -440,18 +434,23 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
             )}
 
             {isDefault ? (
-              <Field label="Courses it reads">
+              <Field label={t('messaging.agent_builder.courses')}>
                 <div className="flex items-start gap-3 rounded-xl border border-gray-200 px-3.5 py-3">
                   <BookOpen size={18} className="mt-0.5 shrink-0 text-gray-500" />
                   <p className="text-sm text-gray-600">
-                    <span className="font-semibold text-gray-900">Every course.</span> Copilot reads all the courses the person chatting can open, and connects them in its answers.
+                    <span className="font-semibold text-gray-900">{t('messaging.agent_builder.copilot_courses_title')}</span>{' '}
+                    {t('messaging.agent_builder.copilot_courses_desc', { name: draft.name })}
                   </p>
                 </div>
               </Field>
             ) : (
             <Field
-              label="Courses it reads"
-              hint={draft.course_uuids.length ? `${draft.course_uuids.length} selected` : 'All courses the person chatting can open'}
+              label={t('messaging.agent_builder.courses')}
+              hint={
+                draft.course_uuids.length
+                  ? t('messaging.selected', { count: draft.course_uuids.length })
+                  : t('messaging.agent_builder.courses_all_hint')
+              }
             >
               <div className="rounded-xl border border-gray-200 overflow-hidden">
                 <div className="flex items-center gap-2 px-3 border-b border-gray-100">
@@ -459,17 +458,17 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
                   <input
                     value={courseQuery}
                     onChange={(e) => setCourseQuery(e.target.value)}
-                    placeholder="Search courses"
+                    placeholder={t('messaging.agent_builder.search_courses')}
                     className="w-full py-2 text-sm focus:outline-none bg-transparent"
                   />
                   {draft.course_uuids.length > 0 && (
                     <button type="button" onClick={() => set('course_uuids', [])} className="text-xs font-semibold text-gray-500 hover:text-gray-900 whitespace-nowrap">
-                      Clear
+                      {t('messaging.clear')}
                     </button>
                   )}
                 </div>
                 <div className="max-h-40 overflow-y-auto py-1">
-                  {filteredCourses.length === 0 && <p className="px-3 py-3 text-xs text-gray-400">No courses found.</p>}
+                  {filteredCourses.length === 0 && <p className="px-3 py-3 text-xs text-gray-400">{t('messaging.agent_builder.no_courses')}</p>}
                   {filteredCourses.map((c) => {
                     const on = draft.course_uuids.includes(c.course_uuid)
                     return (
@@ -492,39 +491,44 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
             </Field>
             )}
 
-            <Field label="Instructions" hint="Only you and admins see these">
+            <Field label={t('messaging.agent_builder.instructions')} hint={t('messaging.agent_builder.instructions_hint')}>
               <textarea
                 value={draft.instructions}
                 onChange={(e) => set('instructions', e.target.value.slice(0, 4000))}
                 rows={4}
-                placeholder="How should it behave? What should it always or never do?"
+                placeholder={t('messaging.agent_builder.instructions_placeholder')}
                 className={`${inputCls} resize-y min-h-[96px]`}
               />
               <div className="flex flex-wrap gap-1.5">
                 {INSTRUCTION_TEMPLATES.map((tpl) => (
                   <button
-                    key={tpl.label}
+                    key={tpl}
                     type="button"
-                    onClick={() => set('instructions', (draft.instructions ? draft.instructions.trimEnd() + '\n' : '') + tpl.text)}
+                    onClick={() =>
+                      set(
+                        'instructions',
+                        (draft.instructions ? draft.instructions.trimEnd() + '\n' : '') + t(`messaging.agent_builder.templates.${tpl}_text`)
+                      )
+                    }
                     className="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 hover:border-gray-900 hover:text-gray-900"
                   >
                     <Plus size={10} weight="bold" />
-                    {tpl.label}
+                    {t(`messaging.agent_builder.templates.${tpl}`)}
                   </button>
                 ))}
               </div>
             </Field>
 
-            <Field label="Greeting" hint="First message in a new chat">
+            <Field label={t('messaging.agent_builder.greeting')} hint={t('messaging.agent_builder.greeting_hint')}>
               <input
                 value={draft.greeting}
                 onChange={(e) => set('greeting', e.target.value.slice(0, 500))}
-                placeholder="Hi! What are we learning today?"
+                placeholder={t('messaging.agent_builder.greeting_placeholder')}
                 className={inputCls}
               />
             </Field>
 
-            <Field label="Conversation starters" hint={`${draft.starters.length}/6`}>
+            <Field label={t('messaging.agent_builder.starters')} hint={`${draft.starters.length}/6`}>
               {draft.starters.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {draft.starters.map((s, i) => (
@@ -534,7 +538,7 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
                         type="button"
                         onClick={() => set('starters', draft.starters.filter((_, j) => j !== i))}
                         className="p-0.5 rounded-full hover:bg-gray-200"
-                        aria-label="Remove starter"
+                        aria-label={t('messaging.agent_builder.remove_starter')}
                       >
                         <X size={10} weight="bold" />
                       </button>
@@ -553,7 +557,7 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
                         addStarter()
                       }
                     }}
-                    placeholder="e.g. Quiz me on chapter 2"
+                    placeholder={t('messaging.agent_builder.starter_placeholder')}
                     className={inputCls}
                   />
                   <button
@@ -561,18 +565,18 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
                     onClick={addStarter}
                     className="rounded-lg border border-gray-200 px-3 text-sm font-semibold text-gray-700 hover:border-gray-900"
                   >
-                    Add
+                    {t('messaging.add')}
                   </button>
                 </div>
               )}
             </Field>
 
             {canShare && (
-              <Field label="Who can chat with it">
+              <Field label={t('messaging.agent_builder.visibility')}>
                 <div className="grid grid-cols-2 gap-2">
                   {([
-                    { value: 'private', label: 'Only me', Icon: LockSimple },
-                    { value: 'org', label: 'Everyone in the org', Icon: UsersThree },
+                    { value: 'private', label: t('messaging.agent_builder.only_me'), Icon: LockSimple },
+                    { value: 'org', label: t('messaging.agent_builder.everyone'), Icon: UsersThree },
                   ] as const).map((v) => (
                     <button
                       key={v.value}
@@ -594,7 +598,7 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
           {/* Preview */}
           <div className="hidden md:block border-s border-gray-100 bg-gray-50/40 p-4">
             <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-1.5">
-              Preview
+              {t('messaging.agent_builder.preview')}
             </p>
             <div className="h-[calc(100%-1.5rem)]">
               <ChatPreview draft={draft} isDefault={isDefault} />
@@ -607,12 +611,12 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
             {editing && agent?.can_edit && !isDefault && (
               confirmDelete ? (
                 <span className="flex items-center gap-2 text-xs">
-                  <span className="text-gray-600">Delete for good?</span>
+                  <span className="text-gray-600">{t('messaging.agent_builder.delete_confirm')}</span>
                   <button type="button" onClick={remove} disabled={saving} className="font-semibold text-red-600 hover:text-red-700">
-                    Delete
+                    {t('messaging.delete')}
                   </button>
                   <button type="button" onClick={() => setConfirmDelete(false)} className="font-semibold text-gray-500">
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                 </span>
               ) : (
@@ -622,7 +626,7 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-red-600"
                 >
                   <Trash size={14} />
-                  Delete
+                  {t('messaging.delete')}
                 </button>
               )
             )}
@@ -634,7 +638,7 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
               onClick={() => onOpenChange(false)}
               className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -643,7 +647,7 @@ export default function AgentBuilderDialog({ open, onOpenChange, agent, orgslug,
               className="inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-40"
             >
               {saving && <SpinnerGap size={14} className="animate-spin" />}
-              {editing ? 'Save changes' : 'Create agent'}
+              {editing ? t('messaging.agent_builder.save') : t('messaging.agent_builder.create')}
             </button>
           </div>
         </div>

@@ -19,6 +19,7 @@ import { ConversationListSkeleton, ConversationRow } from '@components/Messaging
 import { IconButton } from '@components/Messaging/ui/kit'
 import NewConversationDialog from '@components/Messaging/Dialogs/NewConversationDialog'
 import AgentAvatar from '@components/Messaging/Agents/AgentAvatar'
+import { agentDescription } from '@components/Messaging/Agents/agentText'
 import { ConversationAvatar } from '@components/Messaging/ui/Avatars'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@components/ui/tooltip'
 import { usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
@@ -386,7 +387,7 @@ function ChatList({
                 type="button"
                 onClick={() => onOpenAgent(a.agent_uuid)}
                 className="flex w-14 shrink-0 flex-col items-center gap-1 rounded-xl py-1.5 hover:bg-neutral-50"
-                title={a.description || a.name}
+                title={agentDescription(a, t) || a.name}
               >
                 <AgentAvatar agent={a} size={34} />
                 <span className="w-full truncate px-0.5 text-center text-[11px] text-neutral-600">{a.name}</span>
