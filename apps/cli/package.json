@@ -44,13 +44,13 @@
   "devDependencies": {
     "@clack/core": "^1.6.0",
     "@clack/prompts": "^1.9.0",
-    "@types/node": "^26.6.6",
-    "@vitest/coverage-v8": "^5.1.1",
+    "@types/node": "^26.6.10",
+    "@vitest/coverage-v8": "^5.1.2",
     "commander": "^15.1.0",
     "picocolors": "^1.1.1",
     "tsup": "^9.0.0",
     "typescript": "^7.0.2",
-    "vitest": "^5.1.1"
+    "vitest": "^5.1.2"
   },
   "engines": {
     "node": ">=22"
@@ -60,7 +60,7 @@
     "access": "public"
   },
   "overrides": {
-    "source-map-js": ">=1.2.3",
+    "source-map-js": ">=1.2.4",
     "esbuild": ">=0.28.2"
   }
 }

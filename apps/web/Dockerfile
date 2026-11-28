@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.4-alpine AS base
+FROM oven/bun:1.4.5-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -31,7 +31,7 @@ ENV BUILD_ID=$BUILD_ID
 RUN NODE_OPTIONS=--max-old-space-size=6144 bun run build
 
 # Production image: the Next.js standalone server runs on Bun
-FROM oven/bun:1.4.4-alpine AS runner
+FROM oven/bun:1.4.5-alpine AS runner
 WORKDIR /app
 
 RUN apk upgrade --no-cache && apk add --no-cache curl
