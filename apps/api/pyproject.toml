@@ -42,7 +42,7 @@ dependencies = [
     "pillow==13.0.0",
     "pytest-asyncio==1.5.0",
     "pytest-xdist==3.8.0",
-    "sentry-sdk[fastapi]==2.75.0",
+    "sentry-sdk[fastapi]==3.0.0",
     "protobuf==7.36.2",
     "workos==10.9.0",
     "dnspython==2.9.2",
