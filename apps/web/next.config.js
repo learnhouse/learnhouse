@@ -183,6 +183,18 @@ const nextConfig = {
         ],
       },
       {
+        // Package content origin (lib/packageContent). The player shell and
+        // package files are framed by the org's site, which can be any custom
+        // domain, so any ancestor may frame them. Both only answer on the
+        // content origin, which holds no session, and need a launch token.
+        source: '/:path(package-player|api/pkg/.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'ALLOWALL' },
+          { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
+          { key: 'Referrer-Policy', value: 'same-origin' },
+        ],
+      },
+      {
         // The xAPI LRS proxy returns documents with client-chosen content
         // types (the xAPI spec requires it): never let one render as a page.
         source: '/api/xapi/:path*',

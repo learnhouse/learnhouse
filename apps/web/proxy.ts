@@ -1,3 +1,4 @@
+import { isPackageContentHost, isPackageContentPath } from '@/lib/packageContent'
 import { getAPIUrl } from './services/config/config'
 import { NextResponse, userAgent } from 'next/server'
 import type { NextRequest } from 'next/server'
@@ -327,6 +328,14 @@ export const config = {
 }
 
 export default async function proxy(req: NextRequest) {
+  // The package content origin (see lib/packageContent) only serves the
+  // player shell; the shell itself is never served on the app's own hosts.
+  const onContentHost = isPackageContentHost(req.headers.get('host'))
+  if (onContentHost || req.nextUrl.pathname === '/package-player') {
+    if (onContentHost && isPackageContentPath(req.nextUrl.pathname)) return NextResponse.next()
+    return new NextResponse('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } })
+  }
+
   let response: Awaited<ReturnType<typeof route>>
   try {
     response = await route(req)

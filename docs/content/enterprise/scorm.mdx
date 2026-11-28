@@ -74,6 +74,12 @@ To see how learners did, open the SCORM activity's edit dialog. The results tabl
 - SCORM activities follow the same access rules as other activities, including paid courses and locked chapters.
 - The title and the visible text of each SCO's launch page are indexed for AI search.
 
+## Package content origin
+
+Packages are HTML and JavaScript written by whoever uploads them. On a self-hosted multi-organization deployment, set `LEARNHOUSE_PACKAGE_CONTENT_URL` on both the backend and the web app to a host on its own domain (for example `content.example-lms.net` when the platform runs on `example-lms.com`) that points at the web app. Packages then run on that host, where learners have no login session, and the player talks to them through the browser's message channel. Tin Can and cmi5 packages send their statements through the same host.
+
+Without it, packages run on the organization's own site, as before.
+
 ## Frequently asked questions
 
 ### Which SCORM versions does LearnHouse support?
