@@ -113,7 +113,7 @@
     "jspdf-html2canvas": "^1.7.0",
     "katex": "^0.19.1",
     "livekit-client": "^2.24.1",
-    "loops": "^7.5.0",
+    "loops": "^8.0.0",
     "lowlight": "^3.3.0",
     "lucide-react": "^1.75.0",
     "mailchecker": "^6.0.21",

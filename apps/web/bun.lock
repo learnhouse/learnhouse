@@ -103,7 +103,7 @@
         "jspdf-html2canvas": "^1.7.0",
         "katex": "^0.19.1",
         "livekit-client": "^2.24.1",
-        "loops": "^7.5.0",
+        "loops": "^8.0.0",
         "lowlight": "^3.3.0",
         "lucide-react": "^1.75.0",
         "mailchecker": "^6.0.21",
@@ -1716,7 +1716,7 @@
 
     "longest-streak": ["longest-streak@3.1.0", "", {}, "sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g=="],
 
-    "loops": ["loops@7.5.0", "", {}, "sha512-hCHjAeZFY7FjxqfvcA3wsA+r+yP68kiv7HzX5qVF2BV9PyaiqiC45Lp/YRJecqFg4wOCeHHNHCq9Qp9pBrratQ=="],
+    "loops": ["loops@8.0.0", "", {}, "sha512-VjUSQ/cn9oFY8GuleTY1b2SEXPOeO4lHM6WN/RIAJsggQW8OPzsVMtsjbDsAxF8JXgO3zxsG1DJEz7xRKhMYjw=="],
 
     "loose-envify": ["loose-envify@1.4.0", "", { "dependencies": { "js-tokens": "^3.0.0 || ^4.0.0" }, "bin": { "loose-envify": "cli.js" } }, "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q=="],
 
