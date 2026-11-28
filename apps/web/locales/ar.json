@@ -22517,7 +22517,11 @@
         "test_org_score": "درجة السبام، الصيغة القديمة",
         "looks_fake_signup": "تسجيل سبام محتمل (مديرون ببريد مؤقت، أو بريد شخصي + اسم تجريبي)",
         "spam_score": "درجة السبام (0-100)",
-        "spam_score_level": "مستوى درجة السبام"
+        "spam_score_level": "مستوى درجة السبام",
+        "admin_email_work_domain": "أحد المسؤولين يستخدم بريدًا مهنيًا",
+        "paying_customer": "عميل يدفع",
+        "on_free_trial": "في التجربة دون بطاقة",
+        "had_plan_change": "تغيّرت الخطة من قبل"
       },
       "actions": {
         "add_tag": "إضافة وسم",
@@ -22534,7 +22538,8 @@
         "follow_org": "متابعة المنظمة",
         "assign_account_owner": "تعيين مالك حساب",
         "schedule_org_deletion": "جدولة الحذف (محمي)",
-        "create_task": "إنشاء مهمة"
+        "create_task": "إنشاء مهمة",
+        "purge_lazy_org": "حذف المؤسسة الخاملة ومستخدميها الآن"
       },
       "params": {
         "tag": "الوسم",

@@ -16,6 +16,7 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.core.deployment_mode import get_deployment_mode
+from src.services.users.email_check import ensure_real_email
 from src.services.users.emails import (
     send_account_creation_email,
 )
@@ -253,6 +254,11 @@ async def create_user(
                     "requirements": validation_result.requirements,
                 },
             )
+
+    # Fake email domains (throwaway, non-existent, no mail server) can't sign
+    # up. Google accounts and emailed invitation links already proved the inbox.
+    if not is_oauth and not email_verified_by_link:
+        await ensure_real_email(str(user_object.email))
 
     # Reject phishing links in display-name fields at signup.
     _reject_urls_in_profile_fields(
@@ -545,6 +551,12 @@ async def create_user_without_org(
                 },
             )
 
+    # Fake email domains (throwaway, non-existent, no mail server) can't sign
+    # up. Google accounts already proved the inbox; an invited address was
+    # chosen by the org's admin.
+    if not is_oauth and invited_org_id is None:
+        await ensure_real_email(str(user_object.email))
+
     # Reject phishing links in display-name fields at signup.
     _reject_urls_in_profile_fields(
         username=user_object.username,
@@ -686,6 +698,10 @@ async def update_user(
 
     if not is_owner and not acting_backoffice:
         await _check_org_admin_can_edit_account(user, db_session)
+
+    if email_changed and is_owner:
+        # A real account can't move to a throwaway address either.
+        await ensure_real_email(str(user_object.email))
 
     if email_changed:
         actor = user if is_owner else (await db_session.execute(

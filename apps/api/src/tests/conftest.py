@@ -37,6 +37,12 @@ os.environ["LEARNHOUSE_DISABLE_EE"] = "1"
 # and nowhere else. Tests that need the feature on enable it themselves.
 os.environ["LEARNHOUSE_DEMO_ENABLED"] = "0"
 
+# The signup fake-email check does live DNS lookups; tests of it turn it on
+# themselves with a stubbed resolver.
+os.environ["LEARNHOUSE_FAKE_EMAIL_CHECK"] = "0"
+# Same for the test/demo org-name check: fixtures name orgs "Test Org".
+os.environ["LEARNHOUSE_ORG_NAME_CHECK"] = "0"
+
 # Set a valid JWT secret key for tests (must be at least 32 characters)
 os.environ["LEARNHOUSE_AUTH_JWT_SECRET_KEY"] = (
     "test-secret-key-for-unit-tests-32chars!"

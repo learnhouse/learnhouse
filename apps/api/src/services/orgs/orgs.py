@@ -37,6 +37,7 @@ from src.services.orgs.uploads import upload_org_logo, upload_org_preview, uploa
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
 from src.core.ee_hooks import is_multi_org_allowed
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.services.orgs.name_check import reject_throwaway_org_name
 
 
 async def _get_org_config_cached(org_id: int, db_session: AsyncSession) -> Optional[OrganizationConfig]:
@@ -332,6 +333,7 @@ async def create_org(
         )
 
     reject_url_in_org_name(org_object.name)
+    reject_throwaway_org_name(org_object.name, org_object.slug)
 
     org = Organization.model_validate(org_object)
 
@@ -439,6 +441,7 @@ async def create_org_with_config(
         )
 
     reject_url_in_org_name(org_object.name)
+    reject_throwaway_org_name(org_object.name, org_object.slug)
 
     org = Organization.model_validate(org_object)
 
@@ -540,6 +543,13 @@ async def update_org(
     # Only a changed slug is validated: existing slugs keep working as-is.
     if org_object.slug is not None and org_object.slug != org.slug:
         org_object.slug = normalize_org_slug(org_object.slug)
+    # Test / demo / random-letter names: refused when the name or slug
+    # changes, so existing orgs can still save their other settings.
+    if not org.is_demo:
+        new_name = org_object.name if org_object.name is not None and org_object.name != org.name else None
+        new_slug = org_object.slug if org_object.slug is not None and org_object.slug != org.slug else None
+        if new_name is not None or new_slug is not None:
+            reject_throwaway_org_name(new_name, new_slug)
 
     # Everything else on the demo org is fair game; editing the name or logo
     # is part of what a prospect is here to try, and the refresh puts it back.
